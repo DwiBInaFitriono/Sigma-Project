@@ -31,16 +31,22 @@ document.addEventListener('DOMContentLoaded', function () {
     if (openButton) {
         openButton.addEventListener('click', function(e) {
             e.preventDefault();
-            if (sidebar && (sidebar.classList.contains('is-open') || sidebar.classList.contains('mobile-visible'))) {
-                closeSidebar();
-            } else {
-                openSidebar();
+            e.stopPropagation();
+            
+            if (sidebar) {
+                sidebar.classList.toggle('is-open');
+                sidebar.classList.toggle('mobile-visible');
+            }
+            
+            if (overlay) {
+                overlay.classList.toggle('is-visible');
+                if (overlay.classList.contains('is-visible')) {
+                    overlay.style.display = 'block';
+                } else {
+                    overlay.style.display = 'none';
+                }
             }
         });
-    }
-
-    if (closeButton) {
-        closeButton.addEventListener('click', closeSidebar);
     }
 
     if (overlay) {
