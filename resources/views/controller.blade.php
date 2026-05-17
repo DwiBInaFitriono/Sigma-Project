@@ -17,9 +17,9 @@
                 <h1>Kontroller Sensor</h1>
                 <p>Kendalikan status daya dan konfigurasi sensor secara terpusat. Perintah akan diantrekan dan dieksekusi saat ESP32 terhubung.</p>
             </div>
-            <div class="realtime-clock-wrapper">
-                <p id="realtime-clock" class="realtime-clock">{{ now()->timezone('Asia/Jakarta')->format('H:i:s') }}</p>
-                <p id="realtime-date" class="realtime-date">{{ now()->timezone('Asia/Jakarta')->translatedFormat('l, d M Y') }}</p>
+            <div class="datetime-widget">
+                <div id="realtime-clock" class="time-display">{{ now()->timezone('Asia/Jakarta')->format('H:i:s') }}</div>
+                <div id="realtime-date" class="date-display">{{ now()->timezone('Asia/Jakarta')->translatedFormat('l, d M Y') }}</div>
             </div>
         </div>
     </header>
