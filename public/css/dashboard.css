@@ -486,6 +486,7 @@ body.sigma-app::before {
     border: 1px solid var(--sigma-border);
     border-radius: var(--sigma-radius-card);
     box-shadow: var(--sigma-glow);
+    min-width: 0;
 }
 
 .glow-card:hover {
