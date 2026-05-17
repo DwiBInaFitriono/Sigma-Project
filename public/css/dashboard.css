@@ -696,6 +696,8 @@ body.sigma-app::before {
 
 .table-responsive {
     overflow-x: auto;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
 }
 
 .data-table {
@@ -813,7 +815,7 @@ body.sigma-app::before {
         word-break: break-word;
     }
     .panel-page {
-        overflow: hidden;
+        overflow-x: hidden;
         max-width: 100%;
     }
     .content-header-flex {

@@ -1,10 +1,10 @@
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-inner">
         <div class="sidebar-header">
-            <div class="sidebar-brand-wrap">
+            <a href="{{ route('dashboard') }}" class="sidebar-brand-wrap" style="text-decoration: none; color: inherit;">
                 <h2 class="sidebar-brand">SIGMA</h2>
                 <p class="sidebar-subtitle">Monitoring Getaran</p>
-            </div>
+            </a>
             <button id="sidebar-close-toggle" class="sidebar-close-toggle" type="button" aria-label="Tutup sidebar">
                 <i class="fa-solid fa-xmark"></i>
             </button>

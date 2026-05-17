@@ -3,10 +3,12 @@
 @section('content')
 <div class="panel-layout">
     <header class="mobile-top-nav">
-        <div class="mobile-logo">SIGMA</div>
-        <button class="btn-toggle-sidebar" id="mobile-sidebar-toggle" type="button" aria-label="Toggle sidebar">
-            <i class="fa-solid fa-bars"></i>
-        </button>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <button class="btn-toggle-sidebar" id="mobile-sidebar-toggle" type="button" aria-label="Toggle sidebar">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <a href="{{ route('dashboard') }}" class="mobile-logo" style="text-decoration: none; color: inherit;">SIGMA</a>
+        </div>
         <div class="mobile-top-actions">
             <button id="theme-toggle" class="btn-toggle-sidebar" title="Toggle Dark Mode">
                 <i class="fa-solid fa-moon"></i>

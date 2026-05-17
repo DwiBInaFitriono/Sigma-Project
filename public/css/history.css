@@ -121,3 +121,17 @@
     margin-bottom: 1rem;
 }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+@media (max-width: 768px) {
+    .history-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .history-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    .history-input {
+        width: 100%;
+    }
+}
