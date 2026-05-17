@@ -48,7 +48,9 @@
                             <h2 class="section-title">GPS NEO-6M</h2>
                             <p class="section-subtitle">Lokasi perangkat ditampilkan di peta OpenStreetMap.</p>
                         </div>
-                        <span class="status-pill online">Online</span>
+                        <span id="gps-map-status-pill" class="status-pill {{ $gps['is_connected'] ? 'online' : 'offline' }}" style="{{ !$gps['is_connected'] ? 'background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.2);' : '' }}">
+                            {{ $gps['is_connected'] ? 'Online' : 'Terputus' }}
+                        </span>
                     </div>
 
                     <div id="gps-map" class="sensor-map"></div>
@@ -90,16 +92,14 @@
                         <span class="status-pill realtime">Realtime</span>
                     </div>
 
-                    <div class="dashboard-accel-header">
-                        <div class="dashboard-accel-header-inner">
-                            <div>
-                                <p class="sensor-label">Nilai X / Y / Z</p>
-                                <p id="currentAxes" class="sensor-axes">{{ number_format($currentAccel['x'], 2) }} / {{ number_format($currentAccel['y'], 2) }} / {{ number_format($currentAccel['z'], 2) }}</p>
-                            </div>
-                            <div class="dashboard-accel-highlight">
-                                <p class="sensor-label light">Waktu Server</p>
-                                <p id="currentAccelTime" class="sensor-time">{{ $currentAccel['time'] }}</p>
-                            </div>
+                    <div class="dashboard-info-grid" style="margin: 1.5rem 0;">
+                        <div class="dashboard-info-card">
+                            <p>NILAI X / Y / Z</p>
+                            <strong id="currentAxes">{{ number_format($currentAccel['x'], 2) }} / {{ number_format($currentAccel['y'], 2) }} / {{ number_format($currentAccel['z'], 2) }}</strong>
+                        </div>
+                        <div class="dashboard-info-card">
+                            <p>WAKTU SERVER</p>
+                            <strong id="currentAccelTime">{{ $currentAccel['time'] }}</strong>
                         </div>
                     </div>
 
@@ -221,7 +221,7 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="{{ asset('js/sidebar.js') }}"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const initialDashboardData = {
@@ -253,7 +253,6 @@
 
             setText('realtime-clock', timeStr);
             setText('realtime-date', dateStr);
-            setText('currentAccelTime', timeStr + ' WIB');
         }
 
         function formatNumber(value, digits = 2) {
@@ -495,13 +494,28 @@
 
             setText('currentMagnitude', formatNumber(accel.magnitude));
             setText('currentAxes', `${formatNumber(accel.x)} / ${formatNumber(accel.y)} / ${formatNumber(accel.z)}`);
+            setText('currentAccelTime', accel.time ?? '--');
             setText('lastUpdatedAt', accel.time ?? '--');
 
             setText('gpsLatitude',   formatNumber(gps.latitude, 7));
             setText('gpsLongitude',  formatNumber(gps.longitude, 7));
             setText('gpsAltitude',   `${formatNumber(gps.altitude, 2)} m`);
             setText('gpsSatellites', gps.satellites ?? 0);
-            setText('gpsStatus',     gps.status ?? 'NO FIX');
+            setText('gpsStatus',     gps.status ?? 'Menunggu');
+
+            const mapPill = document.getElementById('gps-map-status-pill');
+            if (mapPill) {
+                if (gps.is_connected) {
+                    mapPill.textContent = 'Online';
+                    mapPill.className = 'status-pill online';
+                    mapPill.style = '';
+                } else {
+                    mapPill.textContent = 'Terputus';
+                    mapPill.className = 'status-pill offline';
+                    mapPill.style = 'background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.2);';
+                }
+            }
+
             setText('gpsRecordedAt', gps.recorded_at ?? '--');
 
             setText('magnitudeMaximum', formatNumber(summary.maximum));

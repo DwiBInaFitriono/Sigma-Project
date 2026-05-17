@@ -17,14 +17,14 @@
                 <h1 class="content-title">History Sensor & GPS</h1>
                 <p class="content-desc">Melihat seluruh riwayat data sensor berdasarkan hari secara spesifik.</p>
             </div>
-            <div class="realtime-clock-wrapper">
-                <p id="realtime-clock" class="realtime-clock">{{ now()->timezone('Asia/Jakarta')->format('H:i:s') }}</p>
-                <p id="realtime-date" class="realtime-date">{{ now()->timezone('Asia/Jakarta')->translatedFormat('l, d M Y') }}</p>
+            <div class="datetime-widget">
+                <div id="realtime-clock" class="time-display">{{ now()->timezone('Asia/Jakarta')->format('H:i:s') }}</div>
+                <div id="realtime-date" class="date-display">{{ now()->timezone('Asia/Jakarta')->translatedFormat('l, d M Y') }}</div>
             </div>
         </div>
     </header>
 
-    <form method="GET" action="{{ route('history') }}" class="history-form">
+    <form method="GET" action="{{ route('history') }}" class="glow-card panel-card history-form">
         <label for="date">Pilih Tanggal Log:</label>
         <input type="date" id="date" name="date" value="{{ $selectedDate }}" class="history-input" required>
         <button type="submit" class="history-btn">Tampilkan Log</button>
@@ -171,6 +171,22 @@
     const accelData = @json($accelDataForPdf ?? []);
     const gpsData = @json($gpsDataForPdf ?? []);
     const selectedDate = "{{ \Carbon\Carbon::parse($selectedDate)->translatedFormat('d F Y') }}";
+
+    // ── Clock ──────────────────────────────────────────────────────────────────
+    (function startClock() {
+        const clockEl = document.getElementById('realtime-clock');
+        const dateEl = document.getElementById('realtime-date');
+        
+        setInterval(() => {
+            const now = new Date();
+            if (clockEl) {
+                clockEl.textContent = now.toLocaleTimeString('en-GB', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            }
+            if (dateEl) {
+                dateEl.textContent = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            }
+        }, 1000);
+    })();
     
     // MMI Helper for PDF
     function getMmi(magnitude) {

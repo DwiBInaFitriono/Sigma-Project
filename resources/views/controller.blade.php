@@ -141,7 +141,7 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('js/sidebar.js') }}"></script>
+
 <script>
     // ── Clock ──────────────────────────────────────────────────────────────────
     (function startClock() {

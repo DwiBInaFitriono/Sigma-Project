@@ -16,9 +16,9 @@
                 <h1 class="content-title">ADXL345 Accelerometer</h1>
                 <p class="content-desc">Pantau grafik getaran dan log sensor secara realtime langsung dari ESP32.</p>
             </div>
-            <div class="realtime-clock-wrapper">
-                <p id="realtime-clock" class="realtime-clock">--:--:--</p>
-                <p id="realtime-date" class="realtime-date">--, -- --- ----</p>
+            <div class="datetime-widget">
+                <div id="realtime-clock" class="time-display">{{ now()->timezone('Asia/Jakarta')->format('H:i:s') }}</div>
+                <div id="realtime-date" class="date-display">{{ now()->timezone('Asia/Jakarta')->translatedFormat('l, d M Y') }}</div>
             </div>
         </div>
     </header>
@@ -35,14 +35,14 @@
                     <div class="live-badge">REALTIME</div>
                 </div>
 
-                <div class="accel-current-values">
-                    <div class="accel-value-item">
-                        <span class="accel-value-label">NILAI X / Y / Z</span>
-                        <strong class="accel-value-number" id="currentAxes">{{ number_format($currentAccel['x'], 2) }} / {{ number_format($currentAccel['y'], 2) }} / {{ number_format($currentAccel['z'], 2) }}</strong>
+                <div class="dashboard-info-grid" style="margin: 1.5rem 0;">
+                    <div class="dashboard-info-card">
+                        <p>NILAI X / Y / Z</p>
+                        <strong id="currentAxes">{{ number_format($currentAccel['x'], 2) }} / {{ number_format($currentAccel['y'], 2) }} / {{ number_format($currentAccel['z'], 2) }}</strong>
                     </div>
-                    <div class="accel-value-item">
-                        <span class="accel-value-label">WAKTU SERVER</span>
-                        <strong class="accel-value-number" id="currentAccelTime">{{ $currentAccel['time'] }}</strong>
+                    <div class="dashboard-info-card">
+                        <p>WAKTU SERVER</p>
+                        <strong id="currentAccelTime">{{ $currentAccel['time'] ?? now()->timezone('Asia/Jakarta')->format('H:i:s') . ' WIB' }}</strong>
                     </div>
                 </div>
 
@@ -136,7 +136,7 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-<script src="{{ asset('js/sidebar.js') }}"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const initialDashboardData = {
@@ -170,7 +170,6 @@
 
             setText('realtime-clock', timeStr);
             setText('realtime-date', dateStr);
-            setText('currentAccelTime', timeStr + ' WIB');
         }
 
         function formatNumber(value, digits = 2) {
@@ -318,6 +317,7 @@
 
             setText('currentMagnitude', formatNumber(accel.magnitude));
             setText('currentAxes', `${formatNumber(accel.x)} / ${formatNumber(accel.y)} / ${formatNumber(accel.z)}`);
+            setText('currentAccelTime', accel.time ?? '--');
             setText('magnitudeMaximum', formatNumber(summary.maximum));
             setText('magnitudeAverage', formatNumber(summary.average));
             setText('sampleCount', String(summary.count ?? 0));

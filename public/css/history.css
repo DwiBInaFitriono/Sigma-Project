@@ -3,10 +3,6 @@
     align-items: center;
     gap: 1rem;
     margin-bottom: 2rem;
-    background: rgba(26, 21, 18, 0.6);
-    padding: 1rem 1.5rem;
-    border-radius: 8px;
-    border: 1px solid rgba(214, 196, 176, 0.1);
     max-width: 100%;
     box-sizing: border-box;
     flex-wrap: wrap;

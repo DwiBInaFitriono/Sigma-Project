@@ -17,9 +17,9 @@
                 <h1 class="content-title">GPS NEO-6M</h1>
                 <p class="content-desc">Pantau lokasi perangkat dan koordinat satelit secara realtime dari OpenStreetMap.</p>
             </div>
-            <div class="realtime-clock-wrapper">
-                <p id="realtime-clock" class="realtime-clock">--:--:--</p>
-                <p id="realtime-date" class="realtime-date">--, -- --- ----</p>
+            <div class="datetime-widget">
+                <div id="realtime-clock" class="time-display">{{ now()->timezone('Asia/Jakarta')->format('H:i:s') }}</div>
+                <div id="realtime-date" class="date-display">{{ now()->timezone('Asia/Jakarta')->translatedFormat('l, d M Y') }}</div>
             </div>
         </div>
     </header>
@@ -141,7 +141,7 @@
 
 @push('scripts')
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="{{ asset('js/sidebar.js') }}"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const initialDashboardData = {
@@ -414,9 +414,9 @@
                 <h1 class="content-title">GPS NEO-6M</h1>
                 <p class="content-desc">Pantau lokasi perangkat dan koordinat satelit secara realtime dari OpenStreetMap.</p>
             </div>
-            <div class="realtime-clock-wrapper">
-                <p id="realtime-clock" class="realtime-clock">--:--:--</p>
-                <p id="realtime-date" class="realtime-date">--, -- --- ----</p>
+            <div class="datetime-widget">
+                <div id="realtime-clock" class="time-display">{{ now()->timezone('Asia/Jakarta')->format('H:i:s') }}</div>
+                <div id="realtime-date" class="date-display">{{ now()->timezone('Asia/Jakarta')->translatedFormat('l, d M Y') }}</div>
             </div>
         </div>
     </header>
@@ -492,7 +492,7 @@
 
 @push('scripts')
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="{{ asset('js/sidebar.js') }}"></script>
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const initialDashboardData = {
