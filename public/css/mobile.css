@@ -1,7 +1,14 @@
 @media (max-width: 1024px) {
-	.mobile-top-nav,
-	.bottom-nav {
+	.mobile-top-nav {
 		display: flex;
+	}
+
+	.bottom-nav {
+		display: none;
+	}
+
+	.content-topbar {
+		display: none;
 	}
 
 	.sidebar {
@@ -24,7 +31,13 @@
 	}
 
 	.panel-content {
-		padding: 5.25rem 1rem 5.5rem;
+		padding: 5.25rem 1rem 1.5rem;
+		overflow-wrap: break-word;
+		word-break: break-word;
+	}
+
+	.panel-page {
+		overflow: hidden;
 	}
 
 	.content-header-flex {
@@ -56,6 +69,21 @@
 	.dashboard-chart-card,
 	.dashboard-score-card {
 		border-radius: 1.25rem;
+	}
+
+	.history-form {
+		flex-direction: column;
+		align-items: stretch;
+		gap: 0.8rem;
+	}
+	
+	.history-btn {
+		width: 100%;
+		padding: 0.75rem;
+	}
+
+	.table-responsive {
+		-webkit-overflow-scrolling: touch;
 	}
 }
 
@@ -97,7 +125,15 @@
 	.log-card,
 	.dashboard-chart-card,
 	.dashboard-score-card {
-		padding: 1rem;
+		padding: 1.25rem;
+	}
+
+	.content-title, h1 {
+		font-size: 1.75rem;
+	}
+	
+	.section-title {
+		font-size: 1.25rem;
 	}
 }
 
@@ -112,7 +148,7 @@
 
 	.panel-content {
 		padding-top: 5rem;
-		padding-bottom: 5.7rem;
+		padding-bottom: 1.5rem;
 	}
 
 	.sensor-map {

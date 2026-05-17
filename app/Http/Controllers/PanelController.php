@@ -17,7 +17,19 @@ class PanelController extends Controller
     public function realtimeData(): JsonResponse
     {
         return response()
-            ->json($this->dashboardPayload())
+            ->json($this->dashboardPayload(10))
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
+    }
+
+    public function realtimeLog(): JsonResponse
+    {
+        return response()
+            ->json([
+                'accelLog' => $this->collectAccelerometerLog(5),
+                'gpsLog' => $this->collectGpsLog(5),
+            ])
             ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');

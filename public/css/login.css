@@ -210,7 +210,7 @@ html.dark-mode .theme-toggle-btn:hover {
     padding: 1rem 1.2rem;
     border-radius: var(--sigma-radius-btn);
     border: none;
-    background: var(--sigma-surface);
+    background: var(--sigma-accent-2);
     color: #ffffff;
     font-weight: 700;
     font-size: 0.95rem;
@@ -236,7 +236,7 @@ html.dark-mode .theme-toggle-btn:hover {
 .auth-button:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    background: var(--sigma-surface);
+    background: var(--sigma-warm);
 }
 
 .auth-button:hover::before {

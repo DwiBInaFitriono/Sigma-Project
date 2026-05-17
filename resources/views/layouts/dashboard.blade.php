@@ -26,19 +26,11 @@
     @include('components.sidebar')
 
     <main class="panel-content">
+        @include('layouts.header')
         @yield('dashboard-content')
     </main>
 
-    <nav class="bottom-nav">
-        <a href="{{ route('dashboard') }}" class="bottom-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-            <div class="bottom-nav-icon-wrapper"><i class="fa-solid fa-gauge-high"></i></div>
-            <span>Dashboard</span>
-        </a>
-        <a href="{{ route('alarm') }}" class="bottom-nav-link {{ request()->routeIs('alarm') ? 'active' : '' }}">
-            <div class="bottom-nav-icon-wrapper"><i class="fa-solid fa-triangle-exclamation"></i></div>
-            <span>Alarm</span>
-        </a>
-    </nav>
+
 </div>
 
 <script>

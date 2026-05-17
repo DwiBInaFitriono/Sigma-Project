@@ -7,16 +7,18 @@
 
 @section('dashboard-content')
         <div class="panel-page">
-            <header class="content-header-flex">
-                <div>
-                    <p class="section-kicker">SIGMA Monitoring</p>
-                    <h1>Panel Utama</h1>
-                    <p>Pantau getaran gempa, koordinat GPS, dan histori sensor secara realtime tanpa refresh.</p>
-                </div>
+            <header class="content-header">
+                <div class="content-header-flex">
+                    <div>
+                        <p class="section-kicker">SIGMA Monitoring</p>
+                        <h1>Panel Utama</h1>
+                        <p>Pantau getaran gempa, koordinat GPS, dan histori sensor secara realtime tanpa refresh.</p>
+                    </div>
 
-                <div class="datetime-widget">
-                    <div id="realtime-clock" class="time-display">{{ now()->timezone('Asia/Jakarta')->format('H:i:s') }}</div>
-                    <div id="realtime-date" class="date-display">{{ now()->timezone('Asia/Jakarta')->translatedFormat('l, d M Y') }}</div>
+                    <div class="datetime-widget">
+                        <div id="realtime-clock" class="time-display">{{ now()->timezone('Asia/Jakarta')->format('H:i:s') }}</div>
+                        <div id="realtime-date" class="date-display">{{ now()->timezone('Asia/Jakarta')->translatedFormat('l, d M Y') }}</div>
+                    </div>
                 </div>
             </header>
 
@@ -24,28 +26,14 @@
                 <div class="glow-card stat-card">
                     <div class="card-title">Status Sinkron</div>
                     <div class="card-value card-value-status">Live Update Aktif</div>
-                    <div class="card-desc">Polling otomatis setiap 2 detik</div>
+                    <div class="card-desc">Polling otomatis setiap 1 detik</div>
                 </div>
                 <div class="glow-card stat-card meter-card meter-card-magnitude">
                     <div class="card-title">Magnitudo Getaran</div>
                     <div id="currentMagnitude" class="card-value">{{ number_format($currentAccel['magnitude'], 2) }}</div>
-                    <div class="card-desc">Nilai PGA terkini</div>
+                    <div class="card-desc">Nilai PGA terkini — realtime</div>
                 </div>
-                <div class="glow-card stat-card">
-                    <div class="card-title">Sumbu X</div>
-                    <div id="currentX" class="card-value">{{ number_format($currentAccel['x'], 2) }}</div>
-                    <div class="card-desc">Akselerasi horizontal</div>
-                </div>
-                <div class="glow-card stat-card">
-                    <div class="card-title">Sumbu Y</div>
-                    <div id="currentY" class="card-value">{{ number_format($currentAccel['y'], 2) }}</div>
-                    <div class="card-desc">Akselerasi lateral</div>
-                </div>
-                <div class="glow-card stat-card">
-                    <div class="card-title">Sumbu Z</div>
-                    <div id="currentZ" class="card-value">{{ number_format($currentAccel['z'], 2) }}</div>
-                    <div class="card-desc">Akselerasi vertikal</div>
-                </div>
+
                 <div class="glow-card stat-card">
                     <div class="card-title">Update Terakhir</div>
                     <div id="lastUpdatedAt" class="card-value card-value-time">{{ $lastUpdatedAt ?? '--' }}</div>
@@ -140,7 +128,7 @@
                 <div class="section-header">
                     <div>
                         <h2 class="section-title">Log Sensor Terakhir</h2>
-                        <p class="section-subtitle">Riwayat 12 sampel terbaru yang dipakai untuk grafik realtime.</p>
+                        <p class="section-subtitle">10 sampel terbaru beserta level MMI dan status getaran — realtime.</p>
                     </div>
                 </div>
 
@@ -152,27 +140,81 @@
                                 <th>X</th>
                                 <th>Y</th>
                                 <th>Z</th>
-                                <th class="text-right">Magnitudo</th>
+                                <th>Magnitudo</th>
+                                <th>Level MMI</th>
+                                <th class="text-right">Status</th>
                             </tr>
                         </thead>
                         <tbody id="sample-log-body">
-                            @forelse($accelSamples as $sample)
+                            @forelse($accelLogSamples as $sample)
+                                @php
+                                    $mag = (float) $sample['magnitude'];
+                                    if ($mag < 0.34)      { $mmiLevel = 'I';      $mmiStatus = 'Aman';    $mmiColor = '#22c55e'; }
+                                    elseif ($mag < 2.8)   { $mmiLevel = 'II-III'; $mmiStatus = 'Lemah';   $mmiColor = '#86efac'; }
+                                    elseif ($mag < 7.8)   { $mmiLevel = 'IV';     $mmiStatus = 'Waspada'; $mmiColor = '#f59e0b'; }
+                                    elseif ($mag < 18.4)  { $mmiLevel = 'V';      $mmiStatus = 'Bahaya!'; $mmiColor = '#f97316'; }
+                                    else                  { $mmiLevel = 'VI+';    $mmiStatus = 'AWAS!';   $mmiColor = '#ef4444'; }
+                                @endphp
                                 <tr>
                                     <td class="text-muted">{{ $sample['time'] }}</td>
                                     <td>{{ number_format($sample['x'], 2) }}</td>
                                     <td>{{ number_format($sample['y'], 2) }}</td>
                                     <td>{{ number_format($sample['z'], 2) }}</td>
-                                    <td class="text-right">{{ number_format($sample['magnitude'], 2) }}</td>
+                                    <td>{{ number_format($sample['magnitude'], 4) }}</td>
+                                    <td><span style="font-weight: 800; color: {{ $mmiColor }};">{{ $mmiLevel }}</span></td>
+                                    <td class="text-right"><span style="font-weight: 700; color: {{ $mmiColor }};">{{ $mmiStatus }}</span></td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-muted" style="text-align: center; padding: 2rem;">Belum ada data sensor masuk.</td>
+                                    <td colspan="7" class="text-muted" style="text-align: center; padding: 2rem;">Belum ada getaran terdeteksi.</td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
             </section>
+
+            <!-- Table Log GPS -->
+            <section class="glow-card panel-card log-card">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Log Lokasi GPS Terakhir</h2>
+                        <p class="section-subtitle">10 sampel lokasi terbaru dari NEO-6M — realtime.</p>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Waktu</th>
+                                <th>Latitude</th>
+                                <th>Longitude</th>
+                                <th>Altitude</th>
+                                <th>Satelit</th>
+                                <th class="text-right">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gps-log-body">
+                            @forelse($gpsLogSamples as $gps)
+                                <tr>
+                                    <td class="text-muted">{{ $gps['time'] }}</td>
+                                    <td>{{ number_format($gps['latitude'], 7) }}</td>
+                                    <td>{{ number_format($gps['longitude'], 7) }}</td>
+                                    <td>{{ number_format($gps['altitude'], 2) }} m</td>
+                                    <td>{{ $gps['satellites'] }}</td>
+                                    <td class="text-right" style="color: {{ str_contains($gps['status'], 'FIX') ? 'var(--sigma-accent)' : 'var(--sigma-muted)' }}">{{ $gps['status'] }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="text-muted" style="text-align: center; padding: 2rem;">Belum ada data lokasi masuk.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
         </div>
 @endsection
 
@@ -186,28 +228,17 @@
             gps: @json($gps),
             currentAccel: @json($currentAccel),
             accelSamples: @json($accelSamples),
+            accelLogSamples: @json($accelLogSamples),
             summary: @json($summary),
             lastUpdatedAt: @json($lastUpdatedAt),
         };
         const dashboardDataUrl = @json($dashboardDataUrl);
-        const dashboardRefreshIntervalMs = 2000;
-        const jakartaFormatter = new Intl.DateTimeFormat('id-ID', {
-            timeZone: 'Asia/Jakarta',
-            weekday: 'long',
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false,
-        });
+
+        // Realtime polling: every 1 second
+        const REFRESH_MS = 1000;
 
         let accelChart = null;
-        const mapState = {
-            map: null,
-            marker: null,
-        };
+        const mapState = { map: null, marker: null };
 
         function updateClock() {
             const now = new Date();
@@ -215,7 +246,7 @@
             const mm = String(now.getMinutes()).padStart(2, '0');
             const ss = String(now.getSeconds()).padStart(2, '0');
             const timeStr = `${hh}:${mm}:${ss}`;
-            
+
             const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
             const dateStr = `${days[now.getDay()]}, ${String(now.getDate()).padStart(2, '0')} ${months[now.getMonth()]} ${now.getFullYear()}`;
@@ -223,38 +254,18 @@
             setText('realtime-clock', timeStr);
             setText('realtime-date', dateStr);
             setText('currentAccelTime', timeStr + ' WIB');
-            setText('lastUpdatedAt', `${String(now.getDate()).padStart(2, '0')} ${months[now.getMonth()]} ${now.getFullYear()} ${timeStr} WIB`);
-
-            // Also tick the log table timestamps every second
-            const tbody = document.getElementById('sample-log-body');
-            if (tbody) {
-                const rows = tbody.querySelectorAll('tr td:first-child');
-                rows.forEach((td, index) => {
-                    const t = new Date(now.getTime() - (index * dashboardRefreshIntervalMs));
-                    td.textContent = `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}:${String(t.getSeconds()).padStart(2, '0')} WIB`;
-                });
-            }
         }
 
         function formatNumber(value, digits = 2) {
             const numericValue = Number(value);
-
-            if (!Number.isFinite(numericValue)) {
-                return (0).toFixed(digits);
-            }
-
+            if (!Number.isFinite(numericValue)) { return (0).toFixed(digits); }
             return numericValue.toFixed(digits);
         }
 
         function setText(id, value) {
             const element = document.getElementById(id);
-
-            if (element) {
-                element.textContent = value;
-            }
+            if (element) { element.textContent = value; }
         }
-
-
 
         function buildChartOptions(samples) {
             return {
@@ -262,58 +273,46 @@
                     type: 'line',
                     height: 300,
                     fontFamily: 'Plus Jakarta Sans, system-ui, sans-serif',
-                    toolbar: {
-                        show: false,
-                    },
+                    toolbar: { show: false },
                     animations: {
                         enabled: true,
                         easing: 'easeinout',
-                        speed: 600,
-                        dynamicAnimation: {
-                            enabled: true,
-                            speed: 350,
-                        },
+                        speed: 400,
+                        dynamicAnimation: { enabled: true, speed: 300 },
                     },
                     background: 'transparent',
                 },
                 series: [
-                    { name: 'X', data: samples.map((sample) => sample.x) },
-                    { name: 'Y', data: samples.map((sample) => sample.y) },
-                    { name: 'Z', data: samples.map((sample) => sample.z) },
-                    { name: 'Magnitudo', data: samples.map((sample) => sample.magnitude) },
+                    { name: 'X', data: samples.map((s) => s.x) },
+                    { name: 'Y', data: samples.map((s) => s.y) },
+                    { name: 'Z', data: samples.map((s) => s.z) },
+                    { name: 'Magnitudo', data: samples.map((s) => s.magnitude) },
                 ],
                 xaxis: {
-                    categories: samples.map((_, index) => {
-                        const now = new Date();
-                        const reverseIndex = samples.length - 1 - index;
-                        const t = new Date(now.getTime() - (reverseIndex * 2000));
-                        return `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')} WIB`;
-                    }),
-                    labels: { 
+                    // Use real server timestamps from each sample
+                    categories: samples.map((s) => s.time || '--'),
+                    labels: {
                         style: { colors: '#A89081', fontWeight: 600 },
                         hideOverlappingLabels: true,
-                        rotate: 0
+                        rotate: 0,
                     },
                     axisBorder: { show: false },
-                    axisTicks: { show: false }
+                    axisTicks: { show: false },
                 },
                 yaxis: {
                     labels: { style: { colors: '#A89081', fontWeight: 600 } },
                 },
-                stroke: {
-                    curve: 'smooth',
-                    width: [2, 2, 2, 4],
-                },
+                stroke: { curve: 'smooth', width: [2, 2, 2, 4] },
                 colors: ['#8B5026', '#C2743E', '#E58A47', '#E13B3B'],
                 fill: {
                     type: 'gradient',
                     gradient: {
                         shade: 'light',
-                        type: "vertical",
+                        type: 'vertical',
                         opacityFrom: [0, 0, 0, 0.4],
                         opacityTo: [0, 0, 0, 0],
-                        stops: [0, 100]
-                    }
+                        stops: [0, 100],
+                    },
                 },
                 markers: {
                     size: [0, 0, 0, 3],
@@ -342,183 +341,142 @@
 
         function renderChart(samples) {
             if (typeof ApexCharts === 'undefined') return;
-
             const chartElement = document.getElementById('accelChart');
-
-            if (!chartElement) {
-                return;
-            }
+            if (!chartElement) return;
 
             if (accelChart) {
-                // To safely update categories and series without glitches in ApexCharts:
+                accelChart.updateOptions(
+                    { xaxis: { categories: samples.map((s) => s.time || '--') } },
+                    false, false
+                );
                 accelChart.updateSeries([
-                    { name: 'X', data: samples.map((sample) => sample.x) },
-                    { name: 'Y', data: samples.map((sample) => sample.y) },
-                    { name: 'Z', data: samples.map((sample) => sample.z) },
-                    { name: 'Magnitudo', data: samples.map((sample) => sample.magnitude) },
+                    { name: 'X', data: samples.map((s) => s.x) },
+                    { name: 'Y', data: samples.map((s) => s.y) },
+                    { name: 'Z', data: samples.map((s) => s.z) },
+                    { name: 'Magnitudo', data: samples.map((s) => s.magnitude) },
                 ]);
-                
-                // Generate real-time JS timeline for the chart categories
-                const now = new Date();
-                const realTimeCategories = samples.map((_, index) => {
-                    const reverseIndex = samples.length - 1 - index;
-                    const t = new Date(now.getTime() - (reverseIndex * dashboardRefreshIntervalMs));
-                    return `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')} WIB`;
-                });
-
-                accelChart.updateOptions({
-                    xaxis: {
-                        categories: realTimeCategories
-                    }
-                });
-                
                 return;
             }
 
-            const chartOptions = buildChartOptions(samples);
-            accelChart = new ApexCharts(chartElement, chartOptions);
+            accelChart = new ApexCharts(chartElement, buildChartOptions(samples));
             accelChart.render();
         }
 
-        // Tile layer URLs
+        // ─── Leaflet Map ──────────────────────────────────────────────────────
         const tileLight = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-        const tileDark = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+        const tileDark  = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
         const tileAttribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>';
 
         let sigmaIcon = null;
-
         function getSigmaIcon() {
             if (sigmaIcon) return sigmaIcon;
             if (typeof L === 'undefined') return null;
             sigmaIcon = L.divIcon({
                 className: 'sigma-map-marker',
-                html: `<div style="
-                    width: 28px; height: 28px;
-                    background: var(--sigma-accent, #C2743E);
-                    border: 3px solid #fff;
-                    border-radius: 50% 50% 50% 0;
-                    transform: rotate(-45deg);
-                    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-                    display: flex; align-items: center; justify-content: center;
-                "><div style="
-                    width: 8px; height: 8px;
-                    background: #fff;
-                    border-radius: 50%;
-                    transform: rotate(45deg);
-                "></div></div>`,
-                iconSize: [28, 28],
-                iconAnchor: [14, 28],
-                popupAnchor: [0, -30],
+                html: `<div style="width:28px;height:28px;background:var(--sigma-accent,#C2743E);border:3px solid #fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;"><div style="width:8px;height:8px;background:#fff;border-radius:50%;transform:rotate(45deg);"></div></div>`,
+                iconSize: [28, 28], iconAnchor: [14, 28], popupAnchor: [0, -30],
             });
             return sigmaIcon;
         }
-
         function getActiveTileUrl() {
             return document.documentElement.classList.contains('dark-mode') ? tileDark : tileLight;
         }
 
         function renderMap(gps) {
-            // Guard: Leaflet must be loaded
             if (typeof L === 'undefined') return;
-
-            const latitude = Number(gps.latitude);
-            const longitude = Number(gps.longitude);
-
-            if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-                return;
-            }
-
-            if (latitude === 0 && longitude === 0) {
-                return;
-            }
+            const lat = Number(gps.latitude);
+            const lng = Number(gps.longitude);
+            if (!Number.isFinite(lat) || !Number.isFinite(lng) || (lat === 0 && lng === 0)) return;
 
             const popupHtml = `
-                <div style="font-family: 'Plus Jakarta Sans', sans-serif; min-width: 180px; line-height: 1.6;">
-                    <div style="font-weight: 800; font-size: 14px; margin-bottom: 6px; color: #C2743E;">📍 GPS NEO-6M</div>
-                    <div style="font-size: 12px;">
-                        <b>Lat:</b> ${formatNumber(latitude, 7)}<br>
-                        <b>Lng:</b> ${formatNumber(longitude, 7)}<br>
+                <div style="font-family:'Plus Jakarta Sans',sans-serif;min-width:180px;line-height:1.6;">
+                    <div style="font-weight:800;font-size:14px;margin-bottom:6px;color:#C2743E;">📍 GPS NEO-6M</div>
+                    <div style="font-size:12px;">
+                        <b>Lat:</b> ${formatNumber(lat, 7)}<br>
+                        <b>Lng:</b> ${formatNumber(lng, 7)}<br>
                         <b>Alt:</b> ${formatNumber(gps.altitude, 2)} m<br>
                         <b>Sat:</b> ${gps.satellites ?? 0}<br>
                         <b>Status:</b> ${gps.status ?? 'NO FIX'}
                     </div>
-                </div>
-            `;
+                </div>`;
 
             const icon = getSigmaIcon();
-
             if (!mapState.map) {
-                mapState.map = L.map('gps-map', {
-                    center: [latitude, longitude],
-                    zoom: 15,
-                    scrollWheelZoom: true,
-                    zoomControl: false,
-                });
-
+                mapState.map = L.map('gps-map', { center: [lat, lng], zoom: 15, scrollWheelZoom: true, zoomControl: false });
                 L.control.zoom({ position: 'topright' }).addTo(mapState.map);
-
-                mapState.tileLayer = L.tileLayer(getActiveTileUrl(), {
-                    attribution: tileAttribution,
-                    maxZoom: 19,
-                }).addTo(mapState.map);
-
-                mapState.circle = L.circle([latitude, longitude], {
-                    radius: 50,
-                    color: '#C2743E',
-                    fillColor: '#C2743E',
-                    fillOpacity: 0.15,
-                    weight: 1,
-                }).addTo(mapState.map);
-
-                const markerOptions = icon ? { icon: icon } : {};
-                mapState.marker = L.marker([latitude, longitude], markerOptions).addTo(mapState.map);
+                mapState.tileLayer = L.tileLayer(getActiveTileUrl(), { attribution: tileAttribution, maxZoom: 19 }).addTo(mapState.map);
+                mapState.circle = L.circle([lat, lng], { radius: 50, color: '#C2743E', fillColor: '#C2743E', fillOpacity: 0.15, weight: 1 }).addTo(mapState.map);
+                const markerOptions = icon ? { icon } : {};
+                mapState.marker = L.marker([lat, lng], markerOptions).addTo(mapState.map);
                 mapState.marker.bindPopup(popupHtml).openPopup();
             } else {
-                if (mapState.marker) {
-                    mapState.marker.setLatLng([latitude, longitude]);
-                    mapState.marker.setPopupContent(popupHtml);
-                }
-                if (mapState.circle) {
-                    mapState.circle.setLatLng([latitude, longitude]);
-                }
-                mapState.map.flyTo([latitude, longitude], mapState.map.getZoom(), { duration: 1.5 });
+                if (mapState.marker) { mapState.marker.setLatLng([lat, lng]); mapState.marker.setPopupContent(popupHtml); }
+                if (mapState.circle) { mapState.circle.setLatLng([lat, lng]); }
+                mapState.map.flyTo([lat, lng], mapState.map.getZoom(), { duration: 1.5 });
             }
         }
 
-        // Switch tile layer when dark mode toggles
         const mapThemeObserver = new MutationObserver(() => {
-            if (mapState.map && mapState.tileLayer) {
-                mapState.tileLayer.setUrl(getActiveTileUrl());
-            }
+            if (mapState.map && mapState.tileLayer) { mapState.tileLayer.setUrl(getActiveTileUrl()); }
         });
         mapThemeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+        // ─── MMI Helper (mirrors main.ino thresholds) ─────────────────────────
+        function getMmiForMagnitude(magnitude) {
+            const m = Number(magnitude);
+            if (m < 0.34) return { level: 'I',      status: 'Aman',    color: '#22c55e' };
+            if (m < 2.8)  return { level: 'II-III',  status: 'Lemah',   color: '#86efac' };
+            if (m < 7.8)  return { level: 'IV',      status: 'Waspada', color: '#f59e0b' };
+            if (m < 18.4) return { level: 'V',       status: 'Bahaya!', color: '#f97316' };
+            return               { level: 'VI+',      status: 'AWAS!',   color: '#ef4444' };
+        }
 
         function renderSampleTable(samples) {
             const tbody = document.getElementById('sample-log-body');
             if (!tbody) return;
 
             if (!samples || samples.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="text-muted" style="text-align: center; padding: 2rem;">Belum ada data sensor masuk.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="text-muted" style="text-align:center;padding:2rem;">Belum ada getaran terdeteksi.</td></tr>`;
                 return;
             }
 
-            const now = new Date();
             let html = '';
-            
-            // Display newest samples first in the log
-            const displaySamples = [...samples].reverse();
-            
-            displaySamples.forEach((sample, index) => {
-                // Calculate dynamic live time to match the chart's ticking x-axis
-                const t = new Date(now.getTime() - (index * dashboardRefreshIntervalMs));
-                const liveTime = `${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}:${String(t.getSeconds()).padStart(2, '0')} WIB`;
-
+            // Newest first, use real server timestamp
+            [...samples].reverse().forEach((sample) => {
+                const mmi = getMmiForMagnitude(sample.magnitude);
                 html += `<tr>
-                    <td class="text-muted">${liveTime}</td>
+                    <td class="text-muted">${sample.time ?? '--'}</td>
                     <td>${formatNumber(sample.x, 2)}</td>
                     <td>${formatNumber(sample.y, 2)}</td>
                     <td>${formatNumber(sample.z, 2)}</td>
-                    <td class="text-right">${formatNumber(sample.magnitude, 2)}</td>
+                    <td>${formatNumber(sample.magnitude, 4)}</td>
+                    <td><span style="font-weight:800;color:${mmi.color};">${mmi.level}</span></td>
+                    <td class="text-right"><span style="font-weight:700;color:${mmi.color};">${mmi.status}</span></td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function renderGpsTable(samples) {
+            const tbody = document.getElementById('gps-log-body');
+            if (!tbody) return;
+
+            if (!samples || samples.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-muted" style="text-align:center;padding:2rem;">Belum ada data lokasi masuk.</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            // Newest first
+            [...samples].reverse().forEach((sample) => {
+                const statusColor = String(sample.status).includes('FIX') ? 'var(--sigma-accent)' : 'var(--sigma-muted)';
+                html += `<tr>
+                    <td class="text-muted">${sample.time ?? '--'}</td>
+                    <td>${formatNumber(sample.latitude, 7)}</td>
+                    <td>${formatNumber(sample.longitude, 7)}</td>
+                    <td>${formatNumber(sample.altitude, 2)} m</td>
+                    <td>${sample.satellites ?? 0}</td>
+                    <td class="text-right"><span style="font-weight:700;color:${statusColor};">${sample.status ?? 'NO FIX'}</span></td>
                 </tr>`;
             });
             tbody.innerHTML = html;
@@ -527,43 +485,44 @@
         function applyDashboardData(data) {
             if (!data) return;
 
-            const accel = data.currentAccel || {};
-            const gps = data.gps || {};
-            const summary = data.summary || {};
-            const samples = data.accelSamples || [];
+            const accel      = data.currentAccel    || {};
+            const gps        = data.gps             || {};
+            const summary    = data.summary          || {};
+            const samples    = data.accelSamples     || [];
+            // Log uses filtered samples (only where magnitude >= 0.34)
+            const logSamples = data.accelLogSamples  || [];
+            const gpsLogSamples = data.gpsLogSamples || [];
 
             setText('currentMagnitude', formatNumber(accel.magnitude));
-            setText('currentX', formatNumber(accel.x));
-            setText('currentY', formatNumber(accel.y));
-            setText('currentZ', formatNumber(accel.z));
             setText('currentAxes', `${formatNumber(accel.x)} / ${formatNumber(accel.y)} / ${formatNumber(accel.z)}`);
+            setText('lastUpdatedAt', accel.time ?? '--');
 
-            setText('gpsLatitude', formatNumber(gps.latitude, 7));
-            setText('gpsLongitude', formatNumber(gps.longitude, 7));
-            setText('gpsAltitude', `${formatNumber(gps.altitude, 2)} m`);
+            setText('gpsLatitude',   formatNumber(gps.latitude, 7));
+            setText('gpsLongitude',  formatNumber(gps.longitude, 7));
+            setText('gpsAltitude',   `${formatNumber(gps.altitude, 2)} m`);
             setText('gpsSatellites', gps.satellites ?? 0);
-            setText('gpsStatus', gps.status ?? 'NO FIX');
+            setText('gpsStatus',     gps.status ?? 'NO FIX');
             setText('gpsRecordedAt', gps.recorded_at ?? '--');
 
             setText('magnitudeMaximum', formatNumber(summary.maximum));
             setText('magnitudeAverage', formatNumber(summary.average));
-            setText('sampleCount', String(summary.count ?? 0));
+            setText('sampleCount',      String(summary.count ?? 0));
 
-            try { renderChart(samples); } catch (e) { console.warn('[SIGMA] Chart error:', e); }
-            try { renderMap(gps); } catch (e) { console.warn('[SIGMA] Map error:', e); }
-            try { renderSampleTable(samples); } catch (e) { console.warn('[SIGMA] Table error:', e); }
+            try { renderChart(samples); }        catch (e) { console.warn('[SIGMA] Chart error:', e); }
+            try { renderMap(gps); }              catch (e) { console.warn('[SIGMA] Map error:', e); }
+            try { renderSampleTable(logSamples); } catch (e) { console.warn('[SIGMA] Table error:', e); }
+            try { renderGpsTable(gpsLogSamples); } catch (e) { console.warn('[SIGMA] GPS Table error:', e); }
         }
 
-        // Fetch with timeout + abort controller to prevent hanging
+        // ─── Polling (1 second) ───────────────────────────────────────────────
         let isRefreshing = false;
 
         async function refreshDashboardData() {
-            // Prevent overlapping requests
             if (isRefreshing) return;
             isRefreshing = true;
 
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+            const timeoutId = setTimeout(() => controller.abort(), 3000);
 
             try {
                 const response = await fetch(`${dashboardDataUrl}?t=${Date.now()}`, {
@@ -572,56 +531,38 @@
                     credentials: 'same-origin',
                     signal: controller.signal,
                 });
-
                 clearTimeout(timeoutId);
-
                 if (!response.ok) return;
-
                 const data = await response.json();
                 applyDashboardData(data);
             } catch (error) {
                 clearTimeout(timeoutId);
-                if (error.name !== 'AbortError') {
-                    console.warn('[SIGMA] Refresh failed:', error.message);
-                }
+                if (error.name !== 'AbortError') { console.warn('[SIGMA] Refresh failed:', error.message); }
             } finally {
                 isRefreshing = false;
             }
         }
 
-        // ===== JAM REALTIME: jalankan PERTAMA dan INDEPENDEN =====
-        // Jam berjalan di scope terpisah agar tidak bisa dimatikan oleh error apapun
+        // ─── Boot ─────────────────────────────────────────────────────────────
         (function startClock() {
-            try { updateClock(); } catch (e) { /* silent */ }
-            setInterval(function () {
-                try { updateClock(); } catch (e) { /* silent */ }
-            }, 1000);
+            try { updateClock(); } catch (e) {}
+            setInterval(function () { try { updateClock(); } catch (e) {} }, 1000);
         })();
 
-        // ===== DATA SENSOR: jalankan terpisah =====
-        try {
-            applyDashboardData(initialDashboardData);
-        } catch (e) {
+        try { applyDashboardData(initialDashboardData); } catch (e) {
             console.error('[SIGMA] Error applying initial data:', e);
         }
 
-        // Refresh data setiap 2 detik (terpisah dari jam)
-        setInterval(function () {
-            refreshDashboardData();
-        }, dashboardRefreshIntervalMs);
-
-        // Juga jalankan refresh pertama kali
+        setInterval(refreshDashboardData, REFRESH_MS);
         refreshDashboardData();
 
-        // Dark mode observer untuk chart
+        // Dark mode observer for chart
         const observer = new MutationObserver(() => {
             if (accelChart) {
                 try {
                     const isDark = document.documentElement.classList.contains('dark-mode');
-                    accelChart.updateOptions({
-                        tooltip: { theme: isDark ? 'dark' : 'light' }
-                    });
-                } catch (e) { /* silent */ }
+                    accelChart.updateOptions({ tooltip: { theme: isDark ? 'dark' : 'light' } });
+                } catch (e) {}
             }
         });
         observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });

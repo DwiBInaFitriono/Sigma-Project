@@ -15,33 +15,47 @@
                 <i class="fa-solid fa-gauge-high"></i>
                 <span>Dashboard</span>
             </a>
-            <a href="{{ route('alarm') }}" class="sidebar-link {{ request()->routeIs('alarm') ? 'active' : '' }}">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-                <span>Alarm</span>
+            
+            <div class="sidebar-dropdown">
+                <button class="sidebar-dropdown-toggle" type="button" onclick="this.parentElement.classList.toggle('active')">
+                    <div class="sidebar-dropdown-title">
+                        <i class="fa-solid fa-microchip"></i>
+                        <span>Data Sensor</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-down dropdown-icon"></i>
+                </button>
+                <div class="sidebar-dropdown-menu-wrapper">
+                    <div class="sidebar-dropdown-menu">
+                        <a href="{{ route('accelerometer') }}" class="sidebar-link {{ request()->routeIs('accelerometer') ? 'active' : '' }}">
+                            <i class="fa-solid fa-chart-line"></i>
+                            <span>Accelerometer</span>
+                        </a>
+                        <a href="{{ route('gps') }}" class="sidebar-link {{ request()->routeIs('gps') ? 'active' : '' }}">
+                            <i class="fa-solid fa-location-dot"></i>
+                            <span>GPS</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <a href="{{ route('history') }}" class="sidebar-link {{ request()->routeIs('history') ? 'active' : '' }}">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>History</span>
             </a>
-            <a href="#gps-map" class="sidebar-link">
-                <i class="fa-solid fa-location-dot"></i>
-                <span>GPS</span>
+
+            <a href="{{ route('controller') }}" class="sidebar-link {{ request()->routeIs('controller') ? 'active' : '' }}">
+                <i class="fa-solid fa-sliders"></i>
+                <span>Kontroller</span>
             </a>
-            <a href="#accelChart" class="sidebar-link">
-                <i class="fa-solid fa-chart-line"></i>
-                <span>Grafik</span>
-            </a>
+
+            @if(auth()->check() && auth()->user()->isAdmin())
+                <a href="{{ route('users.index') }}" class="sidebar-link {{ request()->routeIs('users.*') ? 'active' : '' }}">
+                    <i class="fa-solid fa-users-gear"></i>
+                    <span>Manajemen Pengguna</span>
+                </a>
+            @endif
         </nav>
 
-        <div class="sidebar-footer">
-            <span class="sidebar-user">Halo, {{ auth()->user()?->name ?? auth()->user()?->email ?? 'User' }}</span>
-            <button id="theme-toggle-desktop" class="btn-logout-sidebar" style="background: var(--sigma-surface-2); color: var(--sigma-text); border: 1px solid var(--sigma-border); margin-bottom: 0.5rem;" type="button">
-                <i class="fa-solid fa-moon"></i>
-                <span>Dark Mode</span>
-            </button>
-            <form action="{{ route('logout') }}" method="POST">
-                @csrf
-                <button type="submit" class="btn-logout-sidebar">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                    <span>Logout</span>
-                </button>
-            </form>
-        </div>
+
     </div>
 </aside>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AccelerometerData;
 use App\Models\GPSData;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Carbon;
 
 abstract class Controller
 {
@@ -26,17 +27,35 @@ abstract class Controller
     {
         $latestGps = GPSData::query()->latest('recorded_at')->first();
         $latestAccelerometer = AccelerometerData::query()->latest('recorded_at')->first();
+        // Chart samples: all readings (including idle) for smooth graph
         $accelerometerSamples = AccelerometerData::query()
             ->latest('recorded_at')
             ->limit($sampleLimit)
             ->get();
 
+        // Log samples: only entries with detected magnitude (>= 0.34 = MMI Level I)
+        $accelerometerLogSamples = AccelerometerData::query()
+            ->where('magnitude', '>=', 0.34)
+            ->latest('recorded_at')
+            ->limit($sampleLimit)
+            ->get();
+
         $accelerometerSamples = $accelerometerSamples->sortBy('recorded_at')->values();
+        $accelerometerLogSamples = $accelerometerLogSamples->sortBy('recorded_at')->values();
+
+        $gpsLogSamples = GPSData::query()
+            ->latest('recorded_at')
+            ->limit($sampleLimit)
+            ->get()
+            ->sortBy('recorded_at')
+            ->values();
 
         return [
             'gps' => $this->formatGpsData($latestGps),
             'currentAccel' => $this->formatAccelerometerData($latestAccelerometer),
             'accelSamples' => $this->formatAccelerometerSamples($accelerometerSamples),
+            'accelLogSamples' => $this->formatAccelerometerSamplesWithMmi($accelerometerLogSamples),
+            'gpsLogSamples' => $this->formatGpsSamples($gpsLogSamples),
             'summary' => $this->buildAccelerometerSummary($accelerometerSamples),
             'lastUpdatedAt' => $this->resolveLastUpdatedAt($latestGps, $latestAccelerometer),
         ];
@@ -52,6 +71,7 @@ abstract class Controller
                 'satellites' => 0,
                 'status' => 'NO FIX',
                 'recorded_at' => '--',
+                'is_connected' => false,
             ];
         }
 
@@ -62,7 +82,22 @@ abstract class Controller
             'satellites' => (int) $gps->satellites,
             'status' => $gps->status,
             'recorded_at' => $this->formatWibTimestamp($gps->recorded_at?->timezone($this->dashboardTimezone()), 'd M Y H:i:s'),
+            'is_connected' => $gps->recorded_at && $gps->recorded_at->diffInSeconds(now()) < 10,
         ];
+    }
+
+    protected function formatGpsSamples(EloquentCollection $samples): array
+    {
+        return $samples->map(function (GPSData $sample): array {
+            return [
+                'time' => $this->formatWibTimestamp($sample->recorded_at?->timezone($this->dashboardTimezone()), 'H:i:s'),
+                'latitude' => (float) $sample->latitude,
+                'longitude' => (float) $sample->longitude,
+                'altitude' => (float) ($sample->altitude ?? 0.0),
+                'satellites' => (int) $sample->satellites,
+                'status' => $sample->status ?? 'NO FIX',
+            ];
+        })->all();
     }
 
     protected function formatAccelerometerData(?AccelerometerData $accelerometer): array
@@ -75,6 +110,7 @@ abstract class Controller
                 'magnitude' => 0.0,
                 'time' => '--',
                 'sensor_time' => '--',
+                'is_connected' => false,
             ];
         }
 
@@ -85,6 +121,7 @@ abstract class Controller
             'magnitude' => (float) $accelerometer->magnitude,
             'time' => $this->formatWibTimestamp($accelerometer->created_at?->timezone($this->dashboardTimezone()), 'H:i:s'),
             'sensor_time' => $this->formatWibTimestamp($accelerometer->recorded_at?->timezone($this->dashboardTimezone()), 'H:i:s'),
+            'is_connected' => $accelerometer->recorded_at && $accelerometer->recorded_at->diffInSeconds(now()) < 10,
         ];
     }
 
@@ -97,6 +134,27 @@ abstract class Controller
                 'y' => (float) $sample->y,
                 'z' => (float) $sample->z,
                 'magnitude' => (float) $sample->magnitude,
+            ];
+        })->all();
+    }
+
+    /**
+     * Format accelerometer samples including MMI level/status — used for log tables.
+     */
+    protected function formatAccelerometerSamplesWithMmi(EloquentCollection $samples): array
+    {
+        return $samples->map(function (AccelerometerData $sample): array {
+            $mmi = $this->getMmiStatus((float) $sample->magnitude);
+
+            return [
+                'time' => $this->formatWibTimestamp($sample->recorded_at?->timezone($this->dashboardTimezone()), 'H:i:s'),
+                'x' => (float) $sample->x,
+                'y' => (float) $sample->y,
+                'z' => (float) $sample->z,
+                'magnitude' => (float) $sample->magnitude,
+                'mmi_level' => $mmi['level'],
+                'mmi_status' => $mmi['status'],
+                'mmi_color' => $mmi['color'],
             ];
         })->all();
     }
@@ -134,5 +192,83 @@ abstract class Controller
             ->first();
 
         return $this->formatWibTimestamp($latestTimestamp?->timezone($this->dashboardTimezone()), 'd M Y H:i:s');
+    }
+
+    /**
+     * Determine MMI level and status label from magnitude (PGA) value.
+     * Thresholds mirror the getStatusMMI() function in main.ino.
+     *
+     * @return array{level: string, status: string, color: string}
+     */
+    protected function getMmiStatus(float $magnitude): array
+    {
+        if ($magnitude < 0.34) {
+            return ['level' => 'I', 'status' => 'Aman', 'color' => '#22c55e'];
+        }
+
+        if ($magnitude < 2.8) {
+            return ['level' => 'II-III', 'status' => 'Lemah', 'color' => '#86efac'];
+        }
+
+        if ($magnitude < 7.8) {
+            return ['level' => 'IV', 'status' => 'Waspada', 'color' => '#f59e0b'];
+        }
+
+        if ($magnitude < 18.4) {
+            return ['level' => 'V', 'status' => 'Bahaya!', 'color' => '#f97316'];
+        }
+
+        return ['level' => 'VI+', 'status' => 'AWAS!', 'color' => '#ef4444'];
+    }
+
+    /**
+     * Collect accelerometer log entries from the last N minutes.
+     * Only includes entries with detected seismic magnitude (>= 0.34 = MMI Level I).
+     * Each entry includes MMI level and status.
+     */
+    protected function collectAccelerometerLog(int $minutes = 5): array
+    {
+        return AccelerometerData::query()
+            ->where('recorded_at', '>=', Carbon::now()->subMinutes($minutes))
+            ->where('magnitude', '>=', 0.34)
+            ->orderByDesc('recorded_at')
+            ->get()
+            ->map(function (AccelerometerData $sample): array {
+                $mmi = $this->getMmiStatus((float) $sample->magnitude);
+
+                return [
+                    'time' => $this->formatWibTimestamp($sample->recorded_at?->timezone($this->dashboardTimezone()), 'H:i:s'),
+                    'x' => (float) $sample->x,
+                    'y' => (float) $sample->y,
+                    'z' => (float) $sample->z,
+                    'magnitude' => (float) $sample->magnitude,
+                    'mmi_level' => $mmi['level'],
+                    'mmi_status' => $mmi['status'],
+                    'mmi_color' => $mmi['color'],
+                ];
+            })
+            ->all();
+    }
+
+    /**
+     * Collect GPS log entries from the last N minutes.
+     */
+    protected function collectGpsLog(int $minutes = 5): array
+    {
+        return GPSData::query()
+            ->where('recorded_at', '>=', Carbon::now()->subMinutes($minutes))
+            ->orderByDesc('recorded_at')
+            ->get()
+            ->map(function (GPSData $gps): array {
+                return [
+                    'time' => $this->formatWibTimestamp($gps->recorded_at?->timezone($this->dashboardTimezone()), 'H:i:s'),
+                    'latitude' => (float) $gps->latitude,
+                    'longitude' => (float) $gps->longitude,
+                    'altitude' => $gps->altitude === null ? 0.0 : (float) $gps->altitude,
+                    'satellites' => (int) $gps->satellites,
+                    'status' => $gps->status ?? 'NO FIX',
+                ];
+            })
+            ->all();
     }
 }

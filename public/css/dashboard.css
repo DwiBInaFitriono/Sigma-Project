@@ -212,6 +212,77 @@ body.sigma-app::before {
     color: var(--sigma-accent);
 }
 
+/* Sidebar Dropdown */
+.sidebar-dropdown {
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-dropdown-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 1rem 1.25rem;
+    color: var(--sigma-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--sigma-radius-btn);
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: all 0.2s ease;
+}
+
+.sidebar-dropdown-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.sidebar-dropdown-title i {
+    width: 1.25rem;
+    text-align: center;
+}
+
+.dropdown-icon {
+    font-size: 0.8rem;
+    transition: transform 0.3s ease;
+}
+
+.sidebar-dropdown-toggle:hover {
+    color: var(--sigma-text);
+    background: var(--sigma-surface-2);
+}
+
+.sidebar-dropdown-menu-wrapper {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.3s ease;
+}
+
+.sidebar-dropdown.active .sidebar-dropdown-menu-wrapper {
+    grid-template-rows: 1fr;
+}
+
+.sidebar-dropdown-menu {
+    overflow: hidden;
+    display: grid;
+    gap: 0.25rem;
+}
+
+.sidebar-dropdown-menu .sidebar-link {
+    padding: 0.75rem 1.25rem 0.75rem 3.5rem;
+    font-size: 0.9rem;
+    color: var(--sigma-muted);
+}
+
+.sidebar-dropdown-menu .sidebar-link:hover {
+    color: var(--sigma-text);
+    background: transparent;
+}
+
 .sidebar-footer {
     margin-top: auto;
     display: grid;
@@ -249,7 +320,7 @@ body.sigma-app::before {
 .panel-content {
     flex: 1;
     min-width: 0;
-    padding: 3rem 4rem;
+    padding: 0 4rem 3rem 4rem;
     overflow-y: auto;
 }
 
@@ -258,6 +329,86 @@ body.sigma-app::before {
 }
 .panel-content::-webkit-scrollbar-thumb {
     background: var(--sigma-border);
+}
+
+/* ── Content Topbar ── */
+.content-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin: 0 -4rem 2rem -4rem;
+    padding: 0 4rem;
+    height: 107px;
+    box-sizing: border-box;
+    background: var(--sigma-surface);
+    backdrop-filter: var(--sigma-blur);
+    border-bottom: 1px solid var(--sigma-border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.topbar-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--sigma-border);
+    border-radius: var(--sigma-radius-btn);
+    background: transparent;
+    color: var(--sigma-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+}
+
+.topbar-icon-btn:hover {
+    background: var(--sigma-surface-2);
+    color: var(--sigma-accent);
+    border-color: var(--sigma-accent);
+}
+
+.topbar-logout-btn:hover {
+    background: #c1421a;
+    color: #fff;
+    border-color: #c1421a;
+}
+
+.topbar-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.35rem 0.75rem 0.35rem 0.35rem;
+    border-radius: var(--sigma-radius-btn);
+    border: 1px solid var(--sigma-border);
+    background: var(--sigma-surface-2);
+}
+
+.topbar-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--sigma-accent);
+    color: #fff;
+    font-size: 0.7rem;
+}
+
+.topbar-user-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--sigma-text);
+    letter-spacing: -0.02em;
 }
 
 .panel-page {
@@ -323,7 +474,7 @@ body.sigma-app::before {
 
 .summary-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
 }
 
@@ -633,14 +784,20 @@ body.sigma-app::before {
         grid-template-columns: 1fr;
     }
     .panel-content {
-        padding: 2rem;
+        padding: 0 2rem 2rem 2rem;
+    }
+    .content-topbar {
+        margin: 0 -2rem 2rem -2rem;
+        padding: 0.75rem 2rem;
     }
 }
 
 @media (max-width: 768px) {
-    .mobile-top-nav,
-    .bottom-nav {
+    .mobile-top-nav {
         display: flex;
+    }
+    .bottom-nav {
+        display: none;
     }
     .sidebar {
         position: fixed;
@@ -651,12 +808,21 @@ body.sigma-app::before {
         left: 0;
     }
     .panel-content {
-        padding: 6rem 1rem 6rem 1rem;
+        padding: 5.25rem 1rem 1.5rem 1rem;
+        overflow-wrap: break-word;
+        word-break: break-word;
+    }
+    .panel-page {
+        overflow: hidden;
+        max-width: 100%;
     }
     .content-header-flex {
         flex-direction: column;
         align-items: flex-start;
         gap: 1.5rem;
+    }
+    .content-header-flex p {
+        font-size: 0.95rem;
     }
     .datetime-widget {
         text-align: left;
