@@ -86,7 +86,7 @@
                 <section class="glow-card panel-card">
                     <div class="section-header">
                         <div>
-                            <h2 class="section-title">Akselerometer</h2>
+                            <h2 class="section-title">Sensor ADXL345</h2>
                             <p class="section-subtitle">Grafik realtime + ringkasan nilai sensor ADXL345.</p>
                         </div>
                         <span class="status-pill realtime">Realtime</span>

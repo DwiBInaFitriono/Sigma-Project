@@ -31,7 +31,7 @@
         <div class="sensor-ctrl-card">
             <div class="sensor-ctrl-card-header">
                 <div>
-                    <h2 class="sensor-ctrl-card-title">Akselerometer</h2>
+                    <h2 class="sensor-ctrl-card-title">Sensor ADXL345</h2>
                     <p class="sensor-ctrl-card-sub">ADXL345 — Sensor Getaran 3-Axis</p>
                 </div>
                 <span id="accel-conn-badge"
@@ -236,7 +236,7 @@
 
     // ── Reset Default ──────────────────────────────────────────────────────────
     async function resetSensor(sensorType, msgEl) {
-        if (!confirm(`Reset sensor ${sensorType === 'accelerometer' ? 'Akselerometer' : 'GPS'} ke pengaturan default?`)) return;
+        if (!confirm(`Reset sensor ${sensorType === 'accelerometer' ? 'Sensor ADXL345' : 'GPS'} ke pengaturan default?`)) return;
         try {
             const res = await fetch(RESET_URL, {
                 method: 'POST',

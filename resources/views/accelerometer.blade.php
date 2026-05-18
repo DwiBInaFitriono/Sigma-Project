@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Accelerometer ADXL345')
+@section('title', 'Sensor ADXL345')
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
@@ -13,7 +13,7 @@
         <div class="content-header-flex">
             <div>
                 <p class="content-subtitle">DATA SENSOR KHUSUS</p>
-                <h1 class="content-title">ADXL345 Accelerometer</h1>
+                <h1 class="content-title">Sensor ADXL345</h1>
                 <p class="content-desc">Pantau grafik getaran dan log sensor secara realtime langsung dari ESP32.</p>
             </div>
             <div class="datetime-widget">
@@ -25,11 +25,11 @@
 
     <div class="dashboard-grid">
         <div class="dashboard-main">
-            <!-- Akselerometer Section -->
+            <!-- Sensor ADXL345 Section -->
             <section id="accelChart" class="glow-card panel-card accel-card">
                 <div class="section-header">
                     <div>
-                        <h2 class="section-title">Akselerometer Realtime</h2>
+                        <h2 class="section-title">Sensor ADXL345 Realtime</h2>
                         <p class="section-subtitle">Grafik realtime + ringkasan nilai sensor ADXL345.</p>
                     </div>
                     <div class="live-badge">REALTIME</div>

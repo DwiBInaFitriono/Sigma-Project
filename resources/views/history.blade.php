@@ -40,7 +40,7 @@
         <section class="glow-card panel-card log-card">
             <div class="section-header">
                 <div>
-                    <h2 class="section-title">Log Akselerometer (ADXL345)</h2>
+                    <h2 class="section-title">Sensor ADXL345</h2>
                     <p class="section-subtitle">Riwayat getaran terdeteksi (magnitudo ≥ 0.34) pada tanggal {{ \Carbon\Carbon::parse($selectedDate)->translatedFormat('d F Y') }}.</p>
                 </div>
                 <div class="live-badge" style="background: var(--sigma-bg-alt); color: var(--sigma-text);">TOTAL: {{ $accelerometerLogs->total() }} GEMPA</div>
@@ -326,7 +326,7 @@
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(0, 0, 0);
-            doc.text('1. Riwayat Getaran Akselerometer', margin, currentY);
+            doc.text('1. Riwayat Getaran Sensor ADXL345', margin, currentY);
             currentY += 15;
 
             if (chartImage) {

@@ -24,7 +24,7 @@
                     <div class="sidebar-dropdown-menu">
                         <a href="{{ route('accelerometer') }}" class="sidebar-link {{ request()->routeIs('accelerometer') ? 'active' : '' }}">
                             <i class="fa-solid fa-chart-line"></i>
-                            <span>Accelerometer</span>
+                            <span>Sensor ADXL345</span>
                         </a>
                         <a href="{{ route('gps') }}" class="sidebar-link {{ request()->routeIs('gps') ? 'active' : '' }}">
                             <i class="fa-solid fa-location-dot"></i>
