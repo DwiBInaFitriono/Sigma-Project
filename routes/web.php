@@ -47,5 +47,9 @@ Route::middleware('auth')->group(function () {
         Route::delete('/users/{user}', [\App\Http\Controllers\UserController::class, 'destroy'])->name('users.destroy');
     });
 
+    // Profile Routes
+    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });

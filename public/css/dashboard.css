@@ -426,6 +426,59 @@ body.sigma-app::before {
     letter-spacing: -0.02em;
 }
 
+/* Profile Dropdown Styles */
+.profile-dropdown-container {
+    position: relative;
+    display: inline-block;
+}
+
+.profile-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    width: max-content;
+    min-width: 150px;
+    background: var(--sigma-surface-2);
+    border: 1px solid var(--sigma-border);
+    border-radius: var(--sigma-radius-card);
+    box-shadow: var(--sigma-glow);
+    backdrop-filter: var(--sigma-blur);
+    padding: 0.5rem 0;
+    z-index: 1050;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+}
+
+.profile-dropdown-container.is-open .profile-dropdown-menu {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.profile-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    color: var(--sigma-text);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.profile-dropdown-item:hover {
+    background: var(--sigma-border);
+    color: var(--sigma-accent);
+}
+
+.profile-dropdown-item i {
+    width: 1rem;
+    text-align: center;
+}
+
 .panel-page {
     display: grid;
     gap: 2.5rem;

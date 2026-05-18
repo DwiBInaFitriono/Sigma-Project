@@ -154,7 +154,7 @@
 	}
 
 	.mobile-user {
-		display: none;
+		display: inline-block; /* Show mobile user */
 	}
 
 	.panel-content {
