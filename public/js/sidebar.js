@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (overlay) {
             overlay.classList.add('is-visible');
-            overlay.style.display = 'block';
         }
     }
 
@@ -24,7 +23,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (overlay) {
             overlay.classList.remove('is-visible');
-            overlay.style.display = 'none';
         }
     }
 
@@ -40,11 +38,6 @@ document.addEventListener('DOMContentLoaded', function () {
             
             if (overlay) {
                 overlay.classList.toggle('is-visible');
-                if (overlay.classList.contains('is-visible')) {
-                    overlay.style.display = 'block';
-                } else {
-                    overlay.style.display = 'none';
-                }
             }
         });
     }

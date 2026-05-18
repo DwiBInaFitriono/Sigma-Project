@@ -35,9 +35,17 @@ html.dark-mode {
 
 * {
     box-sizing: border-box;
+}
+
+a, button, input, select, textarea, .glow-card, .panel-card, .dashboard-chart-card, 
+.sidebar-link, .topbar-icon-btn, .sidebar-dropdown-toggle, .bottom-nav-link, 
+.btn-logout-sidebar, .btn-toggle-sidebar, .btn-mobile-logout, .sidebar-close-toggle,
+.power-btn, .ctrl-apply-btn, .ctrl-reset-btn, .btn-submit, .btn-role, .btn-delete, .dashboard-info-card {
     transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
                 border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-                box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                color 0.2s ease,
+                transform 0.2s ease;
 }
 
 html {
@@ -127,12 +135,19 @@ body.sigma-app::before {
 }
 
 .sidebar-overlay {
-    display: none;
+    visibility: hidden;
+    opacity: 0;
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(4px);
     z-index: 1090;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.sidebar-overlay.is-visible {
+    visibility: visible;
+    opacity: 1;
 }
 
 .sidebar {

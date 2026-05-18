@@ -76,7 +76,7 @@
             {{-- Actions --}}
             <div class="ctrl-action-row">
                 <button type="button" class="ctrl-apply-btn" onclick="applySensitivity('accel-msg')">
-                    <i class="fa-solid fa-sliders"></i> Terapkan Sensitivitas
+                    Terapkan Sensitivitas
                 </button>
                 <button type="button" class="ctrl-reset-btn" onclick="resetSensor('accelerometer','accel-msg')">
                     <i class="fa-solid fa-rotate-left"></i> Reset Default
