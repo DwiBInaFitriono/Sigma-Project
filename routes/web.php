@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('is_admin')->group(function () {
         Route::get('/users', [\App\Http\Controllers\UserController::class, 'index'])->name('users.index');
         Route::post('/users', [\App\Http\Controllers\UserController::class, 'store'])->name('users.store');
+        Route::patch('/users/{user}/role', [\App\Http\Controllers\UserController::class, 'updateRole'])->name('users.updateRole');
         Route::delete('/users/{user}', [\App\Http\Controllers\UserController::class, 'destroy'])->name('users.destroy');
     });
 

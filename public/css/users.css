@@ -74,6 +74,22 @@
     background: #e11d48;
     color: white;
 }
+.btn-role {
+    background: rgba(214, 196, 176, 0.1);
+    color: var(--sigma-text);
+    border: 1px solid rgba(214, 196, 176, 0.2);
+    padding: 0.4rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.btn-role:hover {
+    background: var(--sigma-accent);
+    color: white;
+    border-color: var(--sigma-accent);
+}
 .badge {
     padding: 0.25rem 0.75rem;
     border-radius: 50px;

@@ -53,4 +53,23 @@ class UserController extends Controller
 
         return back()->with('success', 'Pengguna berhasil dihapus.');
     }
+
+    /**
+     * Update the role of the specified user.
+     */
+    public function updateRole(Request $request, User $user)
+    {
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'Anda tidak dapat mengubah role Anda sendiri.');
+        }
+
+        $request->validate([
+            'role' => ['required', 'in:admin,user'],
+        ]);
+
+        $user->update(['role' => $request->role]);
+
+        $roleName = $request->role === 'admin' ? 'Admin' : 'User';
+        return back()->with('success', "Role pengguna {$user->name} berhasil diubah menjadi {$roleName}.");
+    }
 }

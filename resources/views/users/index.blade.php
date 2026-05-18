@@ -116,6 +116,21 @@
                                 <td class="text-muted">{{ $user->created_at->translatedFormat('d M Y') }}</td>
                                 <td class="text-right">
                                     @if($user->id !== auth()->id())
+                                        <form action="{{ route('users.updateRole', $user) }}" method="POST" style="display: inline-block; margin-right: 0.25rem;">
+                                            @csrf
+                                            @method('PATCH')
+                                            @if($user->isAdmin())
+                                                <input type="hidden" name="role" value="user">
+                                                <button type="submit" class="btn-role" title="Jadikan User Biasa" onclick="return confirm('Turunkan role pengguna ini menjadi User?');">
+                                                    Jadikan User
+                                                </button>
+                                            @else
+                                                <input type="hidden" name="role" value="admin">
+                                                <button type="submit" class="btn-role" title="Jadikan Admin" onclick="return confirm('Jadikan pengguna ini sebagai Admin?');">
+                                                    Jadikan Admin
+                                                </button>
+                                            @endif
+                                        </form>
                                         <form action="{{ route('users.destroy', $user) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengguna ini?');" style="display: inline-block;">
                                             @csrf
                                             @method('DELETE')
