@@ -1,8 +1,8 @@
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-inner">
-        <div class="sidebar-header">
+        <div class="sidebar-header" style="justify-content: center;">
             <a href="{{ route('dashboard') }}" class="sidebar-brand-wrap" style="text-decoration: none; color: inherit;">
-                <h2 class="sidebar-brand">SIGMA</h2>
+                <h2 class="sidebar-brand">S.I.G.M.A</h2>
             </a>
         </div>
 
