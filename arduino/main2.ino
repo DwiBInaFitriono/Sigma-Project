@@ -22,10 +22,10 @@
 // ---------------------------------------------------------
 // NETWORK & API CONFIGURATION
 // ---------------------------------------------------------
-const char* WIFI_SSID = "RIO";
-const char* WIFI_PASSWORD = "riomia454706";
+const char* WIFI_SSID = "Maison";
+const char* WIFI_PASSWORD = "SANGATLUXU";
 const char* DEVICE_ID = "esp32-sigma-01";
-const char* API_BASE_URL = "http://192.168.0.107:8000/api";
+const char* API_BASE_URL = "http://192.168.1.8:8000/api";
 
 // ---------------------------------------------------------
 // GLOBAL OBJECTS

@@ -234,8 +234,8 @@
         };
         const dashboardDataUrl = @json($dashboardDataUrl);
 
-        // Realtime polling: every 1 second
-        const REFRESH_MS = 1000;
+        // Realtime polling: every 5 seconds (optimized for mobile)
+        const REFRESH_MS = 5000;
 
         let accelChart = null;
         const mapState = { map: null, marker: null };
@@ -554,6 +554,7 @@
                 if (error.name !== 'AbortError') { console.warn('[SIGMA] Refresh failed:', error.message); }
             } finally {
                 isRefreshing = false;
+                setTimeout(refreshDashboardData, REFRESH_MS);
             }
         }
 
@@ -567,7 +568,6 @@
             console.error('[SIGMA] Error applying initial data:', e);
         }
 
-        setInterval(refreshDashboardData, REFRESH_MS);
         refreshDashboardData();
 
         // Dark mode observer for chart

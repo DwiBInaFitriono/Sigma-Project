@@ -150,8 +150,8 @@
         const dashboardDataUrl = @json($dashboardDataUrl);
         const logDataUrl = @json($logDataUrl);
 
-        // Realtime chart: every 1 second
-        const CHART_REFRESH_MS = 1000;
+        // Realtime chart: every 5 seconds (optimized)
+        const CHART_REFRESH_MS = 5000;
         // Log table: every 10 seconds
         const LOG_REFRESH_MS = 10000;
 
@@ -364,6 +364,7 @@
                 clearTimeout(timeoutId);
             } finally {
                 isChartRefreshing = false;
+                setTimeout(refreshChartData, CHART_REFRESH_MS);
             }
         }
 
@@ -392,6 +393,7 @@
                 clearTimeout(timeoutId);
             } finally {
                 isLogRefreshing = false;
+                setTimeout(refreshLogData, LOG_REFRESH_MS);
             }
         }
 
@@ -405,9 +407,6 @@
         try { renderLogTable(initialAccelLog); } catch (e) {}
 
         // Kick off polling
-        setInterval(refreshChartData, CHART_REFRESH_MS);
-        setInterval(refreshLogData, LOG_REFRESH_MS);
-
         refreshChartData();
         refreshLogData();
 

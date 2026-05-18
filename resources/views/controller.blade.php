@@ -286,7 +286,10 @@
                 const el = document.getElementById('gps-last-at');
                 if (el) el.textContent = data.gps.recorded_at;
             }
-        } catch (e) {}
+        } catch (e) {
+        } finally {
+            setTimeout(pollConnectionStatus, 15000);
+        }
     }
 
     function updateBadge(badgeId, isConnected) {
@@ -301,8 +304,7 @@
         }
     }
 
-    // Poll immediately then every 15 seconds
+    // Poll immediately then recursively every 15 seconds
     pollConnectionStatus();
-    setInterval(pollConnectionStatus, 15000);
 </script>
 @endpush
