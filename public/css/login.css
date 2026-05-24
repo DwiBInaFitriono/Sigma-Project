@@ -304,3 +304,17 @@ html.dark-mode .theme-toggle-btn:hover {
     padding-top: 1.5rem;
 }
 
+/* ── Mobile: compact card ── */
+@media (max-width: 480px) {
+    .auth-page {
+        padding: 1.5rem 1rem;
+        align-items: center;
+    }
+
+    .auth-card {
+        width: calc(100% - 2rem);
+        max-width: 360px;
+        padding: 1.75rem 1.5rem;
+    }
+}
+

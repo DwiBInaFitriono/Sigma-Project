@@ -30,7 +30,7 @@
 
             <div>
                 <label for="email" class="auth-label">Email</label>
-                <input id="email" name="email" type="email" value="{{ old('email') }}" required class="auth-input">
+                <input id="email" name="email" type="email" value="{{ old('email') }}" required autocomplete="off" class="auth-input">
                 @error('email')
                     <p class="auth-error">{{ $message }}</p>
                 @enderror
@@ -38,7 +38,7 @@
 
             <div>
                 <label for="password" class="auth-label">Password</label>
-                <input id="password" name="password" type="password" required class="auth-input">
+                <input id="password" name="password" type="password" required autocomplete="new-password" class="auth-input">
                 @error('password')
                     <p class="auth-error">{{ $message }}</p>
                 @enderror
@@ -46,7 +46,7 @@
 
             <div>
                 <label for="password_confirmation" class="auth-label">Konfirmasi Password</label>
-                <input id="password_confirmation" name="password_confirmation" type="password" required class="auth-input">
+                <input id="password_confirmation" name="password_confirmation" type="password" required autocomplete="new-password" class="auth-input">
             </div>
 
             <div>
@@ -56,6 +56,10 @@
 
         <div class="auth-note">
             Setelah mendaftar, Anda akan langsung masuk dan diarahkan ke dashboard.
+        </div>
+
+        <div class="auth-footer">
+            <p>Sudah punya akun? <a href="{{ route('login') }}">Masuk di sini</a></p>
         </div>
     </div>
 </div>
