@@ -4,3 +4,47 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* ── Auth Page Theme Toggle (body-level, always fixed) ── */
+.auth-theme-toggle {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 99999;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    border: 1.5px solid #e8dcd0;
+    background: rgba(255, 255, 255, 0.92);
+    color: #5c3d27;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.auth-theme-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+    background: #ffffff;
+}
+
+.auth-theme-toggle:active {
+    transform: scale(0.94);
+}
+
+html.dark-mode .auth-theme-toggle {
+    background: rgba(38, 26, 19, 0.95);
+    border-color: #4D3527;
+    color: #F5EAE1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+html.dark-mode .auth-theme-toggle:hover {
+    background: #3D2A1F;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}

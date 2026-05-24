@@ -905,3 +905,32 @@ body.sigma-app::before {
         padding: 1.5rem;
     }
 }
+
+/* ── Mobile dropdown alignment fix ── */
+@media (max-width: 1024px) {
+    /* Pastikan container dropdown mobile punya lebar yang cukup */
+    #mobile-profile-dropdown {
+        position: relative;
+    }
+
+    /* Dropdown selalu rata kanan terhadap container */
+    #mobile-profile-dropdown .profile-dropdown-menu {
+        right: 0;
+        left: auto;
+        top: calc(100% + 0.6rem);
+    }
+
+    /* Tombol nama user diberi padding agar container lebih lebar = dropdown lebih lurus */
+    #mobile-profile-dropdown > span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.75rem;
+        border: 1px solid var(--sigma-border);
+        border-radius: var(--sigma-radius-btn);
+        background: var(--sigma-surface-2);
+        font-size: 0.82rem;
+        color: var(--sigma-text);
+        white-space: nowrap;
+    }
+}
