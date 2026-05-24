@@ -267,6 +267,7 @@
         }
 
         function buildChartOptions(samples) {
+            const isMobile = window.innerWidth <= 768;
             return {
                 chart: {
                     type: 'line',
@@ -274,10 +275,10 @@
                     fontFamily: 'Plus Jakarta Sans, system-ui, sans-serif',
                     toolbar: { show: false },
                     animations: {
-                        enabled: true,
+                        enabled: !isMobile,
                         easing: 'easeinout',
                         speed: 400,
-                        dynamicAnimation: { enabled: true, speed: 300 },
+                        dynamicAnimation: { enabled: !isMobile, speed: 300 },
                     },
                     background: 'transparent',
                 },
@@ -301,7 +302,7 @@
                 yaxis: {
                     labels: { style: { colors: '#A89081', fontWeight: 600 } },
                 },
-                stroke: { curve: 'smooth', width: [2, 2, 2, 4] },
+                stroke: { curve: isMobile ? 'straight' : 'smooth', width: [2, 2, 2, 4] },
                 colors: ['#8B5026', '#C2743E', '#E58A47', '#E13B3B'],
                 fill: {
                     type: 'gradient',
@@ -411,7 +412,11 @@
             } else {
                 if (mapState.marker) { mapState.marker.setLatLng([lat, lng]); mapState.marker.setPopupContent(popupHtml); }
                 if (mapState.circle) { mapState.circle.setLatLng([lat, lng]); }
-                mapState.map.flyTo([lat, lng], mapState.map.getZoom(), { duration: 1.5 });
+                if (window.innerWidth > 768) {
+                    mapState.map.flyTo([lat, lng], mapState.map.getZoom(), { duration: 1.5 });
+                } else {
+                    mapState.map.panTo([lat, lng]);
+                }
             }
         }
 
@@ -533,6 +538,10 @@
 
         async function refreshDashboardData() {
             if (isRefreshing) return;
+            if (document.hidden) {
+                setTimeout(refreshDashboardData, REFRESH_MS);
+                return;
+            }
             isRefreshing = true;
 
             const controller = new AbortController();

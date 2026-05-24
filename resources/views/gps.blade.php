@@ -205,7 +205,7 @@
 
                 marker = L.marker([lat, lng]).addTo(map);
             } else {
-                map.setView([lat, lng], map.getZoom());
+                map.setView([lat, lng], map.getZoom(), { animate: window.innerWidth > 768 });
                 if (marker) { marker.setLatLng([lat, lng]); }
             }
         }
@@ -274,6 +274,10 @@
 
         async function refreshMapData() {
             if (isMapRefreshing) return;
+            if (document.hidden) {
+                setTimeout(refreshMapData, MAP_REFRESH_MS);
+                return;
+            }
             isMapRefreshing = true;
 
             const controller = new AbortController();
@@ -303,6 +307,10 @@
 
         async function refreshGpsLog() {
             if (isLogRefreshing) return;
+            if (document.hidden) {
+                setTimeout(refreshGpsLog, LOG_REFRESH_MS);
+                return;
+            }
             isLogRefreshing = true;
 
             const controller = new AbortController();

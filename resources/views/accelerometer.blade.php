@@ -196,17 +196,18 @@
         }
 
         function buildChartOptions(samples) {
+            const isMobile = window.innerWidth <= 768;
             return {
                 chart: {
                     type: 'line',
-                    height: 520,
+                    height: isMobile ? 320 : 520, // Smaller chart height on mobile for visibility
                     fontFamily: 'Plus Jakarta Sans, system-ui, sans-serif',
                     toolbar: { show: false },
                     animations: {
-                        enabled: true,
+                        enabled: !isMobile,
                         easing: 'easeinout',
                         speed: 400,
-                        dynamicAnimation: { enabled: true, speed: 300 },
+                        dynamicAnimation: { enabled: !isMobile, speed: 300 },
                     },
                     background: 'transparent',
                 },
@@ -229,7 +230,7 @@
                 yaxis: {
                     labels: { style: { colors: '#A89081', fontWeight: 600 } },
                 },
-                stroke: { curve: 'smooth', width: [2, 2, 2, 4] },
+                stroke: { curve: isMobile ? 'straight' : 'smooth', width: [2, 2, 2, 4] },
                 colors: ['#8B5026', '#C2743E', '#E58A47', '#E13B3B'],
                 fill: {
                     type: 'gradient',
@@ -344,6 +345,10 @@
 
         async function refreshChartData() {
             if (isChartRefreshing) return;
+            if (document.hidden) {
+                setTimeout(refreshChartData, CHART_REFRESH_MS);
+                return;
+            }
             isChartRefreshing = true;
 
             const controller = new AbortController();
@@ -373,6 +378,10 @@
 
         async function refreshLogData() {
             if (isLogRefreshing) return;
+            if (document.hidden) {
+                setTimeout(refreshLogData, LOG_REFRESH_MS);
+                return;
+            }
             isLogRefreshing = true;
 
             const controller = new AbortController();

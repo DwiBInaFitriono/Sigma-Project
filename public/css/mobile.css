@@ -98,34 +98,38 @@
 	}
 
 	.summary-grid {
-		grid-template-columns: repeat(3, 1fr) !important;
+		grid-template-columns: repeat(2, 1fr) !important;
 		gap: 0.75rem !important;
 	}
 
+	.summary-grid .stat-card:last-child {
+		grid-column: span 2 !important;
+	}
+
 	.stat-card {
-		padding: 0.85rem 0.75rem !important;
+		padding: 0.95rem 1rem !important;
 	}
 
 	.stat-card .card-title {
-		font-size: 0.65rem !important;
+		font-size: 0.7rem !important;
 		letter-spacing: 0.08em !important;
 	}
 
 	.stat-card .card-value {
-		font-size: 1.25rem !important;
+		font-size: 1.45rem !important;
 		margin-top: 0.35rem !important;
 	}
 
 	.stat-card .card-value-status {
-		font-size: 0.95rem !important;
+		font-size: 1.15rem !important;
 	}
 
 	.stat-card .card-value-time {
-		font-size: 0.85rem !important;
+		font-size: 1.05rem !important;
 	}
 
 	.stat-card .card-desc {
-		font-size: 0.65rem !important;
+		font-size: 0.75rem !important;
 		margin-top: 0.25rem !important;
 	}
 
@@ -151,8 +155,12 @@
 	}
 
 	.dashboard-score-grid {
-		grid-template-columns: repeat(3, 1fr) !important;
+		grid-template-columns: repeat(2, 1fr) !important;
 		gap: 0.75rem !important;
+	}
+
+	.dashboard-score-grid .dashboard-score-card:last-child {
+		grid-column: span 2 !important;
 	}
 
 	.summary-grid-vertical {
@@ -205,7 +213,7 @@
 	}
 
 	.dashboard-score-card {
-		padding: 0.85rem 0.75rem !important;
+		padding: 0.95rem 1rem !important;
 	}
 
 	.dashboard-score-card-title {
@@ -214,7 +222,7 @@
 	}
 
 	.dashboard-score-card-value {
-		font-size: 1.35rem !important;
+		font-size: 1.45rem !important;
 		margin-top: 0.25rem !important;
 	}
 
@@ -254,35 +262,39 @@
 	}
 
 	.summary-grid {
-		grid-template-columns: repeat(3, 1fr) !important;
-		gap: 0.5rem !important;
+		grid-template-columns: repeat(2, 1fr) !important;
+		gap: 0.6rem !important;
+	}
+
+	.summary-grid .stat-card:last-child {
+		grid-column: span 2 !important;
 	}
 
 	.stat-card {
-		padding: 0.6rem 0.5rem !important;
+		padding: 0.8rem 0.85rem !important;
 	}
 
 	.stat-card .card-title {
-		font-size: 0.55rem !important;
+		font-size: 0.65rem !important;
 		letter-spacing: 0.05em !important;
 	}
 
 	.stat-card .card-value {
-		font-size: 1rem !important;
-		margin-top: 0.2rem !important;
+		font-size: 1.25rem !important;
+		margin-top: 0.25rem !important;
 	}
 
 	.stat-card .card-value-status {
-		font-size: 0.8rem !important;
+		font-size: 1rem !important;
 	}
 
 	.stat-card .card-value-time {
-		font-size: 0.7rem !important;
+		font-size: 0.9rem !important;
 	}
 
 	.stat-card .card-desc {
-		font-size: 0.55rem !important;
-		margin-top: 0.15rem !important;
+		font-size: 0.7rem !important;
+		margin-top: 0.2rem !important;
 	}
 
 	.dashboard-info-grid {
@@ -304,8 +316,12 @@
 	}
 
 	.dashboard-score-grid {
-		grid-template-columns: repeat(3, 1fr) !important;
-		gap: 0.5rem !important;
+		grid-template-columns: repeat(2, 1fr) !important;
+		gap: 0.6rem !important;
+	}
+
+	.dashboard-score-grid .dashboard-score-card:last-child {
+		grid-column: span 2 !important;
 	}
 
 	.summary-grid-vertical {
@@ -314,14 +330,14 @@
 	}
 
 	.dashboard-score-card {
-		padding: 0.6rem 0.5rem !important;
+		padding: 0.8rem 0.85rem !important;
 	}
 
 	.dashboard-score-card-title {
-		font-size: 0.65rem !important;
+		font-size: 0.7rem !important;
 	}
 
 	.dashboard-score-card-value {
-		font-size: 1.15rem !important;
+		font-size: 1.25rem !important;
 	}
 }
