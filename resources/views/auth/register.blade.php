@@ -56,6 +56,10 @@
         <div class="auth-footer">
             <p>Sudah punya akun? <a href="{{ route('login') }}">Masuk di sini</a></p>
         </div>
+
+        <div class="auth-copyright" style="margin-top: 1.5rem; text-align: center; font-size: 0.75rem; color: var(--sigma-muted); font-weight: 600;">
+            &copy; 2025 Kelompok 2 TKK B. All Rights Reserved.
+        </div>
     </div>
 </div>
 
