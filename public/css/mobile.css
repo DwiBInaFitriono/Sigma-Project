@@ -97,9 +97,57 @@
 		padding-inline: 0.85rem;
 	}
 
-	.summary-grid,
+	.summary-grid {
+		grid-template-columns: repeat(3, 1fr) !important;
+		gap: 0.75rem !important;
+	}
+
+	.stat-card {
+		padding: 0.85rem 0.75rem !important;
+	}
+
+	.stat-card .card-title {
+		font-size: 0.65rem !important;
+		letter-spacing: 0.08em !important;
+	}
+
+	.stat-card .card-value {
+		font-size: 1.25rem !important;
+		margin-top: 0.35rem !important;
+	}
+
+	.stat-card .card-value-status {
+		font-size: 0.95rem !important;
+	}
+
+	.stat-card .card-value-time {
+		font-size: 0.85rem !important;
+	}
+
+	.stat-card .card-desc {
+		font-size: 0.65rem !important;
+		margin-top: 0.25rem !important;
+	}
+
 	.dashboard-info-grid {
-		grid-template-columns: 1fr;
+		grid-template-columns: repeat(2, 1fr) !important;
+		gap: 0.75rem !important;
+	}
+
+	.dashboard-info-card {
+		padding: 0.85rem 0.75rem !important;
+	}
+
+	.dashboard-info-card p {
+		font-size: 0.7rem !important;
+		margin-bottom: 0.25rem !important;
+	}
+
+	.dashboard-info-card strong {
+		font-size: 1rem !important;
+		display: block;
+		word-break: break-all;
+		line-height: 1.2;
 	}
 
 	.dashboard-score-grid {
@@ -151,7 +199,6 @@
 	}
 
 	.panel-card,
-	.stat-card,
 	.log-card,
 	.dashboard-chart-card {
 		padding: 1.25rem;
@@ -204,6 +251,56 @@
 
 	.data-table {
 		font-size: 0.82rem;
+	}
+
+	.summary-grid {
+		grid-template-columns: repeat(3, 1fr) !important;
+		gap: 0.5rem !important;
+	}
+
+	.stat-card {
+		padding: 0.6rem 0.5rem !important;
+	}
+
+	.stat-card .card-title {
+		font-size: 0.55rem !important;
+		letter-spacing: 0.05em !important;
+	}
+
+	.stat-card .card-value {
+		font-size: 1rem !important;
+		margin-top: 0.2rem !important;
+	}
+
+	.stat-card .card-value-status {
+		font-size: 0.8rem !important;
+	}
+
+	.stat-card .card-value-time {
+		font-size: 0.7rem !important;
+	}
+
+	.stat-card .card-desc {
+		font-size: 0.55rem !important;
+		margin-top: 0.15rem !important;
+	}
+
+	.dashboard-info-grid {
+		grid-template-columns: repeat(2, 1fr) !important;
+		gap: 0.5rem !important;
+	}
+
+	.dashboard-info-card {
+		padding: 0.6rem 0.5rem !important;
+	}
+
+	.dashboard-info-card p {
+		font-size: 0.65rem !important;
+		margin-bottom: 0.15rem !important;
+	}
+
+	.dashboard-info-card strong {
+		font-size: 0.85rem !important;
 	}
 
 	.dashboard-score-grid {
