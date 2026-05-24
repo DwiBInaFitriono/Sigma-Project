@@ -154,15 +154,25 @@ html.dark-mode .theme-toggle-btn:hover {
     padding: 0.9rem 1.1rem;
     border: 1.5px solid #d6c4b0;
     border-radius: var(--sigma-radius-btn);
-    background: #faf8f5;
+    background: #ffffff;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-size: 0.95rem;
-    color: #37261b;
+    color: #1a0f0a;
 }
 
 .auth-input::placeholder {
     color: #9d8b7e;
+}
+
+/* Override browser autofill grey background */
+.auth-input:-webkit-autofill,
+.auth-input:-webkit-autofill:hover,
+.auth-input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #1a0f0a;
+    -webkit-box-shadow: 0 0 0px 1000px #ffffff inset;
+    box-shadow: 0 0 0px 1000px #ffffff inset;
+    transition: background-color 5000s ease-in-out 0s;
 }
 
 .auth-input:focus {
