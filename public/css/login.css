@@ -309,14 +309,49 @@ html.dark-mode .theme-toggle-btn:hover {
 /* ── Mobile: compact card ── */
 @media (max-width: 480px) {
     .auth-page {
-        padding: 1.5rem 1rem;
+        padding: 1rem 1rem 2rem;
         align-items: center;
     }
 
     .auth-card {
-        width: calc(100% - 2rem);
-        max-width: 360px;
-        padding: 1.75rem 1.5rem;
+        width: calc(100% - 1.5rem);
+        max-width: 340px;
+        padding: 1.5rem 1.25rem;
+    }
+
+    .auth-title {
+        font-size: 1.6rem;
+    }
+
+    .auth-subtitle {
+        font-size: 0.82rem;
+    }
+
+    .auth-input {
+        padding: 0.7rem 0.9rem;
+        font-size: 0.88rem;
+    }
+
+    .auth-label {
+        font-size: 0.75rem;
+        margin-bottom: 0.45rem;
+    }
+
+    .auth-button {
+        padding: 0.8rem 1rem;
+        font-size: 0.88rem;
+    }
+
+    .theme-toggle-btn {
+        width: 2.1rem;
+        height: 2.1rem;
+        top: 0.85rem;
+        right: 0.85rem;
+    }
+
+    .theme-toggle-btn svg {
+        width: 1rem;
+        height: 1rem;
     }
 }
 
