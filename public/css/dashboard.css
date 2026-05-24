@@ -934,3 +934,14 @@ body.sigma-app::before {
         white-space: nowrap;
     }
 }
+
+.dashboard-footer {
+    margin-top: 3rem;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--sigma-border);
+    text-align: center;
+    color: var(--sigma-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}

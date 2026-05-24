@@ -233,6 +233,12 @@
 	.section-title {
 		font-size: 1.25rem;
 	}
+
+	.dashboard-footer {
+		margin-top: 2rem !important;
+		padding: 1.25rem 0 !important;
+		font-size: 0.75rem !important;
+	}
 }
 
 @media (max-width: 480px) {
@@ -339,5 +345,11 @@
 
 	.dashboard-score-card-value {
 		font-size: 1.25rem !important;
+	}
+
+	.dashboard-footer {
+		margin-top: 1.5rem !important;
+		padding: 1rem 0 !important;
+		font-size: 0.7rem !important;
 	}
 }

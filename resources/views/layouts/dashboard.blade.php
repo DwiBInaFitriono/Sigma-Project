@@ -39,6 +39,9 @@
     <main class="panel-content">
         @include('layouts.header')
         @yield('dashboard-content')
+        <footer class="dashboard-footer">
+            <p>&copy; 2025 Kelompok 2 TKK B. All Rights Reserved.</p>
+        </footer>
     </main>
 
 
