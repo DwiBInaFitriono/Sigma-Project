@@ -318,3 +318,80 @@ html.dark-mode .theme-toggle-btn:hover {
     }
 }
 
+/* ── Dark Mode ── */
+html.dark-mode .auth-page {
+    background: #1A110C;
+}
+
+html.dark-mode .auth-card {
+    background: #261A13;
+    border-color: #4D3527;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+html.dark-mode .auth-title {
+    color: #F5EAE1;
+}
+
+html.dark-mode .auth-subtitle {
+    color: #B39B8A;
+}
+
+html.dark-mode .auth-label {
+    color: #C2956E;
+}
+
+html.dark-mode .auth-input {
+    background: #33231A;
+    border-color: #4D3527;
+    color: #F5EAE1;
+}
+
+html.dark-mode .auth-input::placeholder {
+    color: #6B4D3A;
+}
+
+html.dark-mode .auth-input:-webkit-autofill,
+html.dark-mode .auth-input:-webkit-autofill:hover,
+html.dark-mode .auth-input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #F5EAE1;
+    -webkit-box-shadow: 0 0 0px 1000px #33231A inset;
+    box-shadow: 0 0 0px 1000px #33231A inset;
+}
+
+html.dark-mode .auth-input:focus {
+    background: #3D2A1F;
+    border-color: #E58A47;
+}
+
+html.dark-mode .auth-checkbox-label {
+    color: #D4B8A8;
+}
+
+html.dark-mode .auth-footer {
+    color: #B39B8A;
+}
+
+html.dark-mode .auth-footer a {
+    color: #E58A47;
+}
+
+html.dark-mode .auth-footer a::after {
+    background: #E58A47;
+}
+
+html.dark-mode .auth-note {
+    color: #B39B8A;
+    border-top-color: #4D3527;
+}
+
+html.dark-mode .theme-toggle-btn {
+    background: #33231A;
+    border-color: #4D3527;
+    color: #F5EAE1;
+}
+
+html.dark-mode .theme-toggle-btn:hover {
+    background: #3D2A1F;
+}
+
