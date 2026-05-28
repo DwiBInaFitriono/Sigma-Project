@@ -275,7 +275,7 @@
 
             return {
                 chart: {
-                    type: 'area',
+                    type: 'line',
                     height: 340,
                     fontFamily: 'Plus Jakarta Sans, system-ui, sans-serif',
                     toolbar: { show: false },
@@ -288,10 +288,10 @@
                     },
                 },
                 series: [
-                    { name: 'X', data: samples.map((s) => s.x) },
-                    { name: 'Y', data: samples.map((s) => s.y) },
-                    { name: 'Z', data: samples.map((s) => s.z) },
-                    { name: 'Magnitudo', data: samples.map((s) => s.magnitude) },
+                    { name: 'X', type: 'line', data: samples.map((s) => s.x) },
+                    { name: 'Y', type: 'line', data: samples.map((s) => s.y) },
+                    { name: 'Z', type: 'line', data: samples.map((s) => s.z) },
+                    { name: 'Magnitudo', type: 'area', data: samples.map((s) => s.magnitude) },
                 ],
                 xaxis: {
                     categories: samples.map((s) => s.time || '--'),
@@ -311,13 +311,13 @@
                 },
                 stroke: {
                     curve: isMobile ? 'straight' : 'smooth',
-                    width: [2.5, 2.5, 2.5, 3.5],
+                    width: [2, 2, 2, 3],
                     lineCap: 'round',
                 },
                 colors: ['#3b82f6', '#10b981', '#f59e0b', '#e63946'],
                 fill: {
                     type: ['solid', 'solid', 'solid', 'solid'],
-                    opacity: [1, 1, 1, 0.2],
+                    opacity: [1, 1, 1, 0.15],
                 },
                 markers: {
                     size: [3, 3, 3, 5],
@@ -370,10 +370,10 @@
                     false, false
                 );
                 accelChart.updateSeries([
-                    { name: 'X', data: samples.map((s) => s.x) },
-                    { name: 'Y', data: samples.map((s) => s.y) },
-                    { name: 'Z', data: samples.map((s) => s.z) },
-                    { name: 'Magnitudo', data: samples.map((s) => s.magnitude) },
+                    { name: 'X', type: 'line', data: samples.map((s) => s.x) },
+                    { name: 'Y', type: 'line', data: samples.map((s) => s.y) },
+                    { name: 'Z', type: 'line', data: samples.map((s) => s.z) },
+                    { name: 'Magnitudo', type: 'area', data: samples.map((s) => s.magnitude) },
                 ]);
                 return;
             }
