@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AccelerometerData;
 use App\Models\GPSData;
+use App\Models\SeismicEvent;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Carbon;
 
@@ -20,7 +21,7 @@ abstract class Controller
             return '--';
         }
 
-        return $dateTime->format($format) . ' WIB';
+        return $dateTime->format($format).' WIB';
     }
 
     protected function dashboardPayload(int $sampleLimit = 12): array
@@ -58,7 +59,33 @@ abstract class Controller
             'gpsLogSamples' => $this->formatGpsSamples($gpsLogSamples),
             'summary' => $this->buildAccelerometerSummary($accelerometerSamples),
             'lastUpdatedAt' => $this->resolveLastUpdatedAt($latestGps, $latestAccelerometer),
+            'seismicEvents' => $this->collectSeismicEvents(),
         ];
+    }
+
+    protected function collectSeismicEvents(): array
+    {
+        return SeismicEvent::query()
+            ->where('recorded_at', '>=', Carbon::today())
+            ->latest('recorded_at')
+            ->get()
+            ->map(function (SeismicEvent $event): array {
+                $mmiColor = $this->getMmiStatus((float) $event->magnitude)['color'];
+
+                return [
+                    'id' => $event->id,
+                    'device_id' => $event->device_id,
+                    'latitude' => (float) $event->latitude,
+                    'longitude' => (float) $event->longitude,
+                    'altitude' => $event->altitude === null ? null : (float) $event->altitude,
+                    'magnitude' => (float) $event->magnitude,
+                    'mmi_level' => $event->mmi_level,
+                    'mmi_status' => $event->mmi_status,
+                    'mmi_color' => $mmiColor,
+                    'recorded_at' => $this->formatWibTimestamp($event->recorded_at?->timezone($this->dashboardTimezone()), 'd M Y H:i:s'),
+                ];
+            })
+            ->all();
     }
 
     protected function formatGpsData(?GPSData $gps): array

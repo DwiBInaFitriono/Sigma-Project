@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Kontroller Sensor')
+@section('title', 'Reset ESP32')
 
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
@@ -14,8 +14,8 @@
         <div class="content-header-flex">
             <div>
                 <p class="section-kicker">Manajemen Perangkat</p>
-                <h1>Kontroller Sensor</h1>
-                <p>Kendalikan status daya dan konfigurasi sensor secara terpusat. Perintah akan diantrekan dan dieksekusi saat ESP32 terhubung.</p>
+                <h1>Reset ESP32</h1>
+                <p>Kirim perintah restart ke mikrokontroler ESP32. Perangkat akan melakukan reboot dan kembali ke kondisi awal.</p>
             </div>
             <div class="datetime-widget">
                 <div id="realtime-clock" class="time-display">{{ now()->timezone('Asia/Jakarta')->format('H:i:s') }}</div>
@@ -24,124 +24,65 @@
         </div>
     </header>
 
-    {{-- Sensor Cards Grid --}}
-    <div class="ctrl-page-grid">
-
-        {{-- ── Accelerometer Card ────────────────────────────────────── --}}
-        <div class="sensor-ctrl-card">
-            <div class="sensor-ctrl-card-header">
-                <div>
-                    <h2 class="sensor-ctrl-card-title">Sensor ADXL345</h2>
-                    <p class="sensor-ctrl-card-sub">ADXL345 — Sensor Getaran 3-Axis</p>
+    {{-- ESP32 Reset Card --}}
+    <div class="esp-reset-section">
+        <div class="esp-card">
+            <div class="esp-card-header">
+                <div class="esp-card-icon">
+                    <i class="fa-solid fa-microchip"></i>
                 </div>
-                <span id="accel-conn-badge"
-                      class="conn-badge {{ $accelConnected ? 'connected' : 'disconnected' }}">
+                <div>
+                    <h2 class="esp-card-title">Mikrokontroler ESP32 2U</h2>
+                    <p class="esp-card-sub">ESP32 2U — Node Sensor SIGMA</p>
+                </div>
+                <span id="esp-conn-badge"
+                      class="conn-badge {{ $espConnected ? 'connected' : 'disconnected' }}">
                     <span class="conn-badge-dot"></span>
-                    {{ $accelConnected ? 'Terhubung' : 'Terputus' }}
+                    {{ $espConnected ? 'Terhubung' : 'Terputus' }}
                 </span>
             </div>
 
-            <p class="ctrl-last-update">Data terakhir: <strong id="accel-last-at">{{ $latestAccelAt }}</strong></p>
-
-            {{-- Power Control --}}
-            <div>
-                <p class="ctrl-section-label">Status Daya</p>
-                <div class="power-btn-group">
-                    <button id="accel-btn-on" type="button" class="power-btn power-btn-on {{ $accelPower === 'on' ? 'active' : '' }}"
-                            onclick="setSensorPower('accelerometer','on','accel-msg')">
-                        <i class="fa-solid fa-power-off"></i> Hidupkan
-                    </button>
-                    <button id="accel-btn-off" type="button" class="power-btn power-btn-off {{ $accelPower === 'off' ? 'active' : '' }}"
-                            onclick="setSensorPower('accelerometer','off','accel-msg')">
-                        <i class="fa-solid fa-ban"></i> Matikan
-                    </button>
-                </div>
-            </div>
-
-            {{-- Sensitivity Sliders --}}
-            <div>
-                <p class="ctrl-section-label">Sensitivitas</p>
-                <div class="sensitivity-group">
-                    @foreach([['x', $sensitivity['x']], ['y', $sensitivity['y']], ['z', $sensitivity['z']]] as [$axis, $val])
-                    <div class="sensitivity-row">
-                        <span class="axis-label">{{ strtoupper($axis) }}</span>
-                        <input type="range" id="sens-{{ $axis }}" class="sens-slider"
-                               min="1" max="10" step="0.5" value="{{ $val }}">
-                        <span class="sens-value-label" id="sens-{{ $axis }}-val">{{ number_format($val, 1) }}</span>
+            <div class="esp-card-body">
+                {{-- Info Block --}}
+                <div class="esp-info-block">
+                    <div class="esp-info-row">
+                        <span class="esp-info-label">Data terakhir diterima</span>
+                        <span class="esp-info-value" id="esp-last-data">{{ $lastDataAt }}</span>
                     </div>
-                    @endforeach
+                    <div class="esp-info-row">
+                        <span class="esp-info-label">Status koneksi</span>
+                        <span class="esp-info-value" id="esp-status-text">
+                            {{ $espConnected ? 'Online — mengirim data' : 'Offline — tidak ada data masuk' }}
+                        </span>
+                    </div>
                 </div>
-            </div>
 
-            {{-- Actions --}}
-            <div class="ctrl-action-row">
-                <button type="button" class="ctrl-apply-btn" onclick="applySensitivity('accel-msg')">
-                    Terapkan Sensitivitas
-                </button>
-                <button type="button" class="ctrl-reset-btn" onclick="resetSensor('accelerometer','accel-msg')">
-                    <i class="fa-solid fa-rotate-left"></i> Reset Default
-                </button>
-            </div>
-
-            <p id="accel-msg" class="ctrl-msg"></p>
-        </div>
-
-        {{-- ── GPS Card ─────────────────────────────────────────────── --}}
-        <div class="sensor-ctrl-card">
-            <div class="sensor-ctrl-card-header">
-                <div>
-                    <h2 class="sensor-ctrl-card-title">GPS</h2>
-                    <p class="sensor-ctrl-card-sub">NEO-6M — Modul Lokasi Satelit</p>
+                {{-- Warning Block --}}
+                <div class="esp-warning-block">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <div>
+                        <strong>Perhatian</strong>
+                        <p>Reset akan menghentikan seluruh operasi sensor sementara. ESP32 akan reboot, melakukan kalibrasi ulang, dan kembali mengirim data secara otomatis. Proses ini membutuhkan waktu sekitar 15–30 detik.</p>
+                    </div>
                 </div>
-                <span id="gps-conn-badge"
-                      class="conn-badge {{ $gpsConnected ? 'connected' : 'disconnected' }}">
-                    <span class="conn-badge-dot"></span>
-                    {{ $gpsConnected ? 'Terhubung' : 'Terputus' }}
-                </span>
-            </div>
 
-            <p class="ctrl-last-update">Data terakhir: <strong id="gps-last-at">{{ $latestGpsAt }}</strong></p>
-
-            {{-- Power Control --}}
-            <div>
-                <p class="ctrl-section-label">Status Daya</p>
-                <div class="power-btn-group">
-                    <button id="gps-btn-on" type="button" class="power-btn power-btn-on {{ $gpsPower === 'on' ? 'active' : '' }}"
-                            onclick="setSensorPower('gps','on','gps-msg')">
-                        <i class="fa-solid fa-power-off"></i> Hidupkan
+                {{-- Reset Button --}}
+                <div class="esp-action-area">
+                    <button type="button" class="esp-reset-btn" id="btn-reset-esp32" onclick="resetEsp32()">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        Reset ESP32
                     </button>
-                    <button id="gps-btn-off" type="button" class="power-btn power-btn-off {{ $gpsPower === 'off' ? 'active' : '' }}"
-                            onclick="setSensorPower('gps','off','gps-msg')">
-                        <i class="fa-solid fa-ban"></i> Matikan
-                    </button>
+                    <p class="esp-action-hint">Perintah akan diantrekan dan dijalankan saat ESP32 polling berikutnya.</p>
                 </div>
-            </div>
 
-            {{-- GPS Info (no sliders) --}}
-            <div class="dashboard-score-card" style="background: var(--sigma-surface-2); border-radius: var(--sigma-radius-btn); padding: 1.25rem;">
-                <p class="ctrl-section-label" style="margin-bottom: 0.5rem;">Informasi</p>
-                <p style="color: var(--sigma-muted); font-size: 0.9rem; line-height: 1.6; margin: 0;">
-                    GPS tidak memiliki parameter sensitivitas yang dapat dikonfigurasi.
-                    Anda hanya dapat menghidupkan/mematikan modul GPS dari sini.
-                </p>
+                <p id="esp-msg" class="ctrl-msg"></p>
             </div>
-
-            {{-- Actions --}}
-            <div class="ctrl-action-row">
-                <button type="button" class="ctrl-reset-btn" onclick="resetSensor('gps','gps-msg')">
-                    <i class="fa-solid fa-rotate-left"></i> Reset Default
-                </button>
-            </div>
-
-            <p id="gps-msg" class="ctrl-msg"></p>
         </div>
-
     </div>
 </div>
 @endsection
 
 @push('scripts')
-
 <script>
     // ── Clock ──────────────────────────────────────────────────────────────────
     (function startClock() {
@@ -160,21 +101,8 @@
     })();
 
     // ── API Config ─────────────────────────────────────────────────────────────
-    const POWER_URL  = @json(route('sensor-commands.power'));
-    const SENS_URL   = @json(route('sensor-commands.sensitivity'));
-    const RESET_URL  = @json(route('sensor-commands.reset'));
-    const CSRF       = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
-
-    // ── Slider Live Display ────────────────────────────────────────────────────
-    ['x', 'y', 'z'].forEach(axis => {
-        const slider = document.getElementById(`sens-${axis}`);
-        const label  = document.getElementById(`sens-${axis}-val`);
-        if (slider && label) {
-            slider.addEventListener('input', () => {
-                label.textContent = parseFloat(slider.value).toFixed(1);
-            });
-        }
-    });
+    const RESET_ESP_URL = @json(route('sensor-commands.reset-esp32'));
+    const CSRF = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
     // ── Show Feedback ──────────────────────────────────────────────────────────
     function showMsg(elId, text, type = 'success') {
@@ -182,83 +110,35 @@
         if (!el) return;
         el.textContent = text;
         el.className = `ctrl-msg ${type}`;
-        setTimeout(() => { el.textContent = ''; el.className = 'ctrl-msg'; }, 3500);
+        setTimeout(() => { el.textContent = ''; el.className = 'ctrl-msg'; }, 5000);
     }
 
-    // ── Update Power UI ────────────────────────────────────────────────────────
-    function updatePowerUI(sensor, state) {
-        const prefix = sensor === 'accelerometer' ? 'accel' : 'gps';
-        const btnOn  = document.getElementById(`${prefix}-btn-on`);
-        const btnOff = document.getElementById(`${prefix}-btn-off`);
-        if (btnOn)  btnOn.classList.toggle('active', state === 'on');
-        if (btnOff) btnOff.classList.toggle('active', state === 'off');
-    }
+    // ── Reset ESP32 ────────────────────────────────────────────────────────────
+    async function resetEsp32() {
+        if (!confirm('Anda yakin ingin mereset ESP32? Semua sensor akan reboot.')) return;
 
-    // ── Power Toggle ───────────────────────────────────────────────────────────
-    async function setSensorPower(sensorType, state, msgEl) {
+        const btn = document.getElementById('btn-reset-esp32');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengirim perintah...';
+
         try {
-            const res = await fetch(POWER_URL, {
+            const res = await fetch(RESET_ESP_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
                 credentials: 'same-origin',
-                body: JSON.stringify({ sensor_type: sensorType, state }),
+                body: JSON.stringify({}),
             });
             const data = await res.json();
             if (data.success) {
-                updatePowerUI(sensorType, state);
-                showMsg(msgEl, data.message, 'success');
+                showMsg('esp-msg', data.message ?? 'Perintah reset ESP32 berhasil dikirim.', 'success');
             } else {
-                showMsg(msgEl, 'Gagal mengirim perintah.', 'error');
+                showMsg('esp-msg', data.message ?? 'Gagal mengirim perintah reset.', 'error');
             }
         } catch (e) {
-            showMsg(msgEl, 'Koneksi gagal. Coba lagi.', 'error');
-        }
-    }
-
-    // ── Apply Sensitivity ──────────────────────────────────────────────────────
-    async function applySensitivity(msgEl) {
-        const x = parseFloat(document.getElementById('sens-x').value);
-        const y = parseFloat(document.getElementById('sens-y').value);
-        const z = parseFloat(document.getElementById('sens-z').value);
-        try {
-            const res = await fetch(SENS_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
-                credentials: 'same-origin',
-                body: JSON.stringify({ x, y, z }),
-            });
-            const data = await res.json();
-            showMsg(msgEl, data.message ?? 'Sensitivitas disimpan.', data.success ? 'success' : 'error');
-        } catch (e) {
-            showMsg(msgEl, 'Koneksi gagal. Coba lagi.', 'error');
-        }
-    }
-
-    // ── Reset Default ──────────────────────────────────────────────────────────
-    async function resetSensor(sensorType, msgEl) {
-        if (!confirm(`Reset sensor ${sensorType === 'accelerometer' ? 'Sensor ADXL345' : 'GPS'} ke pengaturan default?`)) return;
-        try {
-            const res = await fetch(RESET_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
-                credentials: 'same-origin',
-                body: JSON.stringify({ sensor_type: sensorType }),
-            });
-            const data = await res.json();
-            if (data.success) {
-                updatePowerUI(sensorType, 'on');
-                if (sensorType === 'accelerometer') {
-                    ['x', 'y', 'z'].forEach(axis => {
-                        const s = document.getElementById(`sens-${axis}`);
-                        const l = document.getElementById(`sens-${axis}-val`);
-                        if (s) s.value = 5;
-                        if (l) l.textContent = '5.0';
-                    });
-                }
-            }
-            showMsg(msgEl, data.message ?? 'Sensor direset.', data.success ? 'success' : 'error');
-        } catch (e) {
-            showMsg(msgEl, 'Koneksi gagal. Coba lagi.', 'error');
+            showMsg('esp-msg', 'Koneksi gagal. Periksa jaringan Anda.', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> Reset ESP32';
         }
     }
 
@@ -275,16 +155,26 @@
             if (!res.ok) return;
             const data = await res.json();
 
-            updateBadge('accel-conn-badge', data.currentAccel?.is_connected);
-            updateBadge('gps-conn-badge', data.gps?.is_connected);
+            const accelOk = data.currentAccel?.is_connected;
+            const gpsOk = data.gps?.is_connected;
+            const isConnected = accelOk || gpsOk;
 
-            if (data.currentAccel?.sensor_time) {
-                const el = document.getElementById('accel-last-at');
-                if (el) el.textContent = data.currentAccel.sensor_time;
+            updateBadge('esp-conn-badge', isConnected);
+
+            const statusText = document.getElementById('esp-status-text');
+            if (statusText) {
+                statusText.textContent = isConnected
+                    ? 'Online — mengirim data'
+                    : 'Offline — tidak ada data masuk';
             }
-            if (data.gps?.recorded_at) {
-                const el = document.getElementById('gps-last-at');
-                if (el) el.textContent = data.gps.recorded_at;
+
+            // Update last data timestamp
+            const lastDataEl = document.getElementById('esp-last-data');
+            if (lastDataEl) {
+                const accelTime = data.currentAccel?.sensor_time;
+                const gpsTime = data.gps?.recorded_at;
+                if (accelTime) lastDataEl.textContent = accelTime;
+                else if (gpsTime) lastDataEl.textContent = gpsTime;
             }
         } catch (e) {
         } finally {
@@ -304,7 +194,6 @@
         }
     }
 
-    // Poll immediately then recursively every 15 seconds
     pollConnectionStatus();
 </script>
 @endpush

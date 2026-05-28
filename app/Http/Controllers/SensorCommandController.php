@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\SensorCommand;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class SensorCommandController extends Controller
@@ -28,7 +27,7 @@ class SensorCommandController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "Sensor {$validated['sensor_type']} diperintahkan untuk " . ($validated['state'] === 'on' ? 'dihidupkan' : 'dimatikan') . '.',
+            'message' => "Sensor {$validated['sensor_type']} diperintahkan untuk ".($validated['state'] === 'on' ? 'dihidupkan' : 'dimatikan').'.',
             'command_id' => $command->id,
             'power_state' => $validated['state'],
         ]);
@@ -84,6 +83,29 @@ class SensorCommandController extends Controller
             'success' => true,
             'message' => "Sensor {$validated['sensor_type']} telah direset ke pengaturan default.",
             'command_id' => $command->id,
+        ]);
+    }
+
+    /**
+     * Reset the entire ESP32 device (queues reset commands for all sensors).
+     */
+    public function resetEsp32(): JsonResponse
+    {
+        $commands = [];
+
+        foreach (['accelerometer', 'gps'] as $sensorType) {
+            $commands[] = SensorCommand::create([
+                'sensor_type' => $sensorType,
+                'command' => 'reset_default',
+                'payload' => null,
+                'status' => 'pending',
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Perintah reset ESP32 berhasil diantrekan. Perangkat akan reboot pada polling berikutnya.',
+            'command_ids' => array_map(fn ($c) => $c->id, $commands),
         ]);
     }
 

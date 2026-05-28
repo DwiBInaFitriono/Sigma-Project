@@ -135,11 +135,14 @@ html.dark-mode .theme-toggle-btn:hover {
 }
 
 .auth-title {
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: #3b2c23;
+    font-size: 2.25rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    background: linear-gradient(135deg, var(--sigma-accent) 0%, var(--sigma-accent-2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
     margin-bottom: 0.35rem;
-    letter-spacing: -0.5px;
 }
 
 .auth-subtitle {
@@ -453,4 +456,8 @@ html.dark-mode .theme-toggle-btn {
 
 html.dark-mode .theme-toggle-btn:hover {
     background: #3D2A1F;
+}
+
+.auth-title {
+    font-family: 'Outfit', system-ui, sans-serif !important;
 }

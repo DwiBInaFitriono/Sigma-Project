@@ -92,10 +92,14 @@ body.sigma-app::before {
 }
 
 .mobile-logo {
-    font-size: 1.25rem;
-    font-weight: 800;
+    font-size: 1.6rem;
+    font-weight: 900;
     letter-spacing: 0.15em;
     text-transform: uppercase;
+    background: linear-gradient(135deg, var(--sigma-accent) 0%, var(--sigma-accent-2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
 }
 
 .btn-toggle-sidebar,
@@ -180,9 +184,20 @@ body.sigma-app::before {
 
 .sidebar-brand {
     margin: 0;
-    font-size: 1.5rem;
-    font-weight: 800;
-    letter-spacing: 0.15em;
+    font-size: 2.2rem;
+    font-weight: 900;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, var(--sigma-accent) 0%, var(--sigma-accent-2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+    filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.05));
+    transition: transform 0.3s ease;
+}
+
+.sidebar-brand:hover {
+    transform: scale(1.05);
 }
 
 .sidebar-subtitle {
@@ -944,4 +959,18 @@ body.sigma-app::before {
     font-size: 0.85rem;
     font-weight: 600;
     letter-spacing: 0.02em;
+}
+
+/* Headline Typography Overrides */
+h1, h2, h3, h4, h5, h6,
+.sidebar-brand,
+.sidebar-subtitle,
+.section-kicker,
+.mobile-logo,
+.card-title,
+.dashboard-score-card-title,
+.section-title,
+.content-title,
+.content-subtitle {
+    font-family: 'Outfit', system-ui, sans-serif !important;
 }

@@ -16,8 +16,8 @@
                     </div>
 
                     <div class="datetime-widget">
-                        <div id="realtime-clock" class="time-display">{{ now()->timezone('Asia/Jakarta')->format('H:i:s') }}</div>
                         <div id="realtime-date" class="date-display">{{ now()->timezone('Asia/Jakarta')->translatedFormat('l, d M Y') }}</div>
+                        <div id="realtime-clock" class="time-display">{{ now()->timezone('Asia/Jakarta')->format('H:i:s') }}</div>
                     </div>
                 </div>
             </header>
@@ -231,6 +231,7 @@
             accelLogSamples: @json($accelLogSamples),
             summary: @json($summary),
             lastUpdatedAt: @json($lastUpdatedAt),
+            seismicEvents: @json($seismicEvents),
         };
         const dashboardDataUrl = @json($dashboardDataUrl);
 
@@ -238,7 +239,7 @@
         const REFRESH_MS = 5000;
 
         let accelChart = null;
-        const mapState = { map: null, marker: null };
+        const mapState = { map: null, marker: null, seismicLayers: [] };
 
         function updateClock() {
             const now = new Date();
@@ -268,19 +269,31 @@
 
         function buildChartOptions(samples) {
             const isMobile = window.innerWidth <= 768;
+            const isDark = document.documentElement.classList.contains('dark-mode');
+            const labelColor = isDark ? '#c4a98a' : '#6b5545';
+            const gridColor  = isDark ? 'rgba(194, 116, 62, 0.15)' : 'rgba(107, 85, 69, 0.12)';
+
             return {
                 chart: {
-                    type: 'line',
-                    height: 300,
+                    type: 'area',
+                    height: 340,
                     fontFamily: 'Plus Jakarta Sans, system-ui, sans-serif',
                     toolbar: { show: false },
                     animations: {
                         enabled: !isMobile,
                         easing: 'easeinout',
-                        speed: 400,
-                        dynamicAnimation: { enabled: !isMobile, speed: 300 },
+                        speed: 500,
+                        dynamicAnimation: { enabled: !isMobile, speed: 350 },
                     },
                     background: 'transparent',
+                    dropShadow: {
+                        enabled: !isMobile,
+                        top: 2,
+                        left: 0,
+                        blur: 4,
+                        color: '#e63946',
+                        opacity: 0.18,
+                    },
                 },
                 series: [
                     { name: 'X', data: samples.map((s) => s.x) },
@@ -289,10 +302,9 @@
                     { name: 'Magnitudo', data: samples.map((s) => s.magnitude) },
                 ],
                 xaxis: {
-                    // Use real server timestamps from each sample
                     categories: samples.map((s) => s.time || '--'),
                     labels: {
-                        style: { colors: '#A89081', fontWeight: 600 },
+                        style: { colors: labelColor, fontWeight: 600, fontSize: '11px' },
                         hideOverlappingLabels: true,
                         rotate: 0,
                     },
@@ -300,42 +312,70 @@
                     axisTicks: { show: false },
                 },
                 yaxis: {
-                    labels: { style: { colors: '#A89081', fontWeight: 600 } },
+                    labels: {
+                        style: { colors: labelColor, fontWeight: 600, fontSize: '11px' },
+                        formatter: (val) => val != null ? val.toFixed(1) : '0',
+                    },
                 },
-                stroke: { curve: isMobile ? 'straight' : 'smooth', width: [2, 2, 2, 4] },
-                colors: ['#8B5026', '#C2743E', '#E58A47', '#E13B3B'],
+                stroke: {
+                    curve: isMobile ? 'straight' : 'smooth',
+                    width: [2.5, 2.5, 2.5, 3.5],
+                    lineCap: 'round',
+                },
+                colors: ['#3b82f6', '#10b981', '#f59e0b', '#e63946'],
                 fill: {
-                    type: 'gradient',
+                    type: ['solid', 'solid', 'solid', 'gradient'],
+                    opacity: [0.02, 0.02, 0.02, 1],
                     gradient: {
-                        shade: 'light',
+                        shade: isDark ? 'dark' : 'light',
                         type: 'vertical',
-                        opacityFrom: [0, 0, 0, 0.4],
-                        opacityTo: [0, 0, 0, 0],
-                        stops: [0, 100],
+                        opacityFrom: 0.35,
+                        opacityTo: 0.02,
+                        stops: [0, 95, 100],
+                        colorStops: [
+                            { offset: 0, color: '#e63946', opacity: 0.35 },
+                            { offset: 60, color: '#e63946', opacity: 0.10 },
+                            { offset: 100, color: '#e63946', opacity: 0.01 },
+                        ],
                     },
                 },
                 markers: {
-                    size: [0, 0, 0, 3],
-                    strokeWidth: 2,
-                    hover: { size: 6 },
+                    size: [3, 3, 3, 5],
+                    strokeWidth: [1, 1, 1, 2],
+                    strokeColors: ['#3b82f6', '#10b981', '#f59e0b', '#fff'],
+                    hover: { size: 8, sizeOffset: 3 },
                 },
                 grid: {
-                    borderColor: 'rgba(139, 80, 38, 0.1)',
-                    strokeDashArray: 0,
+                    borderColor: gridColor,
+                    strokeDashArray: 4,
                     xaxis: { lines: { show: true } },
                     yaxis: { lines: { show: true } },
+                    padding: { left: 8, right: 8, top: 0, bottom: 0 },
                 },
                 tooltip: {
                     shared: true,
                     intersect: false,
-                    theme: document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light',
+                    theme: isDark ? 'dark' : 'light',
+                    y: {
+                        formatter: (val) => val != null ? val.toFixed(4) : '0',
+                    },
+                    style: { fontSize: '12px' },
                 },
                 legend: {
                     show: true,
                     position: 'top',
-                    labels: { colors: '#A89081' },
+                    horizontalAlign: 'center',
+                    labels: { colors: labelColor },
                     fontWeight: 700,
+                    fontSize: '13px',
+                    markers: {
+                        size: 6,
+                        shape: 'circle',
+                        strokeWidth: 0,
+                    },
+                    itemMargin: { horizontal: 12, vertical: 4 },
                 },
+                dataLabels: { enabled: false },
             };
         }
 
@@ -382,14 +422,14 @@
             return document.documentElement.classList.contains('dark-mode') ? tileDark : tileLight;
         }
 
-        function renderMap(gps) {
+        function renderMap(gps, seismicEvents = []) {
             if (typeof L === 'undefined') return;
             const lat = Number(gps.latitude);
             const lng = Number(gps.longitude);
             if (!Number.isFinite(lat) || !Number.isFinite(lng) || (lat === 0 && lng === 0)) return;
 
             const popupHtml = `
-                <div style="font-family:'Plus Jakarta Sans',sans-serif;min-width:180px;line-height:1.6;">
+                <div style="font-family:'Plus Jakarta Sans',sans-serif;min-width:180px;line-height:1.6;color:#1e293b;">
                     <div style="font-weight:800;font-size:14px;margin-bottom:6px;color:#C2743E;">📍 GPS NEO-6M</div>
                     <div style="font-size:12px;">
                         <b>Lat:</b> ${formatNumber(lat, 7)}<br>
@@ -417,6 +457,56 @@
                 } else {
                     mapState.map.panTo([lat, lng]);
                 }
+            }
+
+            // Remove old seismic markers/circles
+            if (mapState.seismicLayers) {
+                mapState.seismicLayers.forEach(layer => layer.remove());
+            }
+            mapState.seismicLayers = [];
+
+            // Add new seismic circles/dots
+            if (seismicEvents && Array.isArray(seismicEvents)) {
+                seismicEvents.forEach(event => {
+                    const evLat = Number(event.latitude);
+                    const evLng = Number(event.longitude);
+                    if (!Number.isFinite(evLat) || !Number.isFinite(evLng)) return;
+
+                    const radius = Math.max(20, Number(event.magnitude) * 80);
+
+                    const popupContent = `
+                        <div style="font-family:'Plus Jakarta Sans',sans-serif;min-width:180px;line-height:1.6;color:#1e293b;">
+                            <div style="font-weight:800;font-size:14px;margin-bottom:6px;color:${event.mmi_color || '#ef4444'};">🚨 Deteksi Getaran</div>
+                            <div style="font-size:12px;">
+                                <b>Waktu:</b> ${event.recorded_at}<br>
+                                <b>Magnitudo:</b> ${formatNumber(event.magnitude, 4)}<br>
+                                <b>Level MMI:</b> <span style="font-weight:800;color:${event.mmi_color};">${event.mmi_level}</span><br>
+                                <b>Status:</b> <span style="font-weight:700;color:${event.mmi_color};">${event.mmi_status}</span><br>
+                                <b>Device:</b> ${event.device_id || 'Unknown'}<br>
+                                <b>Koordinat:</b> ${formatNumber(evLat, 7)}, ${formatNumber(evLng, 7)}
+                            </div>
+                        </div>`;
+
+                    const circle = L.circle([evLat, evLng], {
+                        radius: radius,
+                        color: event.mmi_color || '#ef4444',
+                        fillColor: event.mmi_color || '#ef4444',
+                        fillOpacity: 0.15,
+                        weight: 1.5,
+                        dashArray: '5, 5'
+                    }).addTo(mapState.map);
+
+                    const centerMarker = L.circleMarker([evLat, evLng], {
+                        radius: 6,
+                        color: '#ffffff',
+                        fillColor: event.mmi_color || '#ef4444',
+                        fillOpacity: 1,
+                        weight: 2
+                    }).addTo(mapState.map).bindPopup(popupContent);
+
+                    mapState.seismicLayers.push(circle);
+                    mapState.seismicLayers.push(centerMarker);
+                });
             }
         }
 
@@ -496,11 +586,12 @@
             // Log uses filtered samples (only where magnitude >= 0.34)
             const logSamples = data.accelLogSamples  || [];
             const gpsLogSamples = data.gpsLogSamples || [];
+            const seismicEvents = data.seismicEvents || [];
 
             setText('currentMagnitude', formatNumber(accel.magnitude));
             setText('currentAxes', `${formatNumber(accel.x)} / ${formatNumber(accel.y)} / ${formatNumber(accel.z)}`);
             setText('currentAccelTime', accel.time ?? '--');
-            setText('lastUpdatedAt', accel.time ?? '--');
+            setText('lastUpdatedAt', data.lastUpdatedAt ?? accel.time ?? '--');
 
             setText('gpsLatitude',   formatNumber(gps.latitude, 7));
             setText('gpsLongitude',  formatNumber(gps.longitude, 7));
@@ -528,7 +619,7 @@
             setText('sampleCount',      String(summary.count ?? 0));
 
             try { renderChart(samples); }        catch (e) { console.warn('[SIGMA] Chart error:', e); }
-            try { renderMap(gps); }              catch (e) { console.warn('[SIGMA] Map error:', e); }
+            try { renderMap(gps, seismicEvents); } catch (e) { console.warn('[SIGMA] Map error:', e); }
             try { renderSampleTable(logSamples); } catch (e) { console.warn('[SIGMA] Table error:', e); }
             try { renderGpsTable(gpsLogSamples); } catch (e) { console.warn('[SIGMA] GPS Table error:', e); }
         }
@@ -579,12 +670,21 @@
 
         refreshDashboardData();
 
-        // Dark mode observer for chart
+        // Dark mode observer — rebuild chart colors on theme toggle
+        let lastChartSamples = initialDashboardData.accelSamples || [];
         const observer = new MutationObserver(() => {
             if (accelChart) {
                 try {
                     const isDark = document.documentElement.classList.contains('dark-mode');
-                    accelChart.updateOptions({ tooltip: { theme: isDark ? 'dark' : 'light' } });
+                    const labelColor = isDark ? '#c4a98a' : '#6b5545';
+                    const gridColor  = isDark ? 'rgba(194, 116, 62, 0.15)' : 'rgba(107, 85, 69, 0.12)';
+                    accelChart.updateOptions({
+                        tooltip: { theme: isDark ? 'dark' : 'light' },
+                        xaxis: { labels: { style: { colors: labelColor } } },
+                        yaxis: { labels: { style: { colors: labelColor } } },
+                        grid: { borderColor: gridColor },
+                        legend: { labels: { colors: labelColor } },
+                    }, false, false);
                 } catch (e) {}
             }
         });

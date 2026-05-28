@@ -197,19 +197,31 @@
 
         function buildChartOptions(samples) {
             const isMobile = window.innerWidth <= 768;
+            const isDark = document.documentElement.classList.contains('dark-mode');
+            const labelColor = isDark ? '#c4a98a' : '#6b5545';
+            const gridColor  = isDark ? 'rgba(194, 116, 62, 0.15)' : 'rgba(107, 85, 69, 0.12)';
+
             return {
                 chart: {
-                    type: 'line',
-                    height: isMobile ? 320 : 520, // Smaller chart height on mobile for visibility
+                    type: 'area',
+                    height: isMobile ? 320 : 520,
                     fontFamily: 'Plus Jakarta Sans, system-ui, sans-serif',
                     toolbar: { show: false },
                     animations: {
                         enabled: !isMobile,
                         easing: 'easeinout',
-                        speed: 400,
-                        dynamicAnimation: { enabled: !isMobile, speed: 300 },
+                        speed: 500,
+                        dynamicAnimation: { enabled: !isMobile, speed: 350 },
                     },
                     background: 'transparent',
+                    dropShadow: {
+                        enabled: !isMobile,
+                        top: 2,
+                        left: 0,
+                        blur: 4,
+                        color: '#e63946',
+                        opacity: 0.18,
+                    },
                 },
                 series: [
                     { name: 'X', data: samples.map((s) => s.x) },
@@ -220,7 +232,7 @@
                 xaxis: {
                     categories: samples.map((s) => s.time || '--'),
                     labels: {
-                        style: { colors: '#A89081', fontWeight: 600 },
+                        style: { colors: labelColor, fontWeight: 600, fontSize: '11px' },
                         hideOverlappingLabels: true,
                         rotate: 0,
                     },
@@ -228,29 +240,70 @@
                     axisTicks: { show: false },
                 },
                 yaxis: {
-                    labels: { style: { colors: '#A89081', fontWeight: 600 } },
-                },
-                stroke: { curve: isMobile ? 'straight' : 'smooth', width: [2, 2, 2, 4] },
-                colors: ['#8B5026', '#C2743E', '#E58A47', '#E13B3B'],
-                fill: {
-                    type: 'gradient',
-                    gradient: {
-                        shade: 'light',
-                        type: 'vertical',
-                        opacityFrom: [0, 0, 0, 0.4],
-                        opacityTo: [0, 0, 0, 0],
-                        stops: [0, 100],
+                    labels: {
+                        style: { colors: labelColor, fontWeight: 600, fontSize: '11px' },
+                        formatter: (val) => val != null ? val.toFixed(1) : '0',
                     },
                 },
-                grid: { borderColor: 'rgba(214, 196, 176, 0.15)', strokeDashArray: 4 },
-                legend: {
-                    position: 'top',
-                    horizontalAlign: 'right',
-                    labels: { colors: '#A89081' },
+                stroke: {
+                    curve: isMobile ? 'straight' : 'smooth',
+                    width: [2.5, 2.5, 2.5, 3.5],
+                    lineCap: 'round',
+                },
+                colors: ['#3b82f6', '#10b981', '#f59e0b', '#e63946'],
+                fill: {
+                    type: ['solid', 'solid', 'solid', 'gradient'],
+                    opacity: [0.02, 0.02, 0.02, 1],
+                    gradient: {
+                        shade: isDark ? 'dark' : 'light',
+                        type: 'vertical',
+                        opacityFrom: 0.35,
+                        opacityTo: 0.02,
+                        stops: [0, 95, 100],
+                        colorStops: [
+                            { offset: 0, color: '#e63946', opacity: 0.35 },
+                            { offset: 60, color: '#e63946', opacity: 0.10 },
+                            { offset: 100, color: '#e63946', opacity: 0.01 },
+                        ],
+                    },
+                },
+                markers: {
+                    size: [3, 3, 3, 5],
+                    strokeWidth: [1, 1, 1, 2],
+                    strokeColors: ['#3b82f6', '#10b981', '#f59e0b', '#fff'],
+                    hover: { size: 8, sizeOffset: 3 },
+                },
+                grid: {
+                    borderColor: gridColor,
+                    strokeDashArray: 4,
+                    xaxis: { lines: { show: true } },
+                    yaxis: { lines: { show: true } },
+                    padding: { left: 8, right: 8, top: 0, bottom: 0 },
                 },
                 tooltip: {
-                    theme: document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light',
+                    shared: true,
+                    intersect: false,
+                    theme: isDark ? 'dark' : 'light',
+                    y: {
+                        formatter: (val) => val != null ? val.toFixed(4) : '0',
+                    },
+                    style: { fontSize: '12px' },
                 },
+                legend: {
+                    show: true,
+                    position: 'top',
+                    horizontalAlign: 'center',
+                    labels: { colors: labelColor },
+                    fontWeight: 700,
+                    fontSize: '13px',
+                    markers: {
+                        size: 6,
+                        shape: 'circle',
+                        strokeWidth: 0,
+                    },
+                    itemMargin: { horizontal: 12, vertical: 4 },
+                },
+                dataLabels: { enabled: false },
             };
         }
 
@@ -419,11 +472,20 @@
         refreshChartData();
         refreshLogData();
 
+        // Dark mode observer — rebuild chart colors on theme toggle
         const observer = new MutationObserver(() => {
             if (accelChart) {
                 try {
                     const isDark = document.documentElement.classList.contains('dark-mode');
-                    accelChart.updateOptions({ tooltip: { theme: isDark ? 'dark' : 'light' } });
+                    const labelColor = isDark ? '#c4a98a' : '#6b5545';
+                    const gridColor  = isDark ? 'rgba(194, 116, 62, 0.15)' : 'rgba(107, 85, 69, 0.12)';
+                    accelChart.updateOptions({
+                        tooltip: { theme: isDark ? 'dark' : 'light' },
+                        xaxis: { labels: { style: { colors: labelColor } } },
+                        yaxis: { labels: { style: { colors: labelColor } } },
+                        grid: { borderColor: gridColor },
+                        legend: { labels: { colors: labelColor } },
+                    }, false, false);
                 } catch (e) {}
             }
         });

@@ -146,6 +146,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         const initialDashboardData = {
             gps: @json($gps),
+            seismicEvents: @json($seismicEvents),
         };
         const initialGpsLog = @json($gpsLog);
         const dashboardDataUrl = @json(route('panel.data.realtime'));
@@ -158,6 +159,7 @@
 
         let map = null;
         let marker = null;
+        let seismicLayers = [];
 
         function updateClock() {
             const now = new Date();
@@ -185,7 +187,7 @@
             if (element) { element.textContent = value; }
         }
 
-        function renderMap(gps) {
+        function renderMap(gps, seismicEvents = []) {
             if (typeof L === 'undefined') return;
 
             const mapEl = document.getElementById('gps-map');
@@ -208,12 +210,61 @@
                 map.setView([lat, lng], map.getZoom(), { animate: window.innerWidth > 768 });
                 if (marker) { marker.setLatLng([lat, lng]); }
             }
+
+            // Remove old seismic markers/circles
+            seismicLayers.forEach(layer => layer.remove());
+            seismicLayers = [];
+
+            // Add new seismic circles/dots
+            if (seismicEvents && Array.isArray(seismicEvents)) {
+                seismicEvents.forEach(event => {
+                    const evLat = Number(event.latitude);
+                    const evLng = Number(event.longitude);
+                    if (!Number.isFinite(evLat) || !Number.isFinite(evLng)) return;
+
+                    const radius = Math.max(20, Number(event.magnitude) * 80);
+
+                    const popupContent = `
+                        <div style="font-family:'Plus Jakarta Sans',sans-serif;min-width:180px;line-height:1.6;color:#1e293b;">
+                            <div style="font-weight:800;font-size:14px;margin-bottom:6px;color:${event.mmi_color || '#ef4444'};">🚨 Deteksi Getaran</div>
+                            <div style="font-size:12px;">
+                                <b>Waktu:</b> ${event.recorded_at}<br>
+                                <b>Magnitudo:</b> ${formatNumber(event.magnitude, 4)}<br>
+                                <b>Level MMI:</b> <span style="font-weight:800;color:${event.mmi_color};">${event.mmi_level}</span><br>
+                                <b>Status:</b> <span style="font-weight:700;color:${event.mmi_color};">${event.mmi_status}</span><br>
+                                <b>Device:</b> ${event.device_id || 'Unknown'}<br>
+                                <b>Koordinat:</b> ${formatNumber(evLat, 7)}, ${formatNumber(evLng, 7)}
+                            </div>
+                        </div>`;
+
+                    const circle = L.circle([evLat, evLng], {
+                        radius: radius,
+                        color: event.mmi_color || '#ef4444',
+                        fillColor: event.mmi_color || '#ef4444',
+                        fillOpacity: 0.15,
+                        weight: 1.5,
+                        dashArray: '5, 5'
+                    }).addTo(map);
+
+                    const centerMarker = L.circleMarker([evLat, evLng], {
+                        radius: 6,
+                        color: '#ffffff',
+                        fillColor: event.mmi_color || '#ef4444',
+                        fillOpacity: 1,
+                        weight: 2
+                    }).addTo(map).bindPopup(popupContent);
+
+                    seismicLayers.push(circle);
+                    seismicLayers.push(centerMarker);
+                });
+            }
         }
 
         function applyDashboardData(data) {
             if (!data) return;
 
             const gps = data.gps || {};
+            const seismicEvents = data.seismicEvents || [];
 
             setText('gpsLatitude', formatNumber(gps.latitude, 7));
             setText('gpsLongitude', formatNumber(gps.longitude, 7));
@@ -236,7 +287,7 @@
                 }
             }
 
-            try { renderMap(gps); } catch (e) { console.warn('[SIGMA] Map error:', e); }
+            try { renderMap(gps, seismicEvents); } catch (e) { console.warn('[SIGMA] Map error:', e); }
         }
 
         /**

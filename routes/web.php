@@ -1,10 +1,16 @@
 <?php
 
-use App\Http\Controllers\AlarmController;
+use App\Http\Controllers\AccelerometerController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GpsController;
+use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\PanelController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SensorCommandController;
+use App\Http\Controllers\SensorControllerController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -23,33 +29,34 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/accelerometer', [\App\Http\Controllers\AccelerometerController::class, 'index'])->name('accelerometer');
-    Route::get('/gps', [\App\Http\Controllers\GpsController::class, 'index'])->name('gps');
+    Route::get('/accelerometer', [AccelerometerController::class, 'index'])->name('accelerometer');
+    Route::get('/gps', [GpsController::class, 'index'])->name('gps');
     Route::get('/panel', [PanelController::class, 'index'])->name('panel');
     Route::get('/panel/data/realtime', [PanelController::class, 'realtimeData'])->name('panel.data.realtime');
     Route::get('/panel/data/log', [PanelController::class, 'realtimeLog'])->name('panel.data.log');
-    Route::get('/history', [\App\Http\Controllers\HistoryController::class, 'index'])->name('history');
-    Route::get('/controller', [\App\Http\Controllers\SensorControllerController::class, 'index'])->name('controller');
+    Route::get('/history', [HistoryController::class, 'index'])->name('history');
+    Route::get('/controller', [SensorControllerController::class, 'index'])->name('controller');
 
     // Sensor Command Routes
     Route::prefix('sensor-commands')->name('sensor-commands.')->group(function () {
-        Route::post('/power', [\App\Http\Controllers\SensorCommandController::class, 'power'])->name('power');
-        Route::post('/sensitivity', [\App\Http\Controllers\SensorCommandController::class, 'sensitivity'])->name('sensitivity');
-        Route::post('/reset', [\App\Http\Controllers\SensorCommandController::class, 'reset'])->name('reset');
-        Route::get('/state', [\App\Http\Controllers\SensorCommandController::class, 'state'])->name('state');
+        Route::post('/power', [SensorCommandController::class, 'power'])->name('power');
+        Route::post('/sensitivity', [SensorCommandController::class, 'sensitivity'])->name('sensitivity');
+        Route::post('/reset', [SensorCommandController::class, 'reset'])->name('reset');
+        Route::post('/reset-esp32', [SensorCommandController::class, 'resetEsp32'])->name('reset-esp32');
+        Route::get('/state', [SensorCommandController::class, 'state'])->name('state');
     });
 
     // User Management Routes (Admin Only)
     Route::middleware('is_admin')->group(function () {
-        Route::get('/users', [\App\Http\Controllers\UserController::class, 'index'])->name('users.index');
-        Route::post('/users', [\App\Http\Controllers\UserController::class, 'store'])->name('users.store');
-        Route::patch('/users/{user}/role', [\App\Http\Controllers\UserController::class, 'updateRole'])->name('users.updateRole');
-        Route::delete('/users/{user}', [\App\Http\Controllers\UserController::class, 'destroy'])->name('users.destroy');
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::post('/users', [UserController::class, 'store'])->name('users.store');
+        Route::patch('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.updateRole');
+        Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     });
 
     // Profile Routes
-    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
-    Route::post('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
 
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });
