@@ -7,6 +7,7 @@ use App\Http\Requests\StoreAccelerometerRequest;
 use App\Http\Requests\StoreGpsRequest;
 use App\Models\AccelerometerData;
 use App\Models\GPSData;
+use App\Models\SeismicEvent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
 
@@ -75,6 +76,30 @@ class SensorDataController extends Controller
             'magnitude' => $magnitude,
             'recorded_at' => $this->resolveRecordedAt($validated['recorded_at'] ?? null),
         ]);
+
+        if ($magnitude >= 0.34) {
+            $gpsData = GPSData::query()
+                ->where('device_id', $accelerometerData->device_id)
+                ->latest('recorded_at')
+                ->first()
+                ?? GPSData::query()->latest('recorded_at')->first();
+
+            if ($gpsData) {
+                $mmi = SeismicEvent::getMmiDetails($magnitude);
+                SeismicEvent::create([
+                    'device_id' => $accelerometerData->device_id,
+                    'latitude' => $gpsData->latitude,
+                    'longitude' => $gpsData->longitude,
+                    'altitude' => $gpsData->altitude,
+                    'magnitude' => $magnitude,
+                    'mmi_level' => $mmi['level'],
+                    'mmi_status' => $mmi['status'],
+                    'accelerometer_data_id' => $accelerometerData->id,
+                    'gps_data_id' => $gpsData->id,
+                    'recorded_at' => $accelerometerData->recorded_at,
+                ]);
+            }
+        }
 
         return response()->json([
             'success' => true,
