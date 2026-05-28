@@ -26,7 +26,7 @@ class AuthenticateApiToken
             ], 401);
         }
 
-        $user = User::where('', $token)->first();
+        $user = User::where('api_token', $token)->first();
 
         if ($user === null) {
             return response()->json([
