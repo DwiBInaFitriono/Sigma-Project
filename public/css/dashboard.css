@@ -974,3 +974,25 @@ h1, h2, h3, h4, h5, h6,
 .content-subtitle {
     font-family: 'Outfit', system-ui, sans-serif !important;
 }
+
+/* Mobile & Low-End Device Performance Adjustments */
+@media (max-width: 768px) {
+    :root {
+        --sigma-blur: none !important;
+    }
+    
+    .glow-card, 
+    .panel-card, 
+    .dashboard-chart-card,
+    .sidebar,
+    .mobile-top-nav,
+    .content-topbar {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        box-shadow: none !important;
+    }
+    
+    .glow-card:hover {
+        transform: none !important;
+    }
+}
