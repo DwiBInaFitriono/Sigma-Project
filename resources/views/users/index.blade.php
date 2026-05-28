@@ -105,7 +105,7 @@
                     <tbody>
                         @forelse($users as $user)
                             <tr>
-                                <td style="font-weight: 600; color: white;">{{ $user->name }}</td>
+                                <td style="font-weight: 600; color: var(--sigma-text);">{{ $user->name }}</td>
                                 <td class="text-muted">{{ $user->email }}</td>
                                 <td>
                                     <span class="badge {{ $user->isAdmin() ? 'badge-admin' : 'badge-user' }}">
