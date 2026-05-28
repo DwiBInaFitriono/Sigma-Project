@@ -41,7 +41,7 @@
 
             <a href="{{ route('controller') }}" class="sidebar-link {{ request()->routeIs('controller') ? 'active' : '' }}">
                 <i class="fa-solid fa-rotate-right"></i>
-                <span>Reset ESP32</span>
+                <span>Reset ESP32 2U</span>
             </a>
 
             @if(auth()->check() && auth()->user()->isAdmin())

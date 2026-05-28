@@ -14,7 +14,7 @@
         <div class="content-header-flex">
             <div>
                 <p class="section-kicker">Manajemen Perangkat</p>
-                <h1>Reset ESP32</h1>
+                <h1>Reset ESP32 2U</h1>
                 <p>Kirim perintah restart ke mikrokontroler ESP32. Perangkat akan melakukan reboot dan kembali ke kondisi awal.</p>
             </div>
             <div class="datetime-widget">
