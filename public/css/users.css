@@ -41,6 +41,14 @@
     padding-right: 2.5rem;
     color-scheme: dark;
 }
+.form-control option {
+    background-color: #ffffff;
+    color: #2B1810;
+}
+html.dark-mode .form-control option {
+    background-color: #140e0a;
+    color: #F9F4F0;
+}
 .btn-submit {
     width: 100%;
     background: var(--sigma-accent);
