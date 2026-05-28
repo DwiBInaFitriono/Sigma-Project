@@ -25,6 +25,10 @@
 		transform: translateX(0);
 	}
 
+	.sidebar-inner {
+		padding-top: 6rem;
+	}
+
 	.sidebar-header {
 		display: none;
 	}

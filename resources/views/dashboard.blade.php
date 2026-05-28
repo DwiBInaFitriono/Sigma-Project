@@ -26,7 +26,7 @@
                 <div class="glow-card stat-card">
                     <div class="card-title">Status Sinkron</div>
                     <div class="card-value card-value-status">Live Update Aktif</div>
-                    <div class="card-desc">Polling otomatis setiap 1 detik</div>
+                    <div class="card-desc">Polling otomatis setiap 5 detik</div>
                 </div>
                 <div class="glow-card stat-card meter-card meter-card-magnitude">
                     <div class="card-title">Magnitudo Getaran</div>
@@ -280,19 +280,11 @@
                     fontFamily: 'Plus Jakarta Sans, system-ui, sans-serif',
                     toolbar: { show: false },
                     animations: {
-                        enabled: !isMobile,
-                        easing: 'easeinout',
-                        speed: 500,
-                        dynamicAnimation: { enabled: !isMobile, speed: 350 },
+                        enabled: false,
                     },
                     background: 'transparent',
                     dropShadow: {
-                        enabled: !isMobile,
-                        top: 2,
-                        left: 0,
-                        blur: 4,
-                        color: '#e63946',
-                        opacity: 0.18,
+                        enabled: false,
                     },
                 },
                 series: [
@@ -324,20 +316,8 @@
                 },
                 colors: ['#3b82f6', '#10b981', '#f59e0b', '#e63946'],
                 fill: {
-                    type: ['solid', 'solid', 'solid', 'gradient'],
-                    opacity: [0.02, 0.02, 0.02, 1],
-                    gradient: {
-                        shade: isDark ? 'dark' : 'light',
-                        type: 'vertical',
-                        opacityFrom: 0.35,
-                        opacityTo: 0.02,
-                        stops: [0, 95, 100],
-                        colorStops: [
-                            { offset: 0, color: '#e63946', opacity: 0.35 },
-                            { offset: 60, color: '#e63946', opacity: 0.10 },
-                            { offset: 100, color: '#e63946', opacity: 0.01 },
-                        ],
-                    },
+                    type: ['solid', 'solid', 'solid', 'solid'],
+                    opacity: [1, 1, 1, 0.2],
                 },
                 markers: {
                     size: [3, 3, 3, 5],
