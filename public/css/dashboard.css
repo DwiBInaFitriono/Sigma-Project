@@ -67,13 +67,7 @@ h1, h2, h3, h4, h5, h6, .content-title, .section-title, .card-title, .dashboard-
 }
 
 body.sigma-app::before {
-    content: '';
-    position: fixed;
-    top: -50%; left: -50%; width: 200%; height: 200%;
-    background: radial-gradient(circle at 50% 50%, var(--sigma-accent) 0%, transparent 20%);
-    opacity: 0.03;
-    pointer-events: none;
-    z-index: -1;
+    display: none;
 }
 
 .panel-layout {
@@ -92,20 +86,18 @@ body.sigma-app::before {
     align-items: center;
     justify-content: space-between;
     background: var(--sigma-surface-2);
-    backdrop-filter: var(--sigma-blur);
     border-bottom: 1px solid var(--sigma-border);
 }
 
 .mobile-logo {
-    font-size: 1.6rem;
+    font-size: 1.2rem;
     font-weight: 900;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     background: linear-gradient(135deg, #F8B803 0%, var(--sigma-accent) 50%, var(--sigma-accent-2) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     display: inline-block;
-    filter: drop-shadow(0px 2px 4px rgba(194, 116, 62, 0.4));
 }
 
 .btn-toggle-sidebar,
@@ -164,7 +156,6 @@ body.sigma-app::before {
     width: 280px;
     flex: 0 0 280px;
     background: var(--sigma-surface);
-    backdrop-filter: var(--sigma-blur);
     border-right: 1px solid var(--sigma-border);
     position: sticky;
     top: 0;
@@ -190,15 +181,14 @@ body.sigma-app::before {
 
 .sidebar-brand {
     margin: 0;
-    font-size: 2.8rem;
+    font-size: 1.8rem;
     font-weight: 900;
-    letter-spacing: 0.25em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     background: linear-gradient(135deg, #F8B803 0%, var(--sigma-accent) 50%, var(--sigma-accent-2) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     display: inline-block;
-    filter: drop-shadow(0px 4px 6px rgba(194, 116, 62, 0.4));
     transition: transform 0.3s ease;
 }
 

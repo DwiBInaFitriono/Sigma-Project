@@ -4,6 +4,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
+import 'package:audioplayers/audioplayers.dart';
 import '../services/api_service.dart';
 import '../models/telemetry.dart';
 
@@ -30,6 +31,10 @@ class _DashboardTabState extends State<DashboardTab> {
   // Map Controller
   final MapController _mapController = MapController();
 
+  // Audio Player
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  String? _lastAlarmTime;
+
   @override
   void initState() {
     super.initState();
@@ -46,6 +51,7 @@ class _DashboardTabState extends State<DashboardTab> {
     _pollingTimer?.cancel();
     _clockTimer?.cancel();
     _mapController.dispose();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -79,6 +85,17 @@ class _DashboardTabState extends State<DashboardTab> {
         // Trigger map center fly-to / pan
         if (data.gps.isConnected && data.gps.latitude != 0.0 && data.gps.longitude != 0.0) {
           _mapController.move(LatLng(data.gps.latitude, data.gps.longitude), _mapController.camera.zoom);
+        }
+
+        // Trigger alarm if there is a new seismic event
+        if (data.seismicEvents.isNotEmpty) {
+          final latestEvent = data.seismicEvents.last;
+          final eventTime = latestEvent['time'] as String;
+          if (_lastAlarmTime != eventTime) {
+            _lastAlarmTime = eventTime;
+            // Play alarm sound
+            _audioPlayer.play(AssetSource('sounds/alarm.wav'));
+          }
         }
       }
     } catch (e) {

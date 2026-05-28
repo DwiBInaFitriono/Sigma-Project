@@ -112,6 +112,7 @@ class DashboardData {
   final List<AccelerometerSample> accelSamples;
   final List<Map<String, dynamic>> accelLogSamples; // contains MMI descriptions
   final List<Map<String, dynamic>> gpsLogSamples;
+  final List<Map<String, dynamic>> seismicEvents;
   final TelemetrySummary summary;
   final String lastUpdatedAt;
 
@@ -121,6 +122,7 @@ class DashboardData {
     required this.accelSamples,
     required this.accelLogSamples,
     required this.gpsLogSamples,
+    required this.seismicEvents,
     required this.summary,
     required this.lastUpdatedAt,
   });
@@ -147,6 +149,7 @@ class DashboardData {
       accelSamples: accelSamplesList,
       accelLogSamples: accelLogSamplesList,
       gpsLogSamples: gpsLogSamplesList,
+      seismicEvents: (json['seismicEvents'] as List?)?.map((e) => e as Map<String, dynamic>).toList() ?? [],
       summary: TelemetrySummary.fromJson(json['summary'] ?? {}),
       lastUpdatedAt: json['lastUpdatedAt'] ?? '--',
     );

@@ -546,6 +546,7 @@ class ApiService {
       },
       'accelSamples': _mockAccelSamples,
       'accelLogSamples': _mockAccelLogSamples,
+      'seismicEvents': _mockAccelLogSamples, // Mock seismic events as accel log samples
       'gpsLogSamples': _mockGpsLogSamples,
       'summary': {
         'maximum': maxMag,
