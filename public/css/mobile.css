@@ -25,6 +25,10 @@
 		transform: translateX(0);
 	}
 
+	.sidebar-header {
+		display: none;
+	}
+
 	.sidebar-overlay.is-visible {
 		display: block;
 	}
