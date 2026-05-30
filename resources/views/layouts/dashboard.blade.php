@@ -3,18 +3,18 @@
 @section('content')
 <div class="panel-layout">
     <header class="mobile-top-nav">
-        <div style="display: flex; align-items: center; gap: 1rem;">
+        <div class="flex-align-center-gap-1">
             <button class="btn-toggle-sidebar" id="mobile-sidebar-toggle" type="button" aria-label="Toggle sidebar">
                 <i class="fa-solid fa-bars"></i>
             </button>
-            <a href="{{ route('dashboard') }}" class="mobile-logo" style="text-decoration: none; color: inherit;">SIGMA</a>
+            <a href="{{ route('dashboard') }}" class="mobile-logo logo-link-reset">SIGMA</a>
         </div>
         <div class="mobile-top-actions">
             <button id="theme-toggle" class="btn-toggle-sidebar" title="Toggle Dark Mode">
                 <i class="fa-solid fa-moon"></i>
             </button>
             <div class="profile-dropdown-container mobile-user" id="mobile-profile-dropdown">
-                <span style="cursor: pointer; font-weight: 600;" onclick="document.getElementById('mobile-profile-dropdown').classList.toggle('is-open')">
+                <span class="cursor-pointer font-semibold-text" onclick="document.getElementById('mobile-profile-dropdown').classList.toggle('is-open')">
                     {{ auth()->user()?->name ?? auth()->user()?->email ?? 'User' }}
                 </span>
                 <div class="profile-dropdown-menu">
@@ -23,7 +23,7 @@
                     </a>
                 </div>
             </div>
-            <form action="{{ route('logout') }}" method="POST" style="display: inline;">
+            <form action="{{ route('logout') }}" method="POST" class="display-inline">
                 @csrf
                 <button type="submit" class="btn-mobile-logout" title="Logout">
                     <i class="fa-solid fa-right-from-bracket"></i>

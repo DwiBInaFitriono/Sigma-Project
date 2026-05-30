@@ -35,7 +35,7 @@
                     <div class="live-badge">REALTIME</div>
                 </div>
 
-                <div class="dashboard-info-grid" style="margin: 1.5rem 0;">
+                <div class="dashboard-info-grid margin-y-1-5">
                     <div class="dashboard-info-card">
                         <p>NILAI X / Y / Z</p>
                         <strong id="currentAxes">{{ number_format($currentAccel['x'], 2) }} / {{ number_format($currentAccel['y'], 2) }} / {{ number_format($currentAccel['z'], 2) }}</strong>
@@ -58,10 +58,10 @@
                 <div class="section-header">
                     <h2 class="section-title">Statistik Getaran</h2>
                 </div>
-                <div class="summary-grid-vertical" style="display: grid; gap: 1rem;">
+                <div class="summary-grid-vertical grid-gap-1">
                     <div class="dashboard-score-card">
                         <p class="dashboard-score-card-title">Status Koneksi</p>
-                        <p id="connectionStatus" class="dashboard-score-card-value" style="color: {{ $currentAccel['is_connected'] ? 'var(--sigma-accent)' : 'var(--sigma-muted)' }};">{{ $currentAccel['is_connected'] ? 'Terhubung' : 'Terputus' }}</p>
+                        <p id="connectionStatus" class="dashboard-score-card-value {{ $currentAccel['is_connected'] ? 'status-connected' : 'status-disconnected' }}">{{ $currentAccel['is_connected'] ? 'Terhubung' : 'Terputus' }}</p>
                     </div>
                     <div class="dashboard-score-card">
                         <p class="dashboard-score-card-title">Magnitudo Terkini</p>
@@ -85,13 +85,13 @@
     </div>
 
     <!-- Table Log Section -->
-    <section class="glow-card panel-card log-card" style="margin-top: 2rem;">
+    <section class="glow-card panel-card log-card mt-2">
         <div class="section-header">
             <div>
                 <h2 class="section-title">Log Sensor — 5 Menit Terakhir</h2>
                 <p class="section-subtitle">Riwayat data accelerometer dari 5 menit terakhir beserta status MMI.</p>
             </div>
-            <span id="log-refresh-badge" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; color: var(--sigma-muted); padding: 0.25rem 0.6rem; border: 1px solid var(--sigma-border); border-radius: 4px;">LOG</span>
+            <span id="log-refresh-badge" class="status-pill-badge">LOG</span>
         </div>
 
         <div class="table-responsive">
@@ -124,7 +124,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-muted" style="text-align: center; padding: 2rem;">Belum ada data sensor dalam 5 menit terakhir.</td>
+                            <td colspan="7" class="text-muted table-empty-row">Belum ada data sensor dalam 5 menit terakhir.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -156,6 +156,8 @@
         const LOG_REFRESH_MS = 10000;
 
         let accelChart = null;
+        let cachedLastUpdated = null;
+        let cachedLogDataJson = null;
 
         function updateClock() {
             const now = new Date();
@@ -384,6 +386,12 @@
                 }
             }
 
+            const newTs = data.lastUpdatedAt ?? accel.time;
+            if (newTs && newTs === cachedLastUpdated) {
+                return;
+            }
+            cachedLastUpdated = newTs;
+
             try { renderChart(samples); } catch (e) { console.warn('[SIGMA] Chart error:', e); }
         }
 
@@ -444,7 +452,12 @@
                 clearTimeout(timeoutId);
                 if (!response.ok) return;
                 const data = await response.json();
-                if (data.accelLog) { renderLogTable(data.accelLog); }
+                if (data.accelLog) {
+                    const dataStr = JSON.stringify(data.accelLog);
+                    if (dataStr === cachedLogDataJson) return;
+                    cachedLogDataJson = dataStr;
+                    renderLogTable(data.accelLog);
+                }
             } catch (_) {
                 clearTimeout(timeoutId);
             } finally {

@@ -88,7 +88,7 @@
                     <h2 class="section-title">Daftar Pengguna</h2>
                     <p class="section-subtitle">Seluruh pengguna yang terdaftar di sistem.</p>
                 </div>
-                <div class="live-badge" style="background: var(--sigma-bg-alt); color: var(--sigma-text);">TOTAL: {{ $users->count() }} USER</div>
+                <div class="live-badge badge-alt">TOTAL: {{ $users->count() }} USER</div>
             </div>
 
             <div class="table-responsive">
@@ -105,7 +105,7 @@
                     <tbody>
                         @forelse($users as $user)
                             <tr>
-                                <td style="font-weight: 600; color: var(--sigma-text);">{{ $user->name }}</td>
+                                <td class="font-semibold-text">{{ $user->name }}</td>
                                 <td class="text-muted">{{ $user->email }}</td>
                                 <td>
                                     <span class="badge {{ $user->isAdmin() ? 'badge-admin' : 'badge-user' }}">
@@ -115,7 +115,7 @@
                                 <td class="text-muted">{{ $user->created_at->translatedFormat('d M Y') }}</td>
                                 <td class="text-right">
                                     @if($user->id !== auth()->id())
-                                        <form action="{{ route('users.updateRole', $user) }}" method="POST" style="display: inline-block; margin-right: 0.25rem;">
+                                        <form action="{{ route('users.updateRole', $user) }}" method="POST" class="display-inline-block mr-0-25">
                                             @csrf
                                             @method('PATCH')
                                             @if($user->isAdmin())
@@ -130,7 +130,7 @@
                                                 </button>
                                             @endif
                                         </form>
-                                        <form action="{{ route('users.destroy', $user) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengguna ini?');" style="display: inline-block;">
+                                        <form action="{{ route('users.destroy', $user) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengguna ini?');" class="display-inline-block">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn-delete" title="Hapus Pengguna">
@@ -138,13 +138,13 @@
                                             </button>
                                         </form>
                                     @else
-                                        <span class="text-muted" style="font-size: 0.85rem; font-style: italic;">Anda</span>
+                                        <span class="text-muted text-italic-sm">Anda</span>
                                     @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-muted" style="text-align: center; padding: 2rem;">Belum ada pengguna.</td>
+                                <td colspan="5" class="text-muted table-empty-row">Belum ada pengguna.</td>
                             </tr>
                         @endforelse
                     </tbody>

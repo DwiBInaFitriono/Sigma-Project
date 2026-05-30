@@ -131,3 +131,21 @@
         width: 100%;
     }
 }
+
+.grid-cols-1-gap-2 {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+}
+.badge-alt {
+    background: var(--sigma-bg-alt);
+    color: var(--sigma-text);
+}
+.history-loading-modal-title {
+    margin: 0;
+    font-weight: 600;
+}
+.history-loading-modal-text {
+    margin-top: 0.5rem;
+    opacity: 0.8;
+}
+

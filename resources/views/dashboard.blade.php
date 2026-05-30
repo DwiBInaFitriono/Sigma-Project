@@ -48,7 +48,7 @@
                             <h2 class="section-title">GPS NEO-6M</h2>
                             <p class="section-subtitle">Lokasi perangkat ditampilkan di peta OpenStreetMap.</p>
                         </div>
-                        <span id="gps-map-status-pill" class="status-pill {{ $gps['is_connected'] ? 'online' : 'offline' }}" style="{{ !$gps['is_connected'] ? 'background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.2);' : '' }}">
+                        <span id="gps-map-status-pill" class="status-pill {{ $gps['is_connected'] ? 'online' : 'offline' }}">
                             {{ $gps['is_connected'] ? 'Online' : 'Terputus' }}
                         </span>
                     </div>
@@ -92,7 +92,7 @@
                         <span class="status-pill realtime">Realtime</span>
                     </div>
 
-                    <div class="dashboard-info-grid" style="margin: 1.5rem 0;">
+                    <div class="dashboard-info-grid margin-y-1-5">
                         <div class="dashboard-info-card">
                             <p>NILAI X / Y / Z</p>
                             <strong id="currentAxes">{{ number_format($currentAccel['x'], 2) }} / {{ number_format($currentAccel['y'], 2) }} / {{ number_format($currentAccel['z'], 2) }}</strong>
@@ -166,7 +166,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-muted" style="text-align: center; padding: 2rem;">Belum ada getaran terdeteksi.</td>
+                                    <td colspan="7" class="text-muted table-empty-row">Belum ada getaran terdeteksi.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -203,11 +203,11 @@
                                     <td>{{ number_format($gps['longitude'], 7) }}</td>
                                     <td>{{ number_format($gps['altitude'], 2) }} m</td>
                                     <td>{{ $gps['satellites'] }}</td>
-                                    <td class="text-right" style="color: {{ str_contains($gps['status'], 'FIX') ? 'var(--sigma-accent)' : 'var(--sigma-muted)' }}">{{ $gps['status'] }}</td>
+                                    <td class="text-right {{ str_contains($gps['status'], 'FIX') ? 'status-connected' : 'status-disconnected' }}">{{ $gps['status'] }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-muted" style="text-align: center; padding: 2rem;">Belum ada data lokasi masuk.</td>
+                                    <td colspan="6" class="text-muted table-empty-row">Belum ada data lokasi masuk.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -240,6 +240,9 @@
 
         let accelChart = null;
         const mapState = { map: null, marker: null, seismicLayers: [] };
+        let cachedLastUpdated = null;
+        let lastGpsLat = null;
+        let lastGpsLng = null;
 
         function updateClock() {
             const now = new Date();
@@ -426,10 +429,14 @@
             } else {
                 if (mapState.marker) { mapState.marker.setLatLng([lat, lng]); mapState.marker.setPopupContent(popupHtml); }
                 if (mapState.circle) { mapState.circle.setLatLng([lat, lng]); }
-                if (window.innerWidth > 768) {
-                    mapState.map.flyTo([lat, lng], mapState.map.getZoom(), { duration: 1.5 });
-                } else {
-                    mapState.map.panTo([lat, lng]);
+                if (lat !== lastGpsLat || lng !== lastGpsLng) {
+                    lastGpsLat = lat;
+                    lastGpsLng = lng;
+                    if (window.innerWidth > 768) {
+                        mapState.map.flyTo([lat, lng], mapState.map.getZoom(), { duration: 1.5 });
+                    } else {
+                        mapState.map.panTo([lat, lng]);
+                    }
                 }
             }
 
@@ -591,6 +598,12 @@
             setText('magnitudeMaximum', formatNumber(summary.maximum));
             setText('magnitudeAverage', formatNumber(summary.average));
             setText('sampleCount',      String(summary.count ?? 0));
+
+            const newTs = data.lastUpdatedAt ?? accel.time;
+            if (newTs && newTs === cachedLastUpdated) {
+                return;
+            }
+            cachedLastUpdated = newTs;
 
             try { renderChart(samples); }        catch (e) { console.warn('[SIGMA] Chart error:', e); }
             try { renderMap(gps, seismicEvents); } catch (e) { console.warn('[SIGMA] Map error:', e); }

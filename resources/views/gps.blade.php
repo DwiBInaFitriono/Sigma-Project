@@ -27,7 +27,7 @@
     <div class="dashboard-grid">
         <div class="dashboard-main">
             <!-- Peta GPS Section -->
-            <section id="sensor-gps-card" class="glow-card panel-card map-card" style="height: 100%; display: flex; flex-direction: column;">
+            <section id="sensor-gps-card" class="glow-card panel-card map-card h-full flex-col-stretch">
                 <div class="section-header">
                     <div>
                         <h2 class="section-title">Peta Lokasi Live</h2>
@@ -36,7 +36,7 @@
                     <div class="live-badge" id="gps-live-badge">REALTIME</div>
                 </div>
 
-                <div id="gps-map" class="sensor-map" style="flex-grow: 1; min-height: 400px; border-radius: 8px; margin-top: 1rem; border: 1px solid rgba(214, 196, 176, 0.1);"></div>
+                <div id="gps-map" class="sensor-map flex-grow-1 min-h-400 rounded-8 mt-1 map-border"></div>
             </section>
         </div>
 
@@ -45,10 +45,10 @@
                 <div class="section-header">
                     <h2 class="section-title">Statistik GPS</h2>
                 </div>
-                <div class="summary-grid-vertical" style="display: grid; gap: 1rem;">
+                <div class="summary-grid-vertical grid-gap-1">
                     <div class="dashboard-score-card">
                         <p class="dashboard-score-card-title">Status Koneksi</p>
-                        <p id="connectionStatus" class="dashboard-score-card-value" style="color: {{ $gps['is_connected'] ? 'var(--sigma-accent)' : 'var(--sigma-muted)' }};">{{ $gps['is_connected'] ? 'Terhubung' : 'Terputus' }}</p>
+                        <p id="connectionStatus" class="dashboard-score-card-value {{ $gps['is_connected'] ? 'status-connected' : 'status-disconnected' }}">{{ $gps['is_connected'] ? 'Terhubung' : 'Terputus' }}</p>
                     </div>
                     <div class="dashboard-score-card">
                         <p class="dashboard-score-card-title">Fix Status</p>
@@ -64,7 +64,7 @@
                     </div>
                     <div class="dashboard-score-card">
                         <p class="dashboard-score-card-title">Waktu Pembaruan</p>
-                        <p id="gpsRecordedAt" class="dashboard-score-card-value" style="font-size: 1.25rem;">{{ $gps['recorded_at'] }}</p>
+                        <p id="gpsRecordedAt" class="dashboard-score-card-value fs-1-25">{{ $gps['recorded_at'] }}</p>
                     </div>
                 </div>
             </section>
@@ -72,14 +72,14 @@
     </div>
 
     <!-- Grid Detail Koordinat Full Width -->
-    <section class="glow-card panel-card" style="margin-top: 2rem;">
+    <section class="glow-card panel-card mt-2">
         <div class="section-header">
             <div>
                 <h2 class="section-title">Detail Koordinat Geografis</h2>
             </div>
         </div>
 
-        <div class="dashboard-info-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+        <div class="dashboard-info-grid grid-cols-200">
             <div class="dashboard-info-card">
                 <p>Latitude</p>
                 <strong id="gpsLatitude">{{ number_format($gps['latitude'], 7) }}</strong>
@@ -92,13 +92,13 @@
     </section>
 
     <!-- GPS Log Table -->
-    <section class="glow-card panel-card log-card" style="margin-top: 2rem;">
+    <section class="glow-card panel-card log-card mt-2">
         <div class="section-header">
             <div>
                 <h2 class="section-title">Log GPS — 5 Menit Terakhir</h2>
                 <p class="section-subtitle">Riwayat data koordinat dan status GPS dari 5 menit terakhir.</p>
             </div>
-            <span id="gps-log-badge" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; color: var(--sigma-muted); padding: 0.25rem 0.6rem; border: 1px solid var(--sigma-border); border-radius: 4px;">LOG</span>
+            <span id="gps-log-badge" class="status-pill-badge">LOG</span>
         </div>
 
         <div class="table-responsive">
@@ -129,7 +129,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-muted" style="text-align: center; padding: 2rem;">Belum ada data GPS dalam 5 menit terakhir.</td>
+                            <td colspan="6" class="text-muted table-empty-row">Belum ada data GPS dalam 5 menit terakhir.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -160,6 +160,10 @@
         let map = null;
         let marker = null;
         let seismicLayers = [];
+        let cachedLastUpdated = null;
+        let lastGpsLat = null;
+        let lastGpsLng = null;
+        let cachedGpsLogJson = null;
 
         function updateClock() {
             const now = new Date();
@@ -207,7 +211,11 @@
 
                 marker = L.marker([lat, lng]).addTo(map);
             } else {
-                map.setView([lat, lng], map.getZoom(), { animate: window.innerWidth > 768 });
+                if (lat !== lastGpsLat || lng !== lastGpsLng) {
+                    lastGpsLat = lat;
+                    lastGpsLng = lng;
+                    map.setView([lat, lng], map.getZoom(), { animate: window.innerWidth > 768 });
+                }
                 if (marker) { marker.setLatLng([lat, lng]); }
             }
 
@@ -286,6 +294,12 @@
                     if (liveBadgeEl) liveBadgeEl.style.display = 'none';
                 }
             }
+
+            const newTs = data.lastUpdatedAt ?? gps.recorded_at;
+            if (newTs && newTs === cachedLastUpdated) {
+                return;
+            }
+            cachedLastUpdated = newTs;
 
             try { renderMap(gps, seismicEvents); } catch (e) { console.warn('[SIGMA] Map error:', e); }
         }
@@ -377,7 +391,12 @@
                 clearTimeout(timeoutId);
                 if (!response.ok) return;
                 const data = await response.json();
-                if (data.gpsLog) { renderGpsLogTable(data.gpsLog); }
+                if (data.gpsLog) {
+                    const dataStr = JSON.stringify(data.gpsLog);
+                    if (dataStr === cachedGpsLogJson) return;
+                    cachedGpsLogJson = dataStr;
+                    renderGpsLogTable(data.gpsLog);
+                }
             } catch (_) {
                 clearTimeout(timeoutId);
             } finally {

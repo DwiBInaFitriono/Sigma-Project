@@ -20,7 +20,7 @@
     </header>
 
     @if (session('success'))
-        <div class="alert alert-success" style="margin-bottom: 2rem;">
+        <div class="alert alert-success mb-2">
             {{ session('success') }}
         </div>
     @endif
@@ -48,7 +48,7 @@
                     @error('email')<span class="error-text">{{ $message }}</span>@enderror
                 </div>
 
-                <div class="section-header" style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--sigma-border);">
+                <div class="section-header profile-border-top-section">
                     <div>
                         <h2 class="section-title">Keamanan</h2>
                         <p class="section-subtitle">Kosongkan jika Anda tidak ingin mengubah kata sandi.</p>
@@ -66,7 +66,7 @@
                     <input type="password" id="password_confirmation" name="password_confirmation" class="form-control" autocomplete="new-password">
                 </div>
 
-                <button type="submit" class="btn-submit" style="margin-top: 1.5rem;">
+                <button type="submit" class="btn-submit mt-1-5">
                     Simpan Perubahan
                 </button>
             </form>

@@ -5,7 +5,7 @@
             <i class="fa-solid fa-moon"></i>
         </button>
         <div class="profile-dropdown-container" id="desktop-profile-dropdown">
-            <div class="topbar-profile" style="cursor: pointer;" onclick="document.getElementById('desktop-profile-dropdown').classList.toggle('is-open')">
+            <div class="topbar-profile cursor-pointer" onclick="document.getElementById('desktop-profile-dropdown').classList.toggle('is-open')">
                 <div class="topbar-avatar">
                     <i class="fa-solid fa-user"></i>
                 </div>
@@ -17,7 +17,7 @@
                 </a>
             </div>
         </div>
-        <form action="{{ route('logout') }}" method="POST" style="display: inline;">
+        <form action="{{ route('logout') }}" method="POST" class="display-inline">
             @csrf
             <button type="submit" class="topbar-icon-btn topbar-logout-btn" title="Logout">
                 <i class="fa-solid fa-right-from-bracket"></i>

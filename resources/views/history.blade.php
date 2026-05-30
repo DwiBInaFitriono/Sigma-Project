@@ -34,7 +34,7 @@
         </button>
     </form>
 
-    <div class="dashboard-grid" style="grid-template-columns: 1fr; gap: 2rem;">
+    <div class="dashboard-grid grid-cols-1-gap-2">
         
         <!-- Table Log Accelerometer -->
         <section class="glow-card panel-card log-card">
@@ -43,7 +43,7 @@
                     <h2 class="section-title">Sensor ADXL345</h2>
                     <p class="section-subtitle">Riwayat getaran terdeteksi (magnitudo ≥ 0.15) pada tanggal {{ \Carbon\Carbon::parse($selectedDate)->translatedFormat('d F Y') }}.</p>
                 </div>
-                <div class="live-badge" style="background: var(--sigma-bg-alt); color: var(--sigma-text);">TOTAL: {{ $accelerometerLogs->total() }} GEMPA</div>
+                <div class="live-badge badge-alt">TOTAL: {{ $accelerometerLogs->total() }} GEMPA</div>
             </div>
 
             <div class="table-responsive">
@@ -80,7 +80,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-muted" style="text-align: center; padding: 2rem;">Tidak ada getaran terdeteksi pada tanggal ini.</td>
+                                <td colspan="7" class="text-muted table-empty-row">Tidak ada getaran terdeteksi pada tanggal ini.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -101,7 +101,7 @@
                     <h2 class="section-title">Log GPS (NEO-6M)</h2>
                     <p class="section-subtitle">Menampilkan data lokasi untuk tanggal {{ \Carbon\Carbon::parse($selectedDate)->translatedFormat('d F Y') }}.</p>
                 </div>
-                <div class="live-badge" style="background: var(--sigma-bg-alt); color: var(--sigma-text);">TOTAL: {{ $gpsLogs->total() }} LOG</div>
+                <div class="live-badge badge-alt">TOTAL: {{ $gpsLogs->total() }} LOG</div>
             </div>
 
             <div class="table-responsive">
@@ -124,11 +124,11 @@
                                 <td>{{ number_format($gps->longitude, 7) }}</td>
                                 <td>{{ number_format($gps->altitude, 2) }} m</td>
                                 <td>{{ $gps->satellites }}</td>
-                                <td class="text-right" style="color: {{ str_contains($gps->status, 'FIX') ? 'var(--sigma-accent)' : 'var(--sigma-muted)' }}">{{ $gps->status }}</td>
+                                <td class="text-right {{ str_contains($gps->status, 'FIX') ? 'status-connected' : 'status-disconnected' }}">{{ $gps->status }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-muted" style="text-align: center; padding: 2rem;">Tidak ada data log GPS pada tanggal ini.</td>
+                                <td colspan="6" class="text-muted table-empty-row">Tidak ada data log GPS pada tanggal ini.</td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -154,8 +154,8 @@
 <!-- Loading Modal -->
 <div id="pdf-loading-modal">
     <div class="spinner"></div>
-    <h2 style="margin: 0; font-weight: 600;">Membuat Laporan PDF...</h2>
-    <p style="margin-top: 0.5rem; opacity: 0.8;" id="pdf-loading-text">Menyiapkan grafik dan peta...</p>
+    <h2 class="history-loading-modal-title">Membuat Laporan PDF...</h2>
+    <p class="history-loading-modal-text" id="pdf-loading-text">Menyiapkan grafik dan peta...</p>
 </div>
 @endsection
 
