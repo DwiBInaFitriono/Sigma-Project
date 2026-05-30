@@ -10,6 +10,7 @@
                     <i class="fa-solid fa-user"></i>
                 </div>
                 <span class="topbar-user-name">{{ auth()->user()?->name ?? auth()->user()?->email ?? 'User' }}</span>
+                <i class="fa-solid fa-chevron-down profile-dropdown-arrow"></i>
             </div>
             <div class="profile-dropdown-menu">
                 <a href="{{ route('profile.edit') }}" class="profile-dropdown-item">

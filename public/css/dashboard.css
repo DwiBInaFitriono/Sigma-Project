@@ -411,11 +411,15 @@ body.sigma-app::before {
 .topbar-profile {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    padding: 0.35rem 0.75rem 0.35rem 0.35rem;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.35rem 0.65rem 0.35rem 0.35rem;
     border-radius: var(--sigma-radius-btn);
     border: 1px solid var(--sigma-border);
     background: var(--sigma-surface-2);
+    min-width: 130px;
+    height: 40px;
+    box-sizing: border-box;
 }
 
 .topbar-avatar {
@@ -428,6 +432,7 @@ body.sigma-app::before {
     background: var(--sigma-accent);
     color: #fff;
     font-size: 0.7rem;
+    flex-shrink: 0;
 }
 
 .topbar-user-name {
@@ -435,7 +440,12 @@ body.sigma-app::before {
     font-weight: 700;
     color: var(--sigma-text);
     letter-spacing: -0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 65px;
 }
+
 
 /* Profile Dropdown Styles */
 .profile-dropdown-container {
@@ -446,9 +456,10 @@ body.sigma-app::before {
 .profile-dropdown-menu {
     position: absolute;
     top: calc(100% + 0.5rem);
+    left: 0;
     right: 0;
-    width: max-content;
-    min-width: 150px;
+    width: 100%;
+    min-width: 130px;
     background: var(--sigma-surface-2);
     border: 1px solid var(--sigma-border);
     border-radius: var(--sigma-radius-card);
@@ -467,6 +478,18 @@ body.sigma-app::before {
     opacity: 1;
     transform: translateY(0);
 }
+
+.profile-dropdown-arrow {
+    font-size: 0.7rem;
+    color: var(--sigma-muted);
+    transition: transform 0.25s ease;
+    flex-shrink: 0;
+}
+
+.profile-dropdown-container.is-open .profile-dropdown-arrow {
+    transform: rotate(180deg);
+}
+
 
 .profile-dropdown-item {
     display: flex;

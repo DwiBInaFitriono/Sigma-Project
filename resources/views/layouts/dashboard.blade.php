@@ -13,10 +13,14 @@
             <button id="theme-toggle" class="btn-toggle-sidebar" title="Toggle Dark Mode">
                 <i class="fa-solid fa-moon"></i>
             </button>
-            <div class="profile-dropdown-container mobile-user" id="mobile-profile-dropdown">
-                <span class="cursor-pointer font-semibold-text" onclick="document.getElementById('mobile-profile-dropdown').classList.toggle('is-open')">
-                    {{ auth()->user()?->name ?? auth()->user()?->email ?? 'User' }}
-                </span>
+            <div class="profile-dropdown-container mobile-user-container" id="mobile-profile-dropdown">
+                <div class="topbar-profile cursor-pointer" onclick="document.getElementById('mobile-profile-dropdown').classList.toggle('is-open')">
+                    <div class="topbar-avatar">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <span class="topbar-user-name">{{ auth()->user()?->name ?? auth()->user()?->email ?? 'User' }}</span>
+                    <i class="fa-solid fa-chevron-down profile-dropdown-arrow"></i>
+                </div>
                 <div class="profile-dropdown-menu">
                     <a href="{{ route('profile.edit') }}" class="profile-dropdown-item">
                         <i class="fa-solid fa-user-pen"></i> Manage Profile
