@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'services/api_service.dart';
+import 'services/background_service.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_navigation.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Request notification permissions for Android 13+
+  await Permission.notification.request();
+
   // Initialize API and mock configurations
   final apiService = ApiService();
   await apiService.init();
+
+  // Initialize Background Service
+  await initializeBackgroundService();
   
   runApp(const SigmaApp());
 }
