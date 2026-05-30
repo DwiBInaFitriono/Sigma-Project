@@ -127,7 +127,7 @@ class _ControlPanelTabState extends State<ControlPanelTab> {
                               ),
                               SizedBox(height: 2),
                               Text(
-                                "ESP32 DevKit V1 — Node Sensor SIGMA",
+                                "ESP32 2U — Node Sensor SIGMA",
                                 style: TextStyle(fontSize: 11, color: Colors.grey),
                               ),
                             ],

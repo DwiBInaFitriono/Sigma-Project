@@ -35,25 +35,25 @@ class SeismicEvent extends Model
 
     public static function getMmiDetails(float $magnitude): array
     {
-        if ($magnitude < 0.34) {
+        if ($magnitude < 0.15) {
             return [
                 'level' => 'I',
                 'status' => 'Aman',
                 'color' => '#22c55e',
             ];
-        } elseif ($magnitude < 2.8) {
+        } elseif ($magnitude < 0.30) {
             return [
                 'level' => 'II-III',
                 'status' => 'Lemah',
                 'color' => '#86efac',
             ];
-        } elseif ($magnitude < 7.8) {
+        } elseif ($magnitude < 0.60) {
             return [
                 'level' => 'IV',
                 'status' => 'Waspada',
                 'color' => '#f59e0b',
             ];
-        } elseif ($magnitude < 18.4) {
+        } elseif ($magnitude < 1.00) {
             return [
                 'level' => 'V',
                 'status' => 'Bahaya!',

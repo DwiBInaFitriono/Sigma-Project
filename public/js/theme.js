@@ -1,6 +1,6 @@
 // Theme Toggle Management
 (function () {
-    const THEME_KEY = 'sigma-theme';
+    const THEME_KEY = 'theme';
     const DARK_CLASS = 'dark-mode';
 
     // Get saved theme or system preference
