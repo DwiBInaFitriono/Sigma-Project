@@ -149,10 +149,10 @@
                             @forelse($accelLogSamples as $sample)
                                 @php
                                     $mag = (float) $sample['magnitude'];
-                                    if ($mag < 0.34)      { $mmiLevel = 'I';      $mmiStatus = 'Aman';    $mmiColor = '#22c55e'; }
-                                    elseif ($mag < 2.8)   { $mmiLevel = 'II-III'; $mmiStatus = 'Lemah';   $mmiColor = '#86efac'; }
-                                    elseif ($mag < 7.8)   { $mmiLevel = 'IV';     $mmiStatus = 'Waspada'; $mmiColor = '#f59e0b'; }
-                                    elseif ($mag < 18.4)  { $mmiLevel = 'V';      $mmiStatus = 'Bahaya!'; $mmiColor = '#f97316'; }
+                                    if ($mag < 0.15)      { $mmiLevel = 'I';      $mmiStatus = 'Aman';    $mmiColor = '#22c55e'; }
+                                    elseif ($mag < 0.30)  { $mmiLevel = 'II-III'; $mmiStatus = 'Lemah';   $mmiColor = '#86efac'; }
+                                    elseif ($mag < 0.60)  { $mmiLevel = 'IV';     $mmiStatus = 'Waspada'; $mmiColor = '#f59e0b'; }
+                                    elseif ($mag < 1.00)  { $mmiLevel = 'V';      $mmiStatus = 'Bahaya!'; $mmiColor = '#f97316'; }
                                     else                  { $mmiLevel = 'VI+';    $mmiStatus = 'AWAS!';   $mmiColor = '#ef4444'; }
                                 @endphp
                                 <tr>
@@ -288,9 +288,6 @@
                     },
                 },
                 series: [
-                    { name: 'X', type: 'line', data: samples.map((s) => s.x) },
-                    { name: 'Y', type: 'line', data: samples.map((s) => s.y) },
-                    { name: 'Z', type: 'line', data: samples.map((s) => s.z) },
                     { name: 'Magnitudo', type: 'area', data: samples.map((s) => s.magnitude) },
                 ],
                 xaxis: {
@@ -311,18 +308,18 @@
                 },
                 stroke: {
                     curve: isMobile ? 'straight' : 'smooth',
-                    width: [2, 2, 2, 3],
+                    width: [3],
                     lineCap: 'round',
                 },
-                colors: ['#3b82f6', '#10b981', '#f59e0b', '#e63946'],
+                colors: ['#e63946'],
                 fill: {
-                    type: ['solid', 'solid', 'solid', 'solid'],
-                    opacity: [1, 1, 1, 0.15],
+                    type: ['solid'],
+                    opacity: [0.15],
                 },
                 markers: {
-                    size: [3, 3, 3, 5],
-                    strokeWidth: [1, 1, 1, 2],
-                    strokeColors: ['#3b82f6', '#10b981', '#f59e0b', '#fff'],
+                    size: [5],
+                    strokeWidth: [2],
+                    strokeColors: ['#fff'],
                     hover: { size: 8, sizeOffset: 3 },
                 },
                 grid: {
@@ -370,9 +367,6 @@
                     false, false
                 );
                 accelChart.updateSeries([
-                    { name: 'X', type: 'line', data: samples.map((s) => s.x) },
-                    { name: 'Y', type: 'line', data: samples.map((s) => s.y) },
-                    { name: 'Z', type: 'line', data: samples.map((s) => s.z) },
                     { name: 'Magnitudo', type: 'area', data: samples.map((s) => s.magnitude) },
                 ]);
                 return;
@@ -498,10 +492,10 @@
         // ─── MMI Helper (mirrors main.ino thresholds) ─────────────────────────
         function getMmiForMagnitude(magnitude) {
             const m = Number(magnitude);
-            if (m < 0.34) return { level: 'I',      status: 'Aman',    color: '#22c55e' };
-            if (m < 2.8)  return { level: 'II-III',  status: 'Lemah',   color: '#86efac' };
-            if (m < 7.8)  return { level: 'IV',      status: 'Waspada', color: '#f59e0b' };
-            if (m < 18.4) return { level: 'V',       status: 'Bahaya!', color: '#f97316' };
+            if (m < 0.15) return { level: 'I',      status: 'Aman',    color: '#22c55e' };
+            if (m < 0.30) return { level: 'II-III',  status: 'Lemah',   color: '#86efac' };
+            if (m < 0.60) return { level: 'IV',      status: 'Waspada', color: '#f59e0b' };
+            if (m < 1.00) return { level: 'V',       status: 'Bahaya!', color: '#f97316' };
             return               { level: 'VI+',      status: 'AWAS!',   color: '#ef4444' };
         }
 
@@ -563,7 +557,7 @@
             const gps        = data.gps             || {};
             const summary    = data.summary          || {};
             const samples    = data.accelSamples     || [];
-            // Log uses filtered samples (only where magnitude >= 0.34)
+            // Log uses filtered samples (only where magnitude >= 0.15)
             const logSamples = data.accelLogSamples  || [];
             const gpsLogSamples = data.gpsLogSamples || [];
             const seismicEvents = data.seismicEvents || [];

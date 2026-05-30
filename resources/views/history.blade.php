@@ -41,7 +41,7 @@
             <div class="section-header">
                 <div>
                     <h2 class="section-title">Sensor ADXL345</h2>
-                    <p class="section-subtitle">Riwayat getaran terdeteksi (magnitudo ≥ 0.34) pada tanggal {{ \Carbon\Carbon::parse($selectedDate)->translatedFormat('d F Y') }}.</p>
+                    <p class="section-subtitle">Riwayat getaran terdeteksi (magnitudo ≥ 0.15) pada tanggal {{ \Carbon\Carbon::parse($selectedDate)->translatedFormat('d F Y') }}.</p>
                 </div>
                 <div class="live-badge" style="background: var(--sigma-bg-alt); color: var(--sigma-text);">TOTAL: {{ $accelerometerLogs->total() }} GEMPA</div>
             </div>
@@ -63,10 +63,10 @@
                         @forelse($accelerometerLogs as $sample)
                             @php
                                 $mag = (float) $sample->magnitude;
-                                if ($mag < 0.34)      { $mmiLevel = 'I';      $mmiStatus = 'Aman';    $mmiColor = '#22c55e'; }
-                                elseif ($mag < 2.8)   { $mmiLevel = 'II-III'; $mmiStatus = 'Lemah';   $mmiColor = '#86efac'; }
-                                elseif ($mag < 7.8)   { $mmiLevel = 'IV';     $mmiStatus = 'Waspada'; $mmiColor = '#f59e0b'; }
-                                elseif ($mag < 18.4)  { $mmiLevel = 'V';      $mmiStatus = 'Bahaya!'; $mmiColor = '#f97316'; }
+                                if ($mag < 0.15)      { $mmiLevel = 'I';      $mmiStatus = 'Aman';    $mmiColor = '#22c55e'; }
+                                elseif ($mag < 0.30)  { $mmiLevel = 'II-III'; $mmiStatus = 'Lemah';   $mmiColor = '#86efac'; }
+                                elseif ($mag < 0.60)  { $mmiLevel = 'IV';     $mmiStatus = 'Waspada'; $mmiColor = '#f59e0b'; }
+                                elseif ($mag < 1.00)  { $mmiLevel = 'V';      $mmiStatus = 'Bahaya!'; $mmiColor = '#f97316'; }
                                 else                  { $mmiLevel = 'VI+';    $mmiStatus = 'AWAS!';   $mmiColor = '#ef4444'; }
                             @endphp
                             <tr>
@@ -191,10 +191,10 @@
     // MMI Helper for PDF
     function getMmi(magnitude) {
         const m = Number(magnitude);
-        if (m < 0.34) return { level: 'I', status: 'Aman' };
-        if (m < 2.8)  return { level: 'II-III', status: 'Lemah' };
-        if (m < 7.8)  return { level: 'IV', status: 'Waspada' };
-        if (m < 18.4) return { level: 'V', status: 'Bahaya!' };
+        if (m < 0.15) return { level: 'I', status: 'Aman' };
+        if (m < 0.30) return { level: 'II-III', status: 'Lemah' };
+        if (m < 0.60) return { level: 'IV', status: 'Waspada' };
+        if (m < 1.00) return { level: 'V', status: 'Bahaya!' };
         return { level: 'VI+', status: 'AWAS!' };
     }
 

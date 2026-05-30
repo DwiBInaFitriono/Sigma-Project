@@ -188,10 +188,10 @@
          */
         function getMmiForMagnitude(magnitude) {
             const m = Number(magnitude);
-            if (m < 0.34) return { level: 'I', status: 'Aman', color: '#22c55e' };
-            if (m < 2.8)  return { level: 'II-III', status: 'Lemah', color: '#86efac' };
-            if (m < 7.8)  return { level: 'IV', status: 'Waspada', color: '#f59e0b' };
-            if (m < 18.4) return { level: 'V', status: 'Bahaya!', color: '#f97316' };
+            if (m < 0.15) return { level: 'I', status: 'Aman', color: '#22c55e' };
+            if (m < 0.30) return { level: 'II-III', status: 'Lemah', color: '#86efac' };
+            if (m < 0.60) return { level: 'IV', status: 'Waspada', color: '#f59e0b' };
+            if (m < 1.00) return { level: 'V', status: 'Bahaya!', color: '#f97316' };
             return { level: 'VI+', status: 'AWAS!', color: '#ef4444' };
         }
 
@@ -224,9 +224,6 @@
                     },
                 },
                 series: [
-                    { name: 'X', data: samples.map((s) => s.x) },
-                    { name: 'Y', data: samples.map((s) => s.y) },
-                    { name: 'Z', data: samples.map((s) => s.z) },
                     { name: 'Magnitudo', data: samples.map((s) => s.magnitude) },
                 ],
                 xaxis: {
@@ -247,13 +244,13 @@
                 },
                 stroke: {
                     curve: isMobile ? 'straight' : 'smooth',
-                    width: [2.5, 2.5, 2.5, 3.5],
+                    width: [3.5],
                     lineCap: 'round',
                 },
-                colors: ['#3b82f6', '#10b981', '#f59e0b', '#e63946'],
+                colors: ['#e63946'],
                 fill: {
-                    type: ['solid', 'solid', 'solid', 'gradient'],
-                    opacity: [0.02, 0.02, 0.02, 1],
+                    type: ['gradient'],
+                    opacity: [1],
                     gradient: {
                         shade: isDark ? 'dark' : 'light',
                         type: 'vertical',
@@ -268,9 +265,9 @@
                     },
                 },
                 markers: {
-                    size: [3, 3, 3, 5],
-                    strokeWidth: [1, 1, 1, 2],
-                    strokeColors: ['#3b82f6', '#10b981', '#f59e0b', '#fff'],
+                    size: [5],
+                    strokeWidth: [2],
+                    strokeColors: ['#fff'],
                     hover: { size: 8, sizeOffset: 3 },
                 },
                 grid: {
@@ -321,9 +318,6 @@
                     false
                 );
                 accelChart.updateSeries([
-                    { name: 'X', data: validSamples.map((s) => s.x) },
-                    { name: 'Y', data: validSamples.map((s) => s.y) },
-                    { name: 'Z', data: validSamples.map((s) => s.z) },
                     { name: 'Magnitudo', data: validSamples.map((s) => s.magnitude) },
                 ]);
             }

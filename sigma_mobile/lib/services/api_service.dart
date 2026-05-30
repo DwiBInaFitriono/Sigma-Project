@@ -460,8 +460,8 @@ class ApiService {
     _mockAccelSamples.removeAt(0);
     _mockAccelSamples.add(newSample);
 
-    // If magnitude is above threshold (0.34 MMI I), write to log samples
-    if (magnitude >= 0.34) {
+    // If magnitude is above threshold, write to log samples
+    if (magnitude >= 0.15) {
       final mmi = _getMmiLevel(magnitude);
       final logEntry = {
         'time': timeStr,
@@ -504,13 +504,13 @@ class ApiService {
   }
 
   Map<String, String> _getMmiLevel(double magnitude) {
-    if (magnitude < 0.34) {
+    if (magnitude < 0.15) {
       return {'level': 'I', 'status': 'Aman', 'color': '#22c55e'};
-    } else if (magnitude < 2.8) {
+    } else if (magnitude < 0.30) {
       return {'level': 'II-III', 'status': 'Lemah', 'color': '#86efac'};
-    } else if (magnitude < 7.8) {
+    } else if (magnitude < 0.60) {
       return {'level': 'IV', 'status': 'Waspada', 'color': '#f59e0b'};
-    } else if (magnitude < 18.4) {
+    } else if (magnitude < 1.00) {
       return {'level': 'V', 'status': 'Bahaya!', 'color': '#f97316'};
     } else {
       return {'level': 'VI+', 'status': 'AWAS!', 'color': '#ef4444'};

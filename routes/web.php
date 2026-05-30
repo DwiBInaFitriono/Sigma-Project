@@ -4,12 +4,12 @@ use App\Http\Controllers\AccelerometerController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\GpsController;
 use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\PanelController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SensorCommandController;
-use App\Http\Controllers\SensorControllerController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,7 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/panel/data/realtime', [PanelController::class, 'realtimeData'])->name('panel.data.realtime');
     Route::get('/panel/data/log', [PanelController::class, 'realtimeLog'])->name('panel.data.log');
     Route::get('/history', [HistoryController::class, 'index'])->name('history');
-    Route::get('/controller', [SensorControllerController::class, 'index'])->name('controller');
+    Route::get('/controller', [DeviceController::class, 'index'])->name('controller');
 
     // Sensor Command Routes
     Route::prefix('sensor-commands')->name('sensor-commands.')->group(function () {

@@ -77,7 +77,7 @@ class SensorDataController extends Controller
             'recorded_at' => $this->resolveRecordedAt($validated['recorded_at'] ?? null),
         ]);
 
-        if ($magnitude >= 0.20) {
+        if ($magnitude >= 0.15) {
             $gpsData = GPSData::query()
                 ->where('device_id', $accelerometerData->device_id)
                 ->latest('recorded_at')

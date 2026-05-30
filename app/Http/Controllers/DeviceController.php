@@ -6,7 +6,7 @@ use App\Models\AccelerometerData;
 use App\Models\GPSData;
 use Illuminate\View\View;
 
-class SensorControllerController extends Controller
+class DeviceController extends Controller
 {
     public function index(): View
     {

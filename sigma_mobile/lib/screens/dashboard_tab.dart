@@ -117,18 +117,18 @@ class _DashboardTabState extends State<DashboardTab> {
       mag = double.tryParse(val) ?? 0.0;
     }
     
-    if (mag < 0.34) return const Color(0xFF22C55E); // Green
-    if (mag < 2.8) return const Color(0xFF86EFAC);  // Light Green
-    if (mag < 7.8) return const Color(0xFFF59E0B);  // Yellow/Amber
-    if (mag < 18.4) return const Color(0xFFF97316); // Orange
-    return const Color(0xFFEF4444);                 // Red
+    if (mag < 0.15) return const Color(0xFF22C55E);
+    if (mag < 0.30) return const Color(0xFF86EFAC);
+    if (mag < 0.60) return const Color(0xFFF59E0B);
+    if (mag < 1.00) return const Color(0xFFF97316);
+    return const Color(0xFFEF4444);
   }
 
   String _getMmiLevel(double mag) {
-    if (mag < 0.34) return 'I (Aman)';
-    if (mag < 2.8) return 'II-III (Lemah)';
-    if (mag < 7.8) return 'IV (Waspada)';
-    if (mag < 18.4) return 'V (Bahaya!)';
+    if (mag < 0.15) return 'I (Aman)';
+    if (mag < 0.30) return 'II-III (Lemah)';
+    if (mag < 0.60) return 'IV (Waspada)';
+    if (mag < 1.00) return 'V (Bahaya!)';
     return 'VI+ (AWAS!)';
   }
 
@@ -373,12 +373,8 @@ class _DashboardTabState extends State<DashboardTab> {
                                   borderData: FlBorderData(show: false),
                                   minX: 0,
                                   maxX: (samples.length - 1).toDouble(),
-                                  minY: -5,
-                                  maxY: 15,
+                                  minY: 0,
                                   lineBarsData: [
-                                    _buildBarData(samples, (s) => s.x, const Color(0xFF8B5026), 2), // X
-                                    _buildBarData(samples, (s) => s.y, const Color(0xFFC2743E), 2), // Y
-                                    _buildBarData(samples, (s) => s.z, const Color(0xFFE58A47), 2), // Z
                                     _buildBarData(samples, (s) => s.magnitude, const Color(0xFFE13B3B), 3, isFilled: true), // Magnitude
                                   ],
                                 ),
@@ -390,12 +386,6 @@ class _DashboardTabState extends State<DashboardTab> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          _buildLegendItem("X", const Color(0xFF8B5026)),
-                          const SizedBox(width: 15),
-                          _buildLegendItem("Y", const Color(0xFFC2743E)),
-                          const SizedBox(width: 15),
-                          _buildLegendItem("Z", const Color(0xFFE58A47)),
-                          const SizedBox(width: 15),
                           _buildLegendItem("Magnitudo", const Color(0xFFE13B3B)),
                         ],
                       ),
@@ -565,7 +555,7 @@ class _DashboardTabState extends State<DashboardTab> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const Text(
-                        "Log Getaran Terakhir (PGA >= 0.34)",
+                        "Log Getaran Terakhir (PGA >= 0.15)",
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),

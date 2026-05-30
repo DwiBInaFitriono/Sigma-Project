@@ -1,9 +1,7 @@
-// Theme Toggle Management
 (function () {
     const THEME_KEY = 'theme';
     const DARK_CLASS = 'dark-mode';
 
-    // Get saved theme or system preference
     function getSavedTheme() {
         const saved = localStorage.getItem(THEME_KEY);
         if (saved) return saved;
@@ -11,7 +9,6 @@
         return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
 
-    // Apply theme to document
     function applyTheme(theme) {
         if (theme === 'dark') {
             document.documentElement.classList.add(DARK_CLASS);
@@ -22,7 +19,6 @@
         updateThemeToggle(theme);
     }
 
-    // Update toggle button appearance
     function updateThemeToggle(theme) {
         const toggleBtn = document.getElementById('theme-toggle-btn');
         if (!toggleBtn) return;
@@ -36,14 +32,12 @@
         }
     }
 
-    // Toggle theme
     function toggleTheme() {
         const currentTheme = getSavedTheme();
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
         applyTheme(newTheme);
     }
 
-    // Initialize theme on page load
     document.addEventListener('DOMContentLoaded', function () {
         const theme = getSavedTheme();
         applyTheme(theme);
@@ -54,6 +48,5 @@
         }
     });
 
-    // Expose toggle function globally
     window.toggleTheme = toggleTheme;
 })();

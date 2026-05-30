@@ -34,9 +34,9 @@ abstract class Controller
             ->limit($sampleLimit)
             ->get();
 
-        // Log samples: only entries with detected magnitude (>= 0.34 = MMI Level I)
+        // Log samples: only entries with detected magnitude (>= 0.15 = MMI Level II-III)
         $accelerometerLogSamples = AccelerometerData::query()
-            ->where('magnitude', '>=', 0.34)
+            ->where('magnitude', '>=', 0.15)
             ->latest('recorded_at')
             ->limit($sampleLimit)
             ->get();
@@ -229,19 +229,19 @@ abstract class Controller
      */
     protected function getMmiStatus(float $magnitude): array
     {
-        if ($magnitude < 0.34) {
+        if ($magnitude < 0.15) {
             return ['level' => 'I', 'status' => 'Aman', 'color' => '#22c55e'];
         }
 
-        if ($magnitude < 2.8) {
+        if ($magnitude < 0.30) {
             return ['level' => 'II-III', 'status' => 'Lemah', 'color' => '#86efac'];
         }
 
-        if ($magnitude < 7.8) {
+        if ($magnitude < 0.60) {
             return ['level' => 'IV', 'status' => 'Waspada', 'color' => '#f59e0b'];
         }
 
-        if ($magnitude < 18.4) {
+        if ($magnitude < 1.00) {
             return ['level' => 'V', 'status' => 'Bahaya!', 'color' => '#f97316'];
         }
 
@@ -250,14 +250,14 @@ abstract class Controller
 
     /**
      * Collect accelerometer log entries from the last N minutes.
-     * Only includes entries with detected seismic magnitude (>= 0.34 = MMI Level I).
+     * Only includes entries with detected seismic magnitude (>= 0.15).
      * Each entry includes MMI level and status.
      */
     protected function collectAccelerometerLog(int $minutes = 5): array
     {
         return AccelerometerData::query()
             ->where('recorded_at', '>=', Carbon::now()->subMinutes($minutes))
-            ->where('magnitude', '>=', 0.34)
+            ->where('magnitude', '>=', 0.15)
             ->orderByDesc('recorded_at')
             ->get()
             ->map(function (AccelerometerData $sample): array {

@@ -3,7 +3,6 @@
 <head>
     <meta charset="utf-8">
     <script>
-        // Immediately set dark mode class on html tag to prevent white flash/FOUC on transitions
         (function () {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -26,7 +25,6 @@
     <link rel="stylesheet" href="{{ asset('css/mobile.css') }}">
 </head>
 <body class="sigma-app antialiased">
-    {{-- Theme Toggle: di body level agar position:fixed tidak terhalang apapun --}}
     @if(request()->routeIs('login') || request()->routeIs('register'))
     <button id="theme-toggle-btn" class="auth-theme-toggle" title="Switch to Dark Mode" aria-label="Toggle dark mode">
         <svg fill="currentColor" viewBox="0 0 20 20" width="18" height="18">
