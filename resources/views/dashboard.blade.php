@@ -89,7 +89,9 @@
                             <h2 class="section-title">Sensor ADXL345</h2>
                             <p class="section-subtitle">Grafik realtime + ringkasan nilai sensor ADXL345.</p>
                         </div>
-                        <span class="status-pill realtime">Realtime</span>
+                        <span id="accel-status-pill" class="status-pill {{ $currentAccel['is_connected'] ? 'online' : 'offline' }}">
+                            {{ $currentAccel['is_connected'] ? 'Online' : 'Terputus' }}
+                        </span>
                     </div>
 
                     <div class="dashboard-info-grid margin-y-1-5">
@@ -240,7 +242,8 @@
 
         let accelChart = null;
         const mapState = { map: null, marker: null, seismicLayers: [] };
-        let cachedLastUpdated = null;
+        let cachedAccelTime = null;
+        let cachedGpsTime = null;
         let lastGpsLat = null;
         let lastGpsLng = null;
 
@@ -585,11 +588,20 @@
                 if (gps.is_connected) {
                     mapPill.textContent = 'Online';
                     mapPill.className = 'status-pill online';
-                    mapPill.style = '';
                 } else {
                     mapPill.textContent = 'Terputus';
                     mapPill.className = 'status-pill offline';
-                    mapPill.style = 'background: rgba(239, 68, 68, 0.1); color: #ef4444; border-color: rgba(239, 68, 68, 0.2);';
+                }
+            }
+
+            const accelPill = document.getElementById('accel-status-pill');
+            if (accelPill) {
+                if (accel.is_connected) {
+                    accelPill.textContent = 'Online';
+                    accelPill.className = 'status-pill online';
+                } else {
+                    accelPill.textContent = 'Terputus';
+                    accelPill.className = 'status-pill offline';
                 }
             }
 
@@ -599,16 +611,21 @@
             setText('magnitudeAverage', formatNumber(summary.average));
             setText('sampleCount',      String(summary.count ?? 0));
 
-            const newTs = data.lastUpdatedAt ?? accel.time;
-            if (newTs && newTs === cachedLastUpdated) {
-                return;
+            // Only update Accelerometer elements if they changed
+            const newAccelTime = accel.time;
+            if (newAccelTime && newAccelTime !== cachedAccelTime) {
+                cachedAccelTime = newAccelTime;
+                try { renderChart(samples); }        catch (e) { console.warn('[SIGMA] Chart error:', e); }
+                try { renderSampleTable(logSamples); } catch (e) { console.warn('[SIGMA] Table error:', e); }
             }
-            cachedLastUpdated = newTs;
 
-            try { renderChart(samples); }        catch (e) { console.warn('[SIGMA] Chart error:', e); }
-            try { renderMap(gps, seismicEvents); } catch (e) { console.warn('[SIGMA] Map error:', e); }
-            try { renderSampleTable(logSamples); } catch (e) { console.warn('[SIGMA] Table error:', e); }
-            try { renderGpsTable(gpsLogSamples); } catch (e) { console.warn('[SIGMA] GPS Table error:', e); }
+            // Only update GPS elements if they changed
+            const newGpsTime = gps.recorded_at;
+            if (newGpsTime && newGpsTime !== cachedGpsTime) {
+                cachedGpsTime = newGpsTime;
+                try { renderMap(gps, seismicEvents); } catch (e) { console.warn('[SIGMA] Map error:', e); }
+                try { renderGpsTable(gpsLogSamples); } catch (e) { console.warn('[SIGMA] GPS Table error:', e); }
+            }
         }
 
         // ─── Polling (1 second) ───────────────────────────────────────────────
