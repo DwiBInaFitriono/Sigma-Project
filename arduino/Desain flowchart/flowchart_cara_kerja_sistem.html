@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Flowchart Cara Kerja Sistem - Project SIGMA</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .container { width: 700px; }
+        .caption {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <svg width="700" height="960" viewBox="0 0 700 960" xmlns="http://www.w3.org/2000/svg" font-family="'Times New Roman', Times, serif">
+
+            <!-- ================================ -->
+            <!-- 1. MULAI (Oval)                  -->
+            <!-- ================================ -->
+            <ellipse cx="300" cy="35" rx="70" ry="25" fill="#fff" stroke="#000" stroke-width="2"/>
+            <text x="300" y="40" text-anchor="middle" font-size="15" font-weight="bold">Mulai</text>
+
+            <!-- Panah: Mulai → Inisialisasi -->
+            <line x1="300" y1="60" x2="300" y2="90" stroke="#000" stroke-width="2"/>
+            <polygon points="294,90 300,100 306,90" fill="#000"/>
+
+            <!-- ================================ -->
+            <!-- 2. INISIALISASI SENSOR (Rect)    -->
+            <!-- ================================ -->
+            <rect x="180" y="100" width="240" height="50" fill="#fff" stroke="#000" stroke-width="2"/>
+            <text x="300" y="121" text-anchor="middle" font-size="14">Inisialisasi Sensor</text>
+            <text x="300" y="138" text-anchor="middle" font-size="11">(ADXL345, GPS, OLED, WiFi)</text>
+
+            <!-- Panah: Inisialisasi → Baca Akselerometer -->
+            <line x1="300" y1="150" x2="300" y2="180" stroke="#000" stroke-width="2"/>
+            <polygon points="294,180 300,190 306,180" fill="#000"/>
+
+            <!-- ================================ -->
+            <!-- 3. BACA AKSELEROMETER (Rect)     -->
+            <!-- ================================ -->
+            <rect x="180" y="190" width="240" height="50" fill="#fff" stroke="#000" stroke-width="2"/>
+            <text x="300" y="211" text-anchor="middle" font-size="14">Baca Sensor ADXL345</text>
+            <text x="300" y="228" text-anchor="middle" font-size="11">(Akselerasi X, Y, Z)</text>
+
+            <!-- Panah: Akselerometer → Baca GPS -->
+            <line x1="300" y1="240" x2="300" y2="270" stroke="#000" stroke-width="2"/>
+            <polygon points="294,270 300,280 306,270" fill="#000"/>
+
+            <!-- ================================ -->
+            <!-- 4. BACA GPS (Rect)               -->
+            <!-- ================================ -->
+            <rect x="180" y="280" width="240" height="50" fill="#fff" stroke="#000" stroke-width="2"/>
+            <text x="300" y="301" text-anchor="middle" font-size="14">Baca Sensor GPS Neo-6M</text>
+            <text x="300" y="318" text-anchor="middle" font-size="11">(Latitude, Longitude)</text>
+
+            <!-- Panah: GPS → Kirim Data ke API -->
+            <line x1="300" y1="330" x2="300" y2="360" stroke="#000" stroke-width="2"/>
+            <polygon points="294,360 300,370 306,360" fill="#000"/>
+
+            <!-- ================================ -->
+            <!-- 5. KIRIM DATA KE API (Rect)      -->
+            <!-- ================================ -->
+            <rect x="160" y="370" width="280" height="50" fill="#fff" stroke="#000" stroke-width="2"/>
+            <text x="300" y="391" text-anchor="middle" font-size="14">Kirim Data Sensor ke</text>
+            <text x="300" y="408" text-anchor="middle" font-size="14">API Laravel (HTTPS)</text>
+
+            <!-- Panah: Kirim API → Hitung PGA -->
+            <line x1="300" y1="420" x2="300" y2="450" stroke="#000" stroke-width="2"/>
+            <polygon points="294,450 300,460 306,450" fill="#000"/>
+
+            <!-- ================================ -->
+            <!-- 6. HITUNG PGA (Rect)             -->
+            <!-- ================================ -->
+            <rect x="180" y="460" width="240" height="50" fill="#fff" stroke="#000" stroke-width="2"/>
+            <text x="300" y="481" text-anchor="middle" font-size="14">Hitung Nilai PGA</text>
+            <text x="300" y="498" text-anchor="middle" font-size="11">(Peak Ground Acceleration)</text>
+
+            <!-- Panah: Hitung PGA → Decision -->
+            <line x1="300" y1="510" x2="300" y2="545" stroke="#000" stroke-width="2"/>
+            <polygon points="294,545 300,555 306,545" fill="#000"/>
+
+            <!-- ================================ -->
+            <!-- 7. DECISION: Getaran > Threshold -->
+            <!-- ================================ -->
+            <polygon points="300,555 440,615 300,675 160,615" fill="#fff" stroke="#000" stroke-width="2"/>
+            <text x="300" y="609" text-anchor="middle" font-size="13">Getaran &gt;</text>
+            <text x="300" y="627" text-anchor="middle" font-size="13">Threshold ?</text>
+
+            <!-- ================================ -->
+            <!-- Cabang TIDAK → kembali ke atas   -->
+            <!-- ================================ -->
+            <line x1="440" y1="615" x2="530" y2="615" stroke="#000" stroke-width="2"/>
+            <text x="480" y="607" text-anchor="middle" font-size="13" font-weight="bold">Tidak</text>
+            <!-- Garis naik -->
+            <line x1="530" y1="615" x2="530" y2="215" stroke="#000" stroke-width="2"/>
+            <!-- Garis ke kiri -->
+            <line x1="530" y1="215" x2="426" y2="215" stroke="#000" stroke-width="2"/>
+            <polygon points="426,209 416,215 426,221" fill="#000"/>
+
+            <!-- ================================ -->
+            <!-- Cabang YA → turun ke bawah       -->
+            <!-- ================================ -->
+            <line x1="300" y1="675" x2="300" y2="705" stroke="#000" stroke-width="2"/>
+            <polygon points="294,705 300,715 306,705" fill="#000"/>
+            <text x="316" y="697" font-size="13" font-weight="bold">Ya</text>
+
+            <!-- ================================ -->
+            <!-- 8. BUZZER MENYALA (Rect)         -->
+            <!-- ================================ -->
+            <rect x="180" y="715" width="240" height="45" fill="#fff" stroke="#000" stroke-width="2"/>
+            <text x="300" y="743" text-anchor="middle" font-size="14">Aktifkan Buzzer (Alarm)</text>
+
+            <!-- Panah: Buzzer → Push Notification -->
+            <line x1="300" y1="760" x2="300" y2="790" stroke="#000" stroke-width="2"/>
+            <polygon points="294,790 300,800 306,790" fill="#000"/>
+
+            <!-- ================================ -->
+            <!-- 9. PUSH NOTIFICATION (Rect)      -->
+            <!-- ================================ -->
+            <rect x="180" y="800" width="240" height="45" fill="#fff" stroke="#000" stroke-width="2"/>
+            <text x="300" y="820" text-anchor="middle" font-size="14">Kirim Push Notification</text>
+            <text x="300" y="836" text-anchor="middle" font-size="14">ke Aplikasi Flutter</text>
+
+            <!-- Panah: Notif → Loop balik -->
+            <line x1="300" y1="845" x2="300" y2="875" stroke="#000" stroke-width="2"/>
+            <!-- Garis ke kanan -->
+            <line x1="300" y1="875" x2="560" y2="875" stroke="#000" stroke-width="2"/>
+            <!-- Garis naik -->
+            <line x1="560" y1="875" x2="560" y2="215" stroke="#000" stroke-width="2"/>
+            <!-- Garis ke kiri -->
+            <line x1="560" y1="215" x2="534" y2="215" stroke="#000" stroke-width="2"/>
+
+        </svg>
+
+        <p class="caption">Gambar 3.4 Diagram Alir (Flowchart) Cara Kerja Sistem SIGMA</p>
+    </div>
+</body>
+</html>

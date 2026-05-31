@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Arsitektur Sistem - Project SIGMA</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            padding: 50px 20px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .container { width: 860px; }
+        .caption {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <svg width="860" height="340" viewBox="0 0 860 340" xmlns="http://www.w3.org/2000/svg" font-family="'Times New Roman', Times, serif">
+
+            <!-- ======================================== -->
+            <!-- 1. PERANGKAT IoT (ESP32)                 -->
+            <!-- ======================================== -->
+            <!-- Papan PCB -->
+            <rect x="30" y="90" width="120" height="80" rx="6" fill="#fff" stroke="#000" stroke-width="2"/>
+            <!-- Chip di tengah -->
+            <rect x="60" y="110" width="60" height="40" rx="2" fill="#333" stroke="#000" stroke-width="1.5"/>
+            <text x="90" y="135" text-anchor="middle" font-size="10" fill="#fff" font-weight="bold">ESP32</text>
+            <!-- Pin kiri -->
+            <line x1="30" y1="108" x2="20" y2="108" stroke="#000" stroke-width="2"/>
+            <line x1="30" y1="122" x2="20" y2="122" stroke="#000" stroke-width="2"/>
+            <line x1="30" y1="136" x2="20" y2="136" stroke="#000" stroke-width="2"/>
+            <line x1="30" y1="150" x2="20" y2="150" stroke="#000" stroke-width="2"/>
+            <!-- Pin kanan -->
+            <line x1="150" y1="108" x2="160" y2="108" stroke="#000" stroke-width="2"/>
+            <line x1="150" y1="122" x2="160" y2="122" stroke="#000" stroke-width="2"/>
+            <line x1="150" y1="136" x2="160" y2="136" stroke="#000" stroke-width="2"/>
+            <line x1="150" y1="150" x2="160" y2="150" stroke="#000" stroke-width="2"/>
+            <!-- Pin atas -->
+            <line x1="60" y1="90" x2="60" y2="80" stroke="#000" stroke-width="2"/>
+            <line x1="75" y1="90" x2="75" y2="80" stroke="#000" stroke-width="2"/>
+            <line x1="105" y1="90" x2="105" y2="80" stroke="#000" stroke-width="2"/>
+            <line x1="120" y1="90" x2="120" y2="80" stroke="#000" stroke-width="2"/>
+            <!-- Antena kecil -->
+            <line x1="90" y1="90" x2="90" y2="68" stroke="#000" stroke-width="2"/>
+            <line x1="82" y1="72" x2="98" y2="72" stroke="#000" stroke-width="1.5"/>
+
+            <!-- Label -->
+            <text x="90" y="195" text-anchor="middle" font-size="14" font-weight="bold">Perangkat IoT</text>
+            <text x="90" y="212" text-anchor="middle" font-size="12">(ESP32 + Sensor)</text>
+
+            <!-- ======================================== -->
+            <!-- PANAH 1: ESP32 → Wi-Fi                   -->
+            <!-- ======================================== -->
+            <line x1="160" y1="130" x2="240" y2="130" stroke="#000" stroke-width="2"/>
+            <polygon points="240,124 254,130 240,136" fill="#000"/>
+
+            <!-- Label panah -->
+            <text x="197" y="120" text-anchor="middle" font-size="10">Data</text>
+            <text x="197" y="108" text-anchor="middle" font-size="10">Sensor</text>
+
+            <!-- ======================================== -->
+            <!-- 2. WI-FI                                 -->
+            <!-- ======================================== -->
+            <!-- Sinyal Wi-Fi (3 lengkungan) -->
+            <circle cx="310" cy="150" r="5" fill="#000"/>
+            <!-- Arc 1 -->
+            <path d="M 290 130 A 30 30 0 0 1 330 130" fill="none" stroke="#000" stroke-width="2"/>
+            <!-- Arc 2 -->
+            <path d="M 282 118 A 42 42 0 0 1 338 118" fill="none" stroke="#000" stroke-width="2"/>
+            <!-- Arc 3 -->
+            <path d="M 274 106 A 54 54 0 0 1 346 106" fill="none" stroke="#000" stroke-width="2"/>
+
+            <!-- Label -->
+            <text x="310" y="195" text-anchor="middle" font-size="14" font-weight="bold">Wi-Fi</text>
+            <text x="310" y="212" text-anchor="middle" font-size="12">(IEEE 802.11)</text>
+
+            <!-- ======================================== -->
+            <!-- PANAH 2: Wi-Fi → Server                  -->
+            <!-- ======================================== -->
+            <line x1="350" y1="130" x2="440" y2="130" stroke="#000" stroke-width="2"/>
+            <polygon points="440,124 454,130 440,136" fill="#000"/>
+
+            <!-- Label panah -->
+            <text x="395" y="120" text-anchor="middle" font-size="10">HTTPS</text>
+            <text x="395" y="108" text-anchor="middle" font-size="10">REST API</text>
+
+            <!-- ======================================== -->
+            <!-- 3. SERVER / DATABASE                     -->
+            <!-- ======================================== -->
+            <!-- Badan server (kotak dengan garis-garis) -->
+            <rect x="454" y="75" width="110" height="110" rx="4" fill="#fff" stroke="#000" stroke-width="2"/>
+            <!-- Garis partisi -->
+            <line x1="454" y1="105" x2="564" y2="105" stroke="#000" stroke-width="1.5"/>
+            <line x1="454" y1="135" x2="564" y2="135" stroke="#000" stroke-width="1.5"/>
+            <!-- Lampu indikator baris 1 -->
+            <circle cx="472" cy="90" r="4" fill="#fff" stroke="#000" stroke-width="1.5"/>
+            <circle cx="486" cy="90" r="4" fill="#333" stroke="#000" stroke-width="1.5"/>
+            <line x1="500" y1="88" x2="548" y2="88" stroke="#000" stroke-width="1.5"/>
+            <!-- Lampu indikator baris 2 -->
+            <circle cx="472" cy="120" r="4" fill="#333" stroke="#000" stroke-width="1.5"/>
+            <circle cx="486" cy="120" r="4" fill="#fff" stroke="#000" stroke-width="1.5"/>
+            <line x1="500" y1="118" x2="548" y2="118" stroke="#000" stroke-width="1.5"/>
+            <!-- Database cylinder bawah -->
+            <ellipse cx="509" cy="148" rx="30" ry="8" fill="#fff" stroke="#000" stroke-width="1.5"/>
+            <line x1="479" y1="148" x2="479" y2="170" stroke="#000" stroke-width="1.5"/>
+            <line x1="539" y1="148" x2="539" y2="170" stroke="#000" stroke-width="1.5"/>
+            <ellipse cx="509" cy="170" rx="30" ry="8" fill="#fff" stroke="#000" stroke-width="1.5"/>
+            <text x="509" y="163" text-anchor="middle" font-size="9" font-weight="bold">MySQL</text>
+
+            <!-- Label -->
+            <text x="509" y="205" text-anchor="middle" font-size="14" font-weight="bold">Server / Database</text>
+            <text x="509" y="222" text-anchor="middle" font-size="12">(Laravel &amp; MySQL)</text>
+
+            <!-- ======================================== -->
+            <!-- PANAH 3: Server → Smartphone             -->
+            <!-- ======================================== -->
+            <line x1="564" y1="130" x2="660" y2="130" stroke="#000" stroke-width="2"/>
+            <polygon points="660,124 674,130 660,136" fill="#000"/>
+
+            <!-- Label panah -->
+            <text x="612" y="120" text-anchor="middle" font-size="10">JSON</text>
+            <text x="612" y="108" text-anchor="middle" font-size="10">Response</text>
+
+            <!-- ======================================== -->
+            <!-- 4. SMARTPHONE (Flutter App)              -->
+            <!-- ======================================== -->
+            <!-- Body HP -->
+            <rect x="674" y="70" width="80" height="130" rx="10" fill="#fff" stroke="#000" stroke-width="2"/>
+            <!-- Layar -->
+            <rect x="682" y="88" width="64" height="90" fill="#f5f5f5" stroke="#000" stroke-width="1.2"/>
+            <!-- Speaker atas -->
+            <line x1="702" y1="80" x2="726" y2="80" stroke="#000" stroke-width="2" stroke-linecap="round"/>
+            <!-- Tombol bawah -->
+            <circle cx="714" cy="190" r="6" fill="#fff" stroke="#000" stroke-width="1.5"/>
+            <!-- Ikon di layar: teks SIGMA -->
+            <text x="714" y="125" text-anchor="middle" font-size="9" font-weight="bold">SIGMA</text>
+            <text x="714" y="138" text-anchor="middle" font-size="8">Monitor</text>
+            <!-- Bars chart mini di layar -->
+            <rect x="694" y="148" width="8" height="16" fill="#333" stroke="none"/>
+            <rect x="706" y="142" width="8" height="22" fill="#333" stroke="none"/>
+            <rect x="718" y="150" width="8" height="14" fill="#333" stroke="none"/>
+
+            <!-- Label -->
+            <text x="714" y="225" text-anchor="middle" font-size="14" font-weight="bold">Aplikasi Mobile</text>
+            <text x="714" y="242" text-anchor="middle" font-size="12">(Flutter)</text>
+
+            <!-- ======================================== -->
+            <!-- GARIS BAWAH: Alur Data Keseluruhan       -->
+            <!-- ======================================== -->
+            <line x1="90" y1="270" x2="714" y2="270" stroke="#000" stroke-width="1" stroke-dasharray="6,4"/>
+            <polygon points="714,266 724,270 714,274" fill="#000"/>
+            <text x="400" y="290" text-anchor="middle" font-size="12" font-style="italic">Alur Transmisi Data (Hulu → Hilir)</text>
+
+            <!-- ======================================== -->
+            <!-- KOTAK KETERANGAN PROTOKOL                -->
+            <!-- ======================================== -->
+            <rect x="180" y="305" width="500" height="28" rx="3" fill="#fff" stroke="#000" stroke-width="1"/>
+            <text x="430" y="324" text-anchor="middle" font-size="11">
+                Sensor → I²C/UART → ESP32 → Wi-Fi (HTTPS POST) → Laravel API → MySQL → REST JSON → Flutter App
+            </text>
+
+        </svg>
+
+        <p class="caption">Gambar 3.3 Arsitektur Sistem dan Topologi Jaringan Project SIGMA</p>
+    </div>
+</body>
+</html>

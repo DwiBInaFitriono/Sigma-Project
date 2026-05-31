@@ -319,7 +319,7 @@ void processAccelerometer() {
     }
   }
 
-  // 3. Peak Hold (Hanya naik saat dinamo menyala)
+  // bagian dinamo
   if (rawPga > state.smoothedPga) {
     state.smoothedPga = rawPga;
   }

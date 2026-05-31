@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Bagan Metode Kegiatan - Project SIGMA</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Times+New+Roman&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        .container {
+            width: 620px;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 13px;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .bagan {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+        }
+
+        /* Kotak terminal (Mulai / Selesai) */
+        .terminal {
+            width: 200px;
+            padding: 12px 20px;
+            border: 1.8px solid #000;
+            border-radius: 50px;
+            text-align: center;
+            font-size: 15px;
+            font-weight: bold;
+            background: #fff;
+        }
+
+        /* Kotak proses */
+        .proses {
+            width: 420px;
+            padding: 14px 24px;
+            border: 1.8px solid #000;
+            text-align: center;
+            font-size: 14px;
+            background: #fff;
+            line-height: 1.5;
+        }
+
+        /* Panah ke bawah */
+        .arrow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 36px;
+            position: relative;
+        }
+
+        .arrow .line {
+            width: 1.8px;
+            flex: 1;
+            background: #000;
+        }
+
+        .arrow .head {
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 8px solid #000;
+        }
+
+        /* Nomor urut */
+        .step-number {
+            display: none;
+        }
+
+        /* Caption bawah */
+        .caption {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 28px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="bagan">
+
+            <!-- Mulai -->
+            <div class="terminal">Mulai</div>
+
+            <div class="arrow"><div class="line"></div><div class="head"></div></div>
+
+            <!-- 1 -->
+            <div class="proses">Analisis Kebutuhan</div>
+
+            <div class="arrow"><div class="line"></div><div class="head"></div></div>
+
+            <!-- 2 -->
+            <div class="proses">Desain Skematik (KiCad) &amp; Cetak PCB</div>
+
+            <div class="arrow"><div class="line"></div><div class="head"></div></div>
+
+            <!-- 3 -->
+            <div class="proses">Perakitan Perangkat Keras</div>
+
+            <div class="arrow"><div class="line"></div><div class="head"></div></div>
+
+            <!-- 4 -->
+            <div class="proses">Pengembangan API Laravel &amp; Web</div>
+
+            <div class="arrow"><div class="line"></div><div class="head"></div></div>
+
+            <!-- 5 -->
+            <div class="proses">Pengembangan Aplikasi Flutter</div>
+
+            <div class="arrow"><div class="line"></div><div class="head"></div></div>
+
+            <!-- 6 -->
+            <div class="proses">Pengujian Sistem</div>
+
+            <div class="arrow"><div class="line"></div><div class="head"></div></div>
+
+            <!-- 7 -->
+            <div class="proses">Pembuatan Laporan</div>
+
+            <div class="arrow"><div class="line"></div><div class="head"></div></div>
+
+            <!-- Selesai -->
+            <div class="terminal">Selesai</div>
+
+        </div>
+
+        <p class="caption">Gambar 3.1 Bagan Metode Kegiatan Project SIGMA</p>
+    </div>
+</body>
+</html>
