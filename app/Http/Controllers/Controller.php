@@ -34,16 +34,28 @@ abstract class Controller
         $latestAccelerometer = AccelerometerData::query()->latest('recorded_at')->first();
 
         // 2. Check online status via Cache first (heartbeat)
-        $lastSeenStr = Cache::get("device_last_seen:{$deviceId}");
-        $espConnected = false;
-        if ($lastSeenStr) {
-            $lastSeen = Carbon::parse($lastSeenStr);
-            $espConnected = $lastSeen->diffInSeconds(now()) < 12;
+        $lastSeenGpsStr = Cache::get("device_last_seen_gps:{$deviceId}");
+        $gpsConnected = false;
+        if ($lastSeenGpsStr) {
+            $lastSeenGps = Carbon::parse($lastSeenGpsStr);
+            $gpsConnected = $lastSeenGps->diffInSeconds(now()) < 12;
         }
 
         // Fallback for GPS connection check if cache is not set yet
-        if (! $espConnected && $latestAccelerometer) {
-            $espConnected = $latestAccelerometer->recorded_at && $latestAccelerometer->recorded_at->diffInSeconds(now()) < 10;
+        if (! $gpsConnected && $latestGps) {
+            $gpsConnected = $latestGps->recorded_at && $latestGps->recorded_at->diffInSeconds(now()) < 10;
+        }
+
+        $lastSeenAccelStr = Cache::get("device_last_seen_accel:{$deviceId}");
+        $accelConnected = false;
+        if ($lastSeenAccelStr) {
+            $lastSeenAccel = Carbon::parse($lastSeenAccelStr);
+            $accelConnected = $lastSeenAccel->diffInSeconds(now()) < 12;
+        }
+
+        // Fallback for Accelerometer connection check if cache is not set yet
+        if (! $accelConnected && $latestAccelerometer) {
+            $accelConnected = $latestAccelerometer->recorded_at && $latestAccelerometer->recorded_at->diffInSeconds(now()) < 10;
         }
 
         // 3. Fetch latest Accelerometer reading from Cache for real-time display card
@@ -57,12 +69,12 @@ abstract class Controller
                 'magnitude' => $latestAccelCache['magnitude'],
                 'time' => $this->formatWibTimestamp($recAt->timezone($this->dashboardTimezone()), 'd M Y H:i:s'),
                 'sensor_time' => $this->formatWibTimestamp($recAt->timezone($this->dashboardTimezone()), 'd M Y H:i:s'),
-                'is_connected' => $espConnected,
+                'is_connected' => $accelConnected,
             ];
         } else {
             $currentAccel = $this->formatAccelerometerData($latestAccelerometer);
             if ($latestAccelerometer) {
-                $currentAccel['is_connected'] = $espConnected;
+                $currentAccel['is_connected'] = $accelConnected;
             }
         }
 
@@ -77,11 +89,11 @@ abstract class Controller
                 'satellites' => $latestGpsCache['satellites'] ?? 0,
                 'status' => $latestGpsCache['status'] ?? 'NO FIX',
                 'recorded_at' => $this->formatWibTimestamp($recAt->timezone($this->dashboardTimezone()), 'd M Y H:i:s'),
-                'is_connected' => $espConnected,
+                'is_connected' => $gpsConnected,
                 'has_fix' => ((float) $latestGpsCache['latitude'] !== 0.0 || (float) $latestGpsCache['longitude'] !== 0.0),
             ];
         } else {
-            $gps = $this->formatGpsData($latestGps, $espConnected);
+            $gps = $this->formatGpsData($latestGps, $gpsConnected);
         }
 
         // 5. Chart samples: only entries in the database (since database now only stores magnitude >= 0.15)

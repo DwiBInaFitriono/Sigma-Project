@@ -32,6 +32,7 @@ class SensorDataController extends Controller
 
         // Update device last seen in cache (heartbeat)
         Cache::put("device_last_seen:{$deviceId}", now()->toIso8601String(), now()->addMinutes(5));
+        Cache::put("device_last_seen_gps:{$deviceId}", now()->toIso8601String(), now()->addMinutes(5));
 
         $recordedAt = $this->resolveRecordedAt($validated['recorded_at'] ?? null);
 
@@ -90,6 +91,7 @@ class SensorDataController extends Controller
 
         // Update device last seen in cache (heartbeat)
         Cache::put("device_last_seen:{$deviceId}", now()->toIso8601String(), now()->addMinutes(5));
+        Cache::put("device_last_seen_accel:{$deviceId}", now()->toIso8601String(), now()->addMinutes(5));
 
         // Update latest accelerometer data in cache for instant real-time fetching
         Cache::put("device_latest_accel:{$deviceId}", [
