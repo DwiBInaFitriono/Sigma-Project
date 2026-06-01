@@ -149,7 +149,7 @@
                             <strong id="currentAxes">{{ number_format($currentAccel['x'], 2) }} / {{ number_format($currentAccel['y'], 2) }} / {{ number_format($currentAccel['z'], 2) }}</strong>
                         </div>
                         <div class="dashboard-info-card">
-                            <p>WAKTU SERVER</p>
+                            <p>Waktu Sensor</p>
                             <strong id="currentAccelTime">{{ $currentAccel['time'] }}</strong>
                         </div>
                     </div>
@@ -675,15 +675,11 @@
             setText('magnitudeAverage', formatNumber(summary.average));
             setText('sampleCount',      String(summary.count ?? 0));
 
-            // Only update Accelerometer elements if they changed
-            const newAccelTime = accel.time;
-            if (newAccelTime && newAccelTime !== cachedAccelTime) {
-                cachedAccelTime = newAccelTime;
-                try { renderChart(samples); }        catch (e) { console.warn('[SIGMA] Chart error:', e); }
-                try { renderSampleTable(logSamples); } catch (e) { console.warn('[SIGMA] Table error:', e); }
-            }
+            // Always update accelerometer chart and table with latest data
+            try { renderChart(samples); }        catch (e) { console.warn('[SIGMA] Chart error:', e); }
+            try { renderSampleTable(logSamples); } catch (e) { console.warn('[SIGMA] Table error:', e); }
 
-            // Only update GPS elements if they changed
+            // Only update GPS elements if they changed (map re-renders are expensive)
             const newGpsTime = gps.recorded_at;
             if (newGpsTime && newGpsTime !== cachedGpsTime) {
                 cachedGpsTime = newGpsTime;

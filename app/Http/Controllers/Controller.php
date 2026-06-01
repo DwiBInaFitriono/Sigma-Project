@@ -162,8 +162,8 @@ abstract class Controller
             'y' => (float) $accelerometer->y,
             'z' => (float) $accelerometer->z,
             'magnitude' => (float) $accelerometer->magnitude,
-            'time' => $this->formatWibTimestamp($accelerometer->created_at?->timezone($this->dashboardTimezone()), 'H:i:s'),
-            'sensor_time' => $this->formatWibTimestamp($accelerometer->recorded_at?->timezone($this->dashboardTimezone()), 'H:i:s'),
+            'time' => $this->formatWibTimestamp($accelerometer->recorded_at?->timezone($this->dashboardTimezone()), 'd M Y H:i:s'),
+            'sensor_time' => $this->formatWibTimestamp($accelerometer->recorded_at?->timezone($this->dashboardTimezone()), 'd M Y H:i:s'),
             'is_connected' => $accelerometer->recorded_at && $accelerometer->recorded_at->diffInSeconds(now()) < 10,
         ];
     }

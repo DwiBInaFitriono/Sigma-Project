@@ -136,7 +136,9 @@ class SensorDataController extends Controller
 
     private function resolveRecordedAt(?string $recordedAt): Carbon
     {
-        return $recordedAt ? Carbon::parse($recordedAt) : now();
+        $tz = $this->dashboardTimezone();
+
+        return $recordedAt ? Carbon::parse($recordedAt)->setTimezone($tz) : now($tz);
     }
 
     private function toJakartaTimeString(?Carbon $recordedAt, string $format): ?string

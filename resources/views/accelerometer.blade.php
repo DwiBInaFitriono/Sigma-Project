@@ -41,8 +41,8 @@
                         <strong id="currentAxes">{{ number_format($currentAccel['x'], 2) }} / {{ number_format($currentAccel['y'], 2) }} / {{ number_format($currentAccel['z'], 2) }}</strong>
                     </div>
                     <div class="dashboard-info-card">
-                        <p>WAKTU SERVER</p>
-                        <strong id="currentAccelTime">{{ $currentAccel['time'] ?? now()->timezone('Asia/Jakarta')->format('H:i:s') . ' WIB' }}</strong>
+                        <p>Waktu Sensor</p>
+                        <strong id="currentAccelTime">{{ $currentAccel['time'] ?? now()->timezone('Asia/Jakarta')->format('d M Y H:i:s') . ' WIB' }}</strong>
                     </div>
                 </div>
 
@@ -156,7 +156,6 @@
         const LOG_REFRESH_MS = 2000;
 
         let accelChart = null;
-        let cachedLastUpdated = null;
         let cachedLogDataJson = null;
 
         function updateClock() {
@@ -385,12 +384,6 @@
                     if (liveBadgeEl) liveBadgeEl.style.display = 'none';
                 }
             }
-
-            const newTs = data.lastUpdatedAt ?? accel.time;
-            if (newTs && newTs === cachedLastUpdated) {
-                return;
-            }
-            cachedLastUpdated = newTs;
 
             try { renderChart(samples); } catch (e) { console.warn('[SIGMA] Chart error:', e); }
         }
