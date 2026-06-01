@@ -151,6 +151,30 @@ class _DashboardTabState extends State<DashboardTab> {
 
     double currentMagnitude = (accel?['magnitude'] as num?)?.toDouble() ?? 0.0;
 
+    // Calculate Y-axis range dynamically to avoid overflow and support both m/s2 and Gal data
+    double minYVal = -5.0;
+    double maxYVal = 15.0;
+    if (samples.isNotEmpty) {
+      double minSample = samples.map((s) {
+        double m = s.magnitude > 20.0 ? s.magnitude / 100.0 : s.magnitude;
+        return [s.x, s.y, s.z, m].reduce((a, b) => a < b ? a : b);
+      }).reduce((a, b) => a < b ? a : b);
+      
+      double maxSample = samples.map((s) {
+        double m = s.magnitude > 20.0 ? s.magnitude / 100.0 : s.magnitude;
+        return [s.x, s.y, s.z, m].reduce((a, b) => a > b ? a : b);
+      }).reduce((a, b) => a > b ? a : b);
+
+      double range = maxSample - minSample;
+      if (range < 4.0) range = 4.0;
+      minYVal = minSample - (range * 0.1);
+      maxYVal = maxSample + (range * 0.1);
+      
+      // Keep it within a reasonable boundary
+      if (minYVal < -40.0) minYVal = -40.0;
+      if (maxYVal > 50.0) maxYVal = 50.0;
+    }
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF0F0E0D),
@@ -343,10 +367,11 @@ class _DashboardTabState extends State<DashboardTab> {
                             ? const Center(child: Text("Menunggu sampel sensor..."))
                             : LineChart(
                                 LineChartData(
+                                  clipData: const FlClipData.all(),
                                   gridData: FlGridData(
                                     show: true,
                                     drawVerticalLine: true,
-                                    horizontalInterval: 1.0,
+                                    horizontalInterval: 2.0,
                                     verticalInterval: 1.0,
                                     getDrawingHorizontalLine: (value) => FlLine(
                                       color: const Color(0xFFC2743E).withOpacity(0.08),
@@ -365,7 +390,7 @@ class _DashboardTabState extends State<DashboardTab> {
                                     leftTitles: AxisTitles(
                                       sideTitles: SideTitles(
                                         showTitles: true,
-                                        interval: 2,
+                                        interval: 4,
                                         reservedSize: 28,
                                       ),
                                     ),
@@ -373,9 +398,13 @@ class _DashboardTabState extends State<DashboardTab> {
                                   borderData: FlBorderData(show: false),
                                   minX: 0,
                                   maxX: (samples.length - 1).toDouble(),
-                                  minY: 0,
+                                  minY: minYVal,
+                                  maxY: maxYVal,
                                   lineBarsData: [
-                                    _buildBarData(samples, (s) => s.magnitude, const Color(0xFFE13B3B), 3, isFilled: true), // Magnitude
+                                    _buildBarData(samples, (s) => s.x, const Color(0xFFB45309), 1.5), // X (brown)
+                                    _buildBarData(samples, (s) => s.y, const Color(0xFFF97316), 1.5), // Y (orange)
+                                    _buildBarData(samples, (s) => s.z, const Color(0xFFFBBF24), 1.5), // Z (yellow)
+                                    _buildBarData(samples, (s) => s.magnitude > 20.0 ? s.magnitude / 100.0 : s.magnitude, const Color(0xFFE13B3B), 2.5, isFilled: true), // Magnitude (red)
                                   ],
                                 ),
                               ),
@@ -386,6 +415,12 @@ class _DashboardTabState extends State<DashboardTab> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                          _buildLegendItem("X", const Color(0xFFB45309)),
+                          const SizedBox(width: 12),
+                          _buildLegendItem("Y", const Color(0xFFF97316)),
+                          const SizedBox(width: 12),
+                          _buildLegendItem("Z", const Color(0xFFFBBF24)),
+                          const SizedBox(width: 12),
                           _buildLegendItem("Magnitudo", const Color(0xFFE13B3B)),
                         ],
                       ),

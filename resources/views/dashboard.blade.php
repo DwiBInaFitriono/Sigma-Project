@@ -3,6 +3,47 @@
 @push('styles')
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        .map-loading-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 1rem;
+            background: rgba(20, 15, 12, 0.85);
+            backdrop-filter: blur(6px);
+            border-radius: inherit;
+        }
+        .map-loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(194, 116, 62, 0.2);
+            border-top-color: var(--sigma-accent, #C2743E);
+            border-radius: 50%;
+            animation: spin-satellite 1s linear infinite;
+        }
+        @keyframes spin-satellite {
+            to { transform: rotate(360deg); }
+        }
+        .map-loading-text {
+            color: var(--sigma-accent, #C2743E);
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-align: center;
+            line-height: 1.5;
+        }
+        .map-loading-text small {
+            display: block;
+            color: var(--sigma-muted, #8a7a6a);
+            font-weight: 500;
+            font-size: 0.78rem;
+            margin-top: 0.25rem;
+        }
+        .sensor-map { position: relative; }
+    </style>
 @endpush
 
 @section('dashboard-content')
@@ -53,7 +94,15 @@
                         </span>
                     </div>
 
-                    <div id="gps-map" class="sensor-map"></div>
+                    <div id="gps-map" class="sensor-map">
+                        <div id="gps-map-loading" class="map-loading-overlay" style="display:none;">
+                            <div class="map-loading-spinner"></div>
+                            <p class="map-loading-text">
+                                🛰️ Sedang mencari satelit...
+                                <small>ESP32 terhubung — menunggu GPS lock</small>
+                            </p>
+                        </div>
+                    </div>
 
                     <div class="dashboard-info-grid">
                         <div class="dashboard-info-card">
@@ -237,8 +286,8 @@
         };
         const dashboardDataUrl = @json($dashboardDataUrl);
 
-        // Realtime polling: every 5 seconds (optimized for mobile)
-        const REFRESH_MS = 5000;
+        // Realtime polling: every 1 second (optimized for real-time responsiveness)
+        const REFRESH_MS = 1000;
 
         let accelChart = null;
         const mapState = { map: null, marker: null, seismicLayers: [] };
@@ -286,7 +335,12 @@
                     fontFamily: 'Plus Jakarta Sans, system-ui, sans-serif',
                     toolbar: { show: false },
                     animations: {
-                        enabled: false,
+                        enabled: true,
+                        easing: 'linear',
+                        dynamicAnimation: {
+                            enabled: true,
+                            speed: 350
+                        }
                     },
                     background: 'transparent',
                     dropShadow: {
@@ -406,7 +460,17 @@
             if (typeof L === 'undefined') return;
             const lat = Number(gps.latitude);
             const lng = Number(gps.longitude);
-            if (!Number.isFinite(lat) || !Number.isFinite(lng) || (lat === 0 && lng === 0)) return;
+            const loadingEl = document.getElementById('gps-map-loading');
+            const noFix = !Number.isFinite(lat) || !Number.isFinite(lng) || (lat === 0 && lng === 0);
+
+            if (noFix) {
+                // ESP connected but no satellite fix — show loading overlay
+                if (loadingEl) loadingEl.style.display = gps.is_connected ? 'flex' : 'none';
+                return;
+            }
+
+            // Valid coordinates — hide loading overlay
+            if (loadingEl) loadingEl.style.display = 'none';
 
             const popupHtml = `
                 <div style="font-family:'Plus Jakarta Sans',sans-serif;min-width:180px;line-height:1.6;color:#1e293b;">

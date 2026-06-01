@@ -131,6 +131,12 @@
             <!-- ======================================== -->
             <!-- 4. SMARTPHONE (Flutter App)              -->
             <!-- ======================================== -->
+            <!-- Sinyal Getar / Alarm (Vibration Lines) -->
+            <path d="M 662,110 A 15,15 0 0 0 662,150" fill="none" stroke="#000" stroke-width="1.5"/>
+            <path d="M 656,100 A 25,25 0 0 0 656,160" fill="none" stroke="#000" stroke-width="1.5" stroke-dasharray="3,2"/>
+            <path d="M 766,110 A 15,15 0 0 1 766,150" fill="none" stroke="#000" stroke-width="1.5"/>
+            <path d="M 772,100 A 25,25 0 0 1 772,160" fill="none" stroke="#000" stroke-width="1.5" stroke-dasharray="3,2"/>
+
             <!-- Body HP -->
             <rect x="674" y="70" width="80" height="130" rx="10" fill="#fff" stroke="#000" stroke-width="2"/>
             <!-- Layar -->
@@ -139,9 +145,14 @@
             <line x1="702" y1="80" x2="726" y2="80" stroke="#000" stroke-width="2" stroke-linecap="round"/>
             <!-- Tombol bawah -->
             <circle cx="714" cy="190" r="6" fill="#fff" stroke="#000" stroke-width="1.5"/>
-            <!-- Ikon di layar: teks SIGMA -->
+            
+            <!-- Notifikasi Alarm di Layar -->
+            <rect x="686" y="93" width="56" height="15" rx="2" fill="#fff" stroke="#000" stroke-width="1"/>
+            <text x="714" y="103" text-anchor="middle" font-size="8" font-weight="bold">ALARM!</text>
+
+            <!-- Teks/Ikon di layar: teks SIGMA -->
             <text x="714" y="125" text-anchor="middle" font-size="9" font-weight="bold">SIGMA</text>
-            <text x="714" y="138" text-anchor="middle" font-size="8">Monitor</text>
+            <text x="714" y="137" text-anchor="middle" font-size="8">Monitor</text>
             <!-- Bars chart mini di layar -->
             <rect x="694" y="148" width="8" height="16" fill="#333" stroke="none"/>
             <rect x="706" y="142" width="8" height="22" fill="#333" stroke="none"/>
@@ -149,7 +160,7 @@
 
             <!-- Label -->
             <text x="714" y="225" text-anchor="middle" font-size="14" font-weight="bold">Aplikasi Mobile</text>
-            <text x="714" y="242" text-anchor="middle" font-size="12">(Flutter)</text>
+            <text x="714" y="242" text-anchor="middle" font-size="12">(Flutter &amp; Alarm)</text>
 
             <!-- ======================================== -->
             <!-- GARIS BAWAH: Alur Data Keseluruhan       -->
@@ -161,9 +172,9 @@
             <!-- ======================================== -->
             <!-- KOTAK KETERANGAN PROTOKOL                -->
             <!-- ======================================== -->
-            <rect x="180" y="305" width="500" height="28" rx="3" fill="#fff" stroke="#000" stroke-width="1"/>
-            <text x="430" y="324" text-anchor="middle" font-size="11">
-                Sensor → I²C/UART → ESP32 → Wi-Fi (HTTPS POST) → Laravel API → MySQL → REST JSON → Flutter App
+            <rect x="60" y="305" width="740" height="28" rx="3" fill="#fff" stroke="#000" stroke-width="1"/>
+            <text x="430" y="323" text-anchor="middle" font-size="11">
+                Sensor → I²C/UART → ESP32 → Wi-Fi (HTTPS POST) → Laravel API → MySQL → REST JSON → Flutter App (Alarm)
             </text>
 
         </svg>

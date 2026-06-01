@@ -28,6 +28,12 @@ abstract class Controller
     {
         $latestGps = GPSData::query()->latest('recorded_at')->first();
         $latestAccelerometer = AccelerometerData::query()->latest('recorded_at')->first();
+
+        // Determine if the ESP32 device itself is online (accelerometer always uploads)
+        $espConnected = $latestAccelerometer
+            && $latestAccelerometer->recorded_at
+            && $latestAccelerometer->recorded_at->diffInSeconds(now()) < 10;
+
         // Chart samples: all readings (including idle) for smooth graph
         $accelerometerSamples = AccelerometerData::query()
             ->latest('recorded_at')
@@ -52,7 +58,7 @@ abstract class Controller
             ->values();
 
         return [
-            'gps' => $this->formatGpsData($latestGps),
+            'gps' => $this->formatGpsData($latestGps, $espConnected),
             'currentAccel' => $this->formatAccelerometerData($latestAccelerometer),
             'accelSamples' => $this->formatAccelerometerSamples($accelerometerSamples),
             'accelLogSamples' => $this->formatAccelerometerSamplesWithMmi($accelerometerLogSamples),
@@ -88,7 +94,12 @@ abstract class Controller
             ->all();
     }
 
-    protected function formatGpsData(?GPSData $gps): array
+    /**
+     * Format GPS data for the dashboard.
+     *
+     * @param  bool  $espConnected  Whether the ESP32 device is currently sending data (determined from accelerometer freshness).
+     */
+    protected function formatGpsData(?GPSData $gps, bool $espConnected = false): array
     {
         if ($gps === null) {
             return [
@@ -98,9 +109,13 @@ abstract class Controller
                 'satellites' => 0,
                 'status' => 'NO FIX',
                 'recorded_at' => '--',
-                'is_connected' => false,
+                'is_connected' => $espConnected,
+                'has_fix' => false,
             ];
         }
+
+        $gpsDirectlyConnected = $gps->recorded_at && $gps->recorded_at->diffInSeconds(now()) < 10;
+        $hasFix = (float) $gps->latitude !== 0.0 || (float) $gps->longitude !== 0.0;
 
         return [
             'latitude' => (float) $gps->latitude,
@@ -109,7 +124,8 @@ abstract class Controller
             'satellites' => (int) $gps->satellites,
             'status' => $gps->status,
             'recorded_at' => $this->formatWibTimestamp($gps->recorded_at?->timezone($this->dashboardTimezone()), 'd M Y H:i:s'),
-            'is_connected' => $gps->recorded_at && $gps->recorded_at->diffInSeconds(now()) < 10,
+            'is_connected' => $espConnected || $gpsDirectlyConnected,
+            'has_fix' => $hasFix,
         ];
     }
 
@@ -186,9 +202,21 @@ abstract class Controller
         })->all();
     }
 
-    protected function buildAccelerometerSummary(EloquentCollection $samples): array
+    protected function buildAccelerometerSummary(?EloquentCollection $samples = null): array
     {
-        if ($samples->isEmpty()) {
+        $today = Carbon::today($this->dashboardTimezone());
+        $todayQuery = AccelerometerData::query()->where('recorded_at', '>=', $today);
+
+        $count = $todayQuery->count();
+        if ($count === 0) {
+            if ($samples !== null && ! $samples->isEmpty()) {
+                return [
+                    'maximum' => round((float) $samples->max(fn (AccelerometerData $sample): float => (float) $sample->magnitude), 4),
+                    'average' => round((float) $samples->avg(fn (AccelerometerData $sample): float => (float) $sample->magnitude), 4),
+                    'count' => $samples->count(),
+                ];
+            }
+
             return [
                 'maximum' => 0.0,
                 'average' => 0.0,
@@ -197,9 +225,9 @@ abstract class Controller
         }
 
         return [
-            'maximum' => round((float) $samples->max(fn (AccelerometerData $sample): float => (float) $sample->magnitude), 4),
-            'average' => round((float) $samples->avg(fn (AccelerometerData $sample): float => (float) $sample->magnitude), 4),
-            'count' => $samples->count(),
+            'maximum' => round((float) $todayQuery->max('magnitude'), 4),
+            'average' => round((float) $todayQuery->avg('magnitude'), 4),
+            'count' => $count,
         ];
     }
 

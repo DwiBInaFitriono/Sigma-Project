@@ -14,7 +14,7 @@ class ApiService {
   }
 
   // Configurations
-  String _serverUrl = "https://sigma-project-one.vercel.app"; // Default production server
+  String _serverUrl = "https://sigma.sfht.space"; // Default production server
   bool _isMockMode = false; // Default to API connection mode
   String? _token;
   User? _currentUser;
@@ -35,7 +35,7 @@ class ApiService {
   // Initialize service
   Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
-    _serverUrl = prefs.getString(keyServerUrl) ?? "https://sigma-project-one.vercel.app";
+    _serverUrl = prefs.getString(keyServerUrl) ?? "https://sigma.sfht.space";
     _isMockMode = prefs.getBool(keyMockMode) ?? false;
     _token = prefs.getString(keyToken);
     

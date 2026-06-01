@@ -6,6 +6,47 @@
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="{{ asset('css/gps.css') }}">
+    <style>
+        .map-loading-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 1rem;
+            background: rgba(20, 15, 12, 0.85);
+            backdrop-filter: blur(6px);
+            border-radius: inherit;
+        }
+        .map-loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(194, 116, 62, 0.2);
+            border-top-color: var(--sigma-accent, #C2743E);
+            border-radius: 50%;
+            animation: spin-satellite 1s linear infinite;
+        }
+        @keyframes spin-satellite {
+            to { transform: rotate(360deg); }
+        }
+        .map-loading-text {
+            color: var(--sigma-accent, #C2743E);
+            font-weight: 700;
+            font-size: 1rem;
+            text-align: center;
+            line-height: 1.5;
+        }
+        .map-loading-text small {
+            display: block;
+            color: var(--sigma-muted, #8a7a6a);
+            font-weight: 500;
+            font-size: 0.82rem;
+            margin-top: 0.25rem;
+        }
+        #gps-map { position: relative; }
+    </style>
 @endpush
 
 @section('dashboard-content')
@@ -36,7 +77,15 @@
                     <div class="live-badge" id="gps-live-badge">REALTIME</div>
                 </div>
 
-                <div id="gps-map" class="sensor-map flex-grow-1 min-h-400 rounded-8 mt-1 map-border"></div>
+                <div id="gps-map" class="sensor-map flex-grow-1 min-h-400 rounded-8 mt-1 map-border">
+                    <div id="gps-map-loading" class="map-loading-overlay" style="display:none;">
+                        <div class="map-loading-spinner"></div>
+                        <p class="map-loading-text">
+                            🛰️ Sedang mencari satelit...
+                            <small>ESP32 terhubung — menunggu GPS lock</small>
+                        </p>
+                    </div>
+                </div>
             </section>
         </div>
 
@@ -152,10 +201,10 @@
         const dashboardDataUrl = @json(route('panel.data.realtime'));
         const logDataUrl = @json($logDataUrl);
 
-        // Realtime map + stats: every 5 seconds (optimized)
-        const MAP_REFRESH_MS = 5000;
-        // Log table: every 10 seconds
-        const LOG_REFRESH_MS = 10000;
+        // Realtime map + stats: every 1 second (optimized)
+        const MAP_REFRESH_MS = 1000;
+        // Log table: every 2 seconds
+        const LOG_REFRESH_MS = 2000;
 
         let map = null;
         let marker = null;
@@ -199,8 +248,17 @@
 
             const lat = Number(gps.latitude);
             const lng = Number(gps.longitude);
+            const loadingEl = document.getElementById('gps-map-loading');
+            const noFix = isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0);
 
-            if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) return;
+            if (noFix) {
+                // ESP connected but no satellite fix — show loading overlay
+                if (loadingEl) loadingEl.style.display = gps.is_connected ? 'flex' : 'none';
+                return;
+            }
+
+            // Valid coordinates — hide loading overlay
+            if (loadingEl) loadingEl.style.display = 'none';
 
             if (!map) {
                 map = L.map('gps-map').setView([lat, lng], 15);

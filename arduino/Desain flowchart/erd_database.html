@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>ERD Database - Project SIGMA</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .container { width: 800px; }
+        .caption {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 
+        Kita bisa render dengan script mermaid, tapi karena ini untuk laporan,
+        SVG murni akan jauh lebih aman dan konsisten tampilannya (tanpa butuh internet). 
+        Untuk ERD yang rapi, saya gambarkan kotak relasinya langsung. 
+        -->
+        <svg width="800" height="550" viewBox="0 0 800 550" xmlns="http://www.w3.org/2000/svg" font-family="'Times New Roman', Times, serif">
+            
+            <!-- ============================== -->
+            <!-- 1. TABLE: accelerometer_data -->
+            <!-- ============================== -->
+            <rect x="50" y="50" width="220" height="200" fill="#fff" stroke="#000" stroke-width="2"/>
+            <rect x="50" y="50" width="220" height="30" fill="#f0f0f0" stroke="#000" stroke-width="2"/>
+            <text x="160" y="70" text-anchor="middle" font-weight="bold" font-size="14">accelerometer_data</text>
+            
+            <!-- Fields -->
+            <text x="60" y="100" font-size="13"><tspan font-weight="bold">id</tspan> (PK) [BIGINT]</text>
+            <text x="60" y="120" font-size="13">device_id [VARCHAR]</text>
+            <text x="60" y="140" font-size="13">x [DECIMAL]</text>
+            <text x="60" y="160" font-size="13">y [DECIMAL]</text>
+            <text x="60" y="180" font-size="13">z [DECIMAL]</text>
+            <text x="60" y="200" font-size="13">magnitude [DECIMAL]</text>
+            <text x="60" y="220" font-size="13">recorded_at [TIMESTAMP]</text>
+
+            <!-- ============================== -->
+            <!-- 2. TABLE: gps_data           -->
+            <!-- ============================== -->
+            <rect x="50" y="300" width="220" height="200" fill="#fff" stroke="#000" stroke-width="2"/>
+            <rect x="50" y="300" width="220" height="30" fill="#f0f0f0" stroke="#000" stroke-width="2"/>
+            <text x="160" y="320" text-anchor="middle" font-weight="bold" font-size="14">gps_data</text>
+            
+            <!-- Fields -->
+            <text x="60" y="350" font-size="13"><tspan font-weight="bold">id</tspan> (PK) [BIGINT]</text>
+            <text x="60" y="370" font-size="13">device_id [VARCHAR]</text>
+            <text x="60" y="390" font-size="13">latitude [DECIMAL]</text>
+            <text x="60" y="410" font-size="13">longitude [DECIMAL]</text>
+            <text x="60" y="430" font-size="13">altitude [DECIMAL]</text>
+            <text x="60" y="450" font-size="13">satellites [INT]</text>
+            <text x="60" y="470" font-size="13">recorded_at [TIMESTAMP]</text>
+
+            <!-- ============================== -->
+            <!-- 3. TABLE: seismic_events     -->
+            <!-- ============================== -->
+            <rect x="400" y="150" width="280" height="280" fill="#fff" stroke="#000" stroke-width="2"/>
+            <rect x="400" y="150" width="280" height="30" fill="#f0f0f0" stroke="#000" stroke-width="2"/>
+            <text x="540" y="170" text-anchor="middle" font-weight="bold" font-size="14">seismic_events</text>
+            
+            <!-- Fields -->
+            <text x="410" y="200" font-size="13"><tspan font-weight="bold">id</tspan> (PK) [BIGINT]</text>
+            <text x="410" y="220" font-size="13">device_id [VARCHAR]</text>
+            <text x="410" y="240" font-size="13">latitude [DECIMAL]</text>
+            <text x="410" y="260" font-size="13">longitude [DECIMAL]</text>
+            <text x="410" y="280" font-size="13">magnitude [DECIMAL]</text>
+            <text x="410" y="300" font-size="13">mmi_level [VARCHAR]</text>
+            <text x="410" y="320" font-size="13">mmi_status [VARCHAR]</text>
+            <text x="410" y="340" font-size="13" fill="#b91c1c"><tspan font-weight="bold">accelerometer_data_id</tspan> (FK) [BIGINT]</text>
+            <text x="410" y="360" font-size="13" fill="#b91c1c"><tspan font-weight="bold">gps_data_id</tspan> (FK) [BIGINT]</text>
+            <text x="410" y="380" font-size="13">recorded_at [TIMESTAMP]</text>
+            <text x="410" y="400" font-size="13">created_at [TIMESTAMP]</text>
+
+            <!-- ============================== -->
+            <!-- 4. TABLE: users (standalone) -->
+            <!-- ============================== -->
+            <rect x="450" y="40" width="180" height="90" fill="#fff" stroke="#000" stroke-width="2" stroke-dasharray="4"/>
+            <rect x="450" y="40" width="180" height="25" fill="#f0f0f0" stroke="#000" stroke-width="2" stroke-dasharray="4"/>
+            <text x="540" y="57" text-anchor="middle" font-weight="bold" font-size="13">users</text>
+            <text x="460" y="80" font-size="11">id (PK)</text>
+            <text x="460" y="95" font-size="11">name, email, role</text>
+            <text x="460" y="110" font-size="11">api_token, password</text>
+
+            <!-- ============================== -->
+            <!-- RELATIONSHIP LINES           -->
+            <!-- ============================== -->
+            <!-- Relation 1: accelerometer -> seismic (1 to 1/Many) -->
+            <path d="M 270 150 L 335 150 L 335 335 L 400 335" fill="none" stroke="#b91c1c" stroke-width="2"/>
+            <!-- Crow's foot / One-to-Many notation ends -->
+            <circle cx="270" cy="150" r="4" fill="#fff" stroke="#b91c1c" stroke-width="2"/>
+            <!-- Target side: Many/One (BelongsTo) -->
+            <line x1="390" y1="325" x2="400" y2="335" stroke="#b91c1c" stroke-width="2"/>
+            <line x1="390" y1="345" x2="400" y2="335" stroke="#b91c1c" stroke-width="2"/>
+            <text x="345" y="325" fill="#b91c1c" font-size="11" font-weight="bold">1..N</text>
+            <text x="285" y="145" fill="#b91c1c" font-size="11" font-weight="bold">1</text>
+
+            <!-- Relation 2: gps -> seismic (1 to 1/Many) -->
+            <path d="M 270 400 L 335 400 L 335 355 L 400 355" fill="none" stroke="#b91c1c" stroke-width="2"/>
+            <circle cx="270" cy="400" r="4" fill="#fff" stroke="#b91c1c" stroke-width="2"/>
+            <!-- Target side: Many -->
+            <line x1="390" y1="345" x2="400" y2="355" stroke="#b91c1c" stroke-width="2"/>
+            <line x1="390" y1="365" x2="400" y2="355" stroke="#b91c1c" stroke-width="2"/>
+            <text x="345" y="375" fill="#b91c1c" font-size="11" font-weight="bold">1..N</text>
+            <text x="285" y="395" fill="#b91c1c" font-size="11" font-weight="bold">1</text>
+
+            <!-- Keterangan Relasi -->
+            <rect x="50" y="10" width="180" height="25" fill="#fee2e2" stroke="#b91c1c" stroke-width="1"/>
+            <text x="140" y="27" text-anchor="middle" font-size="12" fill="#b91c1c">Garis Merah = Foreign Key</text>
+            
+        </svg>
+
+        <p class="caption">Gambar 3.5 Entity Relationship Diagram (ERD) Database Project SIGMA</p>
+    </div>
+</body>
+</html>

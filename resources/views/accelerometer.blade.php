@@ -150,10 +150,10 @@
         const dashboardDataUrl = @json($dashboardDataUrl);
         const logDataUrl = @json($logDataUrl);
 
-        // Realtime chart: every 5 seconds (optimized)
-        const CHART_REFRESH_MS = 5000;
-        // Log table: every 10 seconds
-        const LOG_REFRESH_MS = 10000;
+        // Realtime chart: every 1 second (optimized)
+        const CHART_REFRESH_MS = 1000;
+        // Log table: every 2 seconds
+        const LOG_REFRESH_MS = 2000;
 
         let accelChart = null;
         let cachedLastUpdated = null;
