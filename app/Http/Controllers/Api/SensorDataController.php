@@ -159,7 +159,7 @@ class SensorDataController extends Controller
         return $formatted.' WIB';
     }
 
-    protected function formatGpsData(?GPSData $gpsData): array
+    protected function formatGpsData(?GPSData $gpsData, bool $espConnected = false): array
     {
         if ($gpsData === null) {
             return [
