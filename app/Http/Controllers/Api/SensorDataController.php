@@ -10,6 +10,7 @@ use App\Models\GPSData;
 use App\Models\SeismicEvent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class SensorDataController extends Controller
 {
@@ -27,15 +28,31 @@ class SensorDataController extends Controller
         }
 
         $validated = $request->validated();
+        $deviceId = $validated['device_id'] ?? 'esp32-sigma-01';
 
-        $gpsData = GPSData::create([
-            'device_id' => $validated['device_id'] ?? null,
+        // Update device last seen in cache (heartbeat)
+        Cache::put("device_last_seen:{$deviceId}", now()->toIso8601String(), now()->addMinutes(5));
+
+        $recordedAt = $this->resolveRecordedAt($validated['recorded_at'] ?? null);
+
+        // Update latest GPS data in cache for instant real-time fetching
+        Cache::put("device_latest_gps:{$deviceId}", [
             'latitude' => (float) $validated['latitude'],
             'longitude' => (float) $validated['longitude'],
             'altitude' => isset($validated['altitude']) ? (float) $validated['altitude'] : null,
             'satellites' => (int) ($validated['satellites'] ?? 0),
             'status' => $validated['status'] ?? 'NO FIX',
-            'recorded_at' => $this->resolveRecordedAt($validated['recorded_at'] ?? null),
+            'recorded_at' => $recordedAt->toIso8601String(),
+        ], now()->addMinutes(5));
+
+        $gpsData = GPSData::create([
+            'device_id' => $deviceId,
+            'latitude' => (float) $validated['latitude'],
+            'longitude' => (float) $validated['longitude'],
+            'altitude' => isset($validated['altitude']) ? (float) $validated['altitude'] : null,
+            'satellites' => (int) ($validated['satellites'] ?? 0),
+            'status' => $validated['status'] ?? 'NO FIX',
+            'recorded_at' => $recordedAt,
         ]);
 
         return response()->json([
@@ -59,6 +76,7 @@ class SensorDataController extends Controller
         }
 
         $validated = $request->validated();
+        $deviceId = $validated['device_id'] ?? 'esp32-sigma-01';
 
         $magnitude = isset($validated['magnitude'])
             ? (float) $validated['magnitude']
@@ -68,18 +86,35 @@ class SensorDataController extends Controller
                 + pow((float) $validated['z'], 2)
             ), 4);
 
-        $accelerometerData = AccelerometerData::create([
-            'device_id' => $validated['device_id'] ?? null,
+        $recordedAt = $this->resolveRecordedAt($validated['recorded_at'] ?? null);
+
+        // Update device last seen in cache (heartbeat)
+        Cache::put("device_last_seen:{$deviceId}", now()->toIso8601String(), now()->addMinutes(5));
+
+        // Update latest accelerometer data in cache for instant real-time fetching
+        Cache::put("device_latest_accel:{$deviceId}", [
             'x' => (float) $validated['x'],
             'y' => (float) $validated['y'],
             'z' => (float) $validated['z'],
             'magnitude' => $magnitude,
-            'recorded_at' => $this->resolveRecordedAt($validated['recorded_at'] ?? null),
-        ]);
+            'recorded_at' => $recordedAt->toIso8601String(),
+        ], now()->addMinutes(5));
 
-        if ($magnitude >= 0.15) {
+        $isSeismic = $magnitude >= 0.15;
+        $accelerometerData = null;
+
+        if ($isSeismic) {
+            $accelerometerData = AccelerometerData::create([
+                'device_id' => $deviceId,
+                'x' => (float) $validated['x'],
+                'y' => (float) $validated['y'],
+                'z' => (float) $validated['z'],
+                'magnitude' => $magnitude,
+                'recorded_at' => $recordedAt,
+            ]);
+
             $gpsData = GPSData::query()
-                ->where('device_id', $accelerometerData->device_id)
+                ->where('device_id', $deviceId)
                 ->latest('recorded_at')
                 ->first()
                 ?? GPSData::query()->latest('recorded_at')->first();
@@ -87,7 +122,7 @@ class SensorDataController extends Controller
             if ($gpsData) {
                 $mmi = SeismicEvent::getMmiDetails($magnitude);
                 SeismicEvent::create([
-                    'device_id' => $accelerometerData->device_id,
+                    'device_id' => $deviceId,
                     'latitude' => $gpsData->latitude,
                     'longitude' => $gpsData->longitude,
                     'altitude' => $gpsData->altitude,
@@ -96,15 +131,26 @@ class SensorDataController extends Controller
                     'mmi_status' => $mmi['status'],
                     'accelerometer_data_id' => $accelerometerData->id,
                     'gps_data_id' => $gpsData->id,
-                    'recorded_at' => $accelerometerData->recorded_at,
+                    'recorded_at' => $recordedAt,
                 ]);
             }
         }
 
+        $responseData = $accelerometerData
+            ? $this->formatAccelerometerData($accelerometerData)
+            : [
+                'device_id' => $deviceId,
+                'x' => (float) $validated['x'],
+                'y' => (float) $validated['y'],
+                'z' => (float) $validated['z'],
+                'magnitude' => $magnitude,
+                'recorded_at' => $this->toJakartaTimeLabel($recordedAt, 'd M Y H:i:s'),
+            ];
+
         return response()->json([
             'success' => true,
-            'message' => 'Accelerometer data saved successfully.',
-            'data' => $this->formatAccelerometerData($accelerometerData),
+            'message' => $isSeismic ? 'Accelerometer data saved (seismic event).' : 'Heartbeat received.',
+            'data' => $responseData,
         ], 201);
     }
 

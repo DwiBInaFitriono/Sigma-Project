@@ -7,6 +7,7 @@ use App\Models\GPSData;
 use App\Models\SeismicEvent;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 abstract class Controller
 {
@@ -26,15 +27,64 @@ abstract class Controller
 
     protected function dashboardPayload(int $sampleLimit = 12): array
     {
+        $deviceId = 'esp32-sigma-01'; // Default device ID from main.ino
+
+        // 1. Fetch latest GPS and Accelerometer data from DB for fallback/historical logs
         $latestGps = GPSData::query()->latest('recorded_at')->first();
         $latestAccelerometer = AccelerometerData::query()->latest('recorded_at')->first();
 
-        // Determine if the ESP32 device itself is online (accelerometer always uploads)
-        $espConnected = $latestAccelerometer
-            && $latestAccelerometer->recorded_at
-            && $latestAccelerometer->recorded_at->diffInSeconds(now()) < 10;
+        // 2. Check online status via Cache first (heartbeat)
+        $lastSeenStr = Cache::get("device_last_seen:{$deviceId}");
+        $espConnected = false;
+        if ($lastSeenStr) {
+            $lastSeen = Carbon::parse($lastSeenStr);
+            $espConnected = $lastSeen->diffInSeconds(now()) < 12;
+        }
 
-        // Chart samples: all readings (including idle) for smooth graph
+        // Fallback for GPS connection check if cache is not set yet
+        if (! $espConnected && $latestAccelerometer) {
+            $espConnected = $latestAccelerometer->recorded_at && $latestAccelerometer->recorded_at->diffInSeconds(now()) < 10;
+        }
+
+        // 3. Fetch latest Accelerometer reading from Cache for real-time display card
+        $latestAccelCache = Cache::get("device_latest_accel:{$deviceId}");
+        if ($latestAccelCache) {
+            $recAt = Carbon::parse($latestAccelCache['recorded_at']);
+            $currentAccel = [
+                'x' => $latestAccelCache['x'],
+                'y' => $latestAccelCache['y'],
+                'z' => $latestAccelCache['z'],
+                'magnitude' => $latestAccelCache['magnitude'],
+                'time' => $this->formatWibTimestamp($recAt->timezone($this->dashboardTimezone()), 'd M Y H:i:s'),
+                'sensor_time' => $this->formatWibTimestamp($recAt->timezone($this->dashboardTimezone()), 'd M Y H:i:s'),
+                'is_connected' => $espConnected,
+            ];
+        } else {
+            $currentAccel = $this->formatAccelerometerData($latestAccelerometer);
+            if ($latestAccelerometer) {
+                $currentAccel['is_connected'] = $espConnected;
+            }
+        }
+
+        // 4. Fetch latest GPS reading from Cache for real-time GPS card
+        $latestGpsCache = Cache::get("device_latest_gps:{$deviceId}");
+        if ($latestGpsCache) {
+            $recAt = Carbon::parse($latestGpsCache['recorded_at']);
+            $gps = [
+                'latitude' => $latestGpsCache['latitude'],
+                'longitude' => $latestGpsCache['longitude'],
+                'altitude' => $latestGpsCache['altitude'] ?? 0.0,
+                'satellites' => $latestGpsCache['satellites'] ?? 0,
+                'status' => $latestGpsCache['status'] ?? 'NO FIX',
+                'recorded_at' => $this->formatWibTimestamp($recAt->timezone($this->dashboardTimezone()), 'd M Y H:i:s'),
+                'is_connected' => $espConnected,
+                'has_fix' => ((float) $latestGpsCache['latitude'] !== 0.0 || (float) $latestGpsCache['longitude'] !== 0.0),
+            ];
+        } else {
+            $gps = $this->formatGpsData($latestGps, $espConnected);
+        }
+
+        // 5. Chart samples: only entries in the database (since database now only stores magnitude >= 0.15)
         $accelerometerSamples = AccelerometerData::query()
             ->latest('recorded_at')
             ->limit($sampleLimit)
@@ -58,8 +108,8 @@ abstract class Controller
             ->values();
 
         return [
-            'gps' => $this->formatGpsData($latestGps, $espConnected),
-            'currentAccel' => $this->formatAccelerometerData($latestAccelerometer),
+            'gps' => $gps,
+            'currentAccel' => $currentAccel,
             'accelSamples' => $this->formatAccelerometerSamples($accelerometerSamples),
             'accelLogSamples' => $this->formatAccelerometerSamplesWithMmi($accelerometerLogSamples),
             'gpsLogSamples' => $this->formatGpsSamples($gpsLogSamples),
@@ -205,9 +255,14 @@ abstract class Controller
     protected function buildAccelerometerSummary(?EloquentCollection $samples = null): array
     {
         $today = Carbon::today($this->dashboardTimezone());
-        $todayQuery = AccelerometerData::query()->where('recorded_at', '>=', $today);
 
-        $count = $todayQuery->count();
+        $stats = AccelerometerData::query()
+            ->where('recorded_at', '>=', $today)
+            ->selectRaw('COUNT(*) as count, MAX(magnitude) as maximum, AVG(magnitude) as average')
+            ->first();
+
+        $count = (int) ($stats->count ?? 0);
+
         if ($count === 0) {
             if ($samples !== null && ! $samples->isEmpty()) {
                 return [
@@ -225,8 +280,8 @@ abstract class Controller
         }
 
         return [
-            'maximum' => round((float) $todayQuery->max('magnitude'), 4),
-            'average' => round((float) $todayQuery->avg('magnitude'), 4),
+            'maximum' => round((float) ($stats->maximum ?? 0.0), 4),
+            'average' => round((float) ($stats->average ?? 0.0), 4),
             'count' => $count,
         ];
     }
