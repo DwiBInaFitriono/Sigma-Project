@@ -198,8 +198,8 @@
             seismicEvents: @json($seismicEvents),
         };
         const initialGpsLog = @json($gpsLog);
-        const dashboardDataUrl = @json(route('panel.data.realtime'));
-        const logDataUrl = @json($logDataUrl);
+        const dashboardDataUrl = '/panel/data/realtime';
+        const logDataUrl = '/panel/data/log';
 
         // Realtime map + stats: every 1 second (optimized)
         const MAP_REFRESH_MS = 1000;
@@ -414,11 +414,15 @@
                     signal: controller.signal,
                 });
                 clearTimeout(timeoutId);
-                if (!response.ok) return;
+                if (!response.ok) {
+                    console.error('[SIGMA] GPS data refresh failed with status:', response.status);
+                    return;
+                }
                 const data = await response.json();
                 applyDashboardData(data);
-            } catch (_) {
+            } catch (error) {
                 clearTimeout(timeoutId);
+                console.error('[SIGMA] GPS data refresh exception:', error);
             } finally {
                 isMapRefreshing = false;
                 setTimeout(refreshMapData, MAP_REFRESH_MS);
@@ -447,7 +451,10 @@
                     signal: controller.signal,
                 });
                 clearTimeout(timeoutId);
-                if (!response.ok) return;
+                if (!response.ok) {
+                    console.error('[SIGMA] GPS log refresh failed with status:', response.status);
+                    return;
+                }
                 const data = await response.json();
                 if (data.gpsLog) {
                     const dataStr = JSON.stringify(data.gpsLog);
@@ -455,8 +462,9 @@
                     cachedGpsLogJson = dataStr;
                     renderGpsLogTable(data.gpsLog);
                 }
-            } catch (_) {
+            } catch (error) {
                 clearTimeout(timeoutId);
+                console.error('[SIGMA] GPS log refresh exception:', error);
             } finally {
                 isLogRefreshing = false;
                 setTimeout(refreshGpsLog, LOG_REFRESH_MS);

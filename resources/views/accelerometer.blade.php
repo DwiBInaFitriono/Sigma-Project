@@ -147,8 +147,8 @@
             lastUpdatedAt: @json($lastUpdatedAt),
         };
         const initialAccelLog = @json($accelLog);
-        const dashboardDataUrl = @json($dashboardDataUrl);
-        const logDataUrl = @json($logDataUrl);
+        const dashboardDataUrl = '/panel/data/realtime';
+        const logDataUrl = '/panel/data/log';
 
         // Realtime chart: every 1 second (optimized)
         const CHART_REFRESH_MS = 1000;
@@ -410,11 +410,15 @@
                     signal: controller.signal,
                 });
                 clearTimeout(timeoutId);
-                if (!response.ok) return;
+                if (!response.ok) {
+                    console.error('[SIGMA] Chart refresh failed with status:', response.status);
+                    return;
+                }
                 const data = await response.json();
                 applyDashboardData(data);
-            } catch (_) {
+            } catch (error) {
                 clearTimeout(timeoutId);
+                console.error('[SIGMA] Chart refresh exception:', error);
             } finally {
                 isChartRefreshing = false;
                 setTimeout(refreshChartData, CHART_REFRESH_MS);
@@ -443,7 +447,10 @@
                     signal: controller.signal,
                 });
                 clearTimeout(timeoutId);
-                if (!response.ok) return;
+                if (!response.ok) {
+                    console.error('[SIGMA] Log refresh failed with status:', response.status);
+                    return;
+                }
                 const data = await response.json();
                 if (data.accelLog) {
                     const dataStr = JSON.stringify(data.accelLog);
@@ -451,8 +458,9 @@
                     cachedLogDataJson = dataStr;
                     renderLogTable(data.accelLog);
                 }
-            } catch (_) {
+            } catch (error) {
                 clearTimeout(timeoutId);
+                console.error('[SIGMA] Log refresh exception:', error);
             } finally {
                 isLogRefreshing = false;
                 setTimeout(refreshLogData, LOG_REFRESH_MS);

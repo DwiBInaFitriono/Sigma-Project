@@ -284,7 +284,7 @@
             lastUpdatedAt: @json($lastUpdatedAt),
             seismicEvents: @json($seismicEvents),
         };
-        const dashboardDataUrl = @json($dashboardDataUrl);
+        const dashboardDataUrl = '/panel/data/realtime';
 
         // Realtime polling: every 1 second (optimized for real-time responsiveness)
         const REFRESH_MS = 1000;
@@ -710,12 +710,15 @@
                     signal: controller.signal,
                 });
                 clearTimeout(timeoutId);
-                if (!response.ok) return;
+                if (!response.ok) {
+                    console.error('[SIGMA] Refresh failed with status:', response.status);
+                    return;
+                }
                 const data = await response.json();
                 applyDashboardData(data);
             } catch (error) {
                 clearTimeout(timeoutId);
-                if (error.name !== 'AbortError') { console.warn('[SIGMA] Refresh failed:', error.message); }
+                console.error('[SIGMA] Refresh exception:', error);
             } finally {
                 isRefreshing = false;
                 setTimeout(refreshDashboardData, REFRESH_MS);
