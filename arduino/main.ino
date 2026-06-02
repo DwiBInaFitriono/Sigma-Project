@@ -491,37 +491,37 @@ void uploadData() {
            API_BASE_URL);
 
   // GPS Data Upload
-  // Tetap kirim data GPS jika modul aktif (charsProcessed > 0) agar dashboard menampilkan status "Online"
-  if (gps.charsProcessed() > 0) {
-    if (gps.location.isValid()) {
-      if (hasTime) {
-        snprintf(payload, sizeof(payload),
-                 "{\"device_id\":\"%s\",\"latitude\":%.7f,\"longitude\":%.7f,"
-                 "\"altitude\":%.2f,\"satellites\":%d,\"status\":\"3D "
-                 "FIX\",\"recorded_at\":\"%s\"}",
-                 DEVICE_ID, gps.location.lat(), gps.location.lng(),
-                 gps.altitude.isValid() ? gps.altitude.meters() : 0.0,
-                 gps.satellites.isValid() ? gps.satellites.value() : 0,
-                 recordedAt);
-      } else {
-        snprintf(payload, sizeof(payload),
-                 "{\"device_id\":\"%s\",\"latitude\":%.7f,\"longitude\":%.7f,"
-                 "\"altitude\":%.2f,\"satellites\":%d,\"status\":\"3D "
-                 "FIX\",\"recorded_at\":null}",
-                 DEVICE_ID, gps.location.lat(), gps.location.lng(),
-                 gps.altitude.isValid() ? gps.altitude.meters() : 0.0,
-                 gps.satellites.isValid() ? gps.satellites.value() : 0);
-      }
-    } else {
-      // Jika belum lock satelit (NO FIX), kirim koordinat default agar backend mencatat status online GPS
+  // Selalu kirim data GPS agar status koneksi di web terbaca "Online"
+  if (gps.location.isValid()) {
+    if (hasTime) {
       snprintf(payload, sizeof(payload),
-               "{\"device_id\":\"%s\",\"latitude\":0.0,\"longitude\":0.0,"
-               "\"altitude\":0.0,\"satellites\":%d,\"status\":\"NO "
+               "{\"device_id\":\"%s\",\"latitude\":%.7f,\"longitude\":%.7f,"
+               "\"altitude\":%.2f,\"satellites\":%d,\"status\":\"3D "
+               "FIX\",\"recorded_at\":\"%s\"}",
+               DEVICE_ID, gps.location.lat(), gps.location.lng(),
+               gps.altitude.isValid() ? gps.altitude.meters() : 0.0,
+               gps.satellites.isValid() ? gps.satellites.value() : 0,
+               recordedAt);
+    } else {
+      snprintf(payload, sizeof(payload),
+               "{\"device_id\":\"%s\",\"latitude\":%.7f,\"longitude\":%.7f,"
+               "\"altitude\":%.2f,\"satellites\":%d,\"status\":\"3D "
                "FIX\",\"recorded_at\":null}",
-               DEVICE_ID, gps.satellites.isValid() ? gps.satellites.value() : 0);
+               DEVICE_ID, gps.location.lat(), gps.location.lng(),
+               gps.altitude.isValid() ? gps.altitude.meters() : 0.0,
+               gps.satellites.isValid() ? gps.satellites.value() : 0);
     }
-    postJson(urlGps, payload);
+  } else {
+    // Jika belum lock satelit (NO FIX), kirim koordinat default agar backend mencatat status online GPS.
+    // Gunakan status "SEARCHING" jika modul aktif mengirim karakter, dan "NO GPS" jika tidak ada data dari modul.
+    const char* gpsStatus = (gps.charsProcessed() > 0) ? "SEARCHING" : "NO GPS";
+    snprintf(payload, sizeof(payload),
+             "{\"device_id\":\"%s\",\"latitude\":0.0,\"longitude\":0.0,"
+             "\"altitude\":0.0,\"satellites\":%d,\"status\":\"%s\","
+             "\"recorded_at\":null}",
+             DEVICE_ID, gps.satellites.isValid() ? gps.satellites.value() : 0, gpsStatus);
   }
+  postJson(urlGps, payload);
 
   // Accelerometer Data Upload
   if (hasTime) {
