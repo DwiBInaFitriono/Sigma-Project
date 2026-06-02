@@ -340,11 +340,11 @@ class _DashboardTabState extends State<DashboardTab> {
                                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                Text(
-                                  "Nilai X / Y / Z: ${(accel?['x'] as num?)?.toStringAsFixed(2) ?? '0.00'} / ${(accel?['y'] as num?)?.toStringAsFixed(2) ?? '0.00'} / ${(accel?['z'] as num?)?.toStringAsFixed(2) ?? '0.00'}",
-                                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
+                                 Text(
+                                   "Level MMI: ${_getMmiLevel(currentMagnitude)}",
+                                   style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                   overflow: TextOverflow.ellipsis,
+                                 ),
                               ],
                             ),
                           ),
@@ -376,7 +376,7 @@ class _DashboardTabState extends State<DashboardTab> {
                                   gridData: FlGridData(
                                     show: true,
                                     drawVerticalLine: true,
-                                    horizontalInterval: 2.0,
+                                    horizontalInterval: 5.0,
                                     verticalInterval: 1.0,
                                     getDrawingHorizontalLine: (value) => FlLine(
                                       color: const Color(0xFFC2743E).withOpacity(0.08),
@@ -395,7 +395,7 @@ class _DashboardTabState extends State<DashboardTab> {
                                     leftTitles: AxisTitles(
                                       sideTitles: SideTitles(
                                         showTitles: true,
-                                        interval: 4,
+                                        interval: 5,
                                         reservedSize: 28,
                                       ),
                                     ),
@@ -620,38 +620,32 @@ class _DashboardTabState extends State<DashboardTab> {
                                 dataRowMinHeight: 35,
                                 dataRowMaxHeight: 45,
                                 columnSpacing: 18,
-                                columns: const [
-                                  DataColumn(label: Text('Waktu', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                                  DataColumn(label: Text('X', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                                  DataColumn(label: Text('Y', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                                  DataColumn(label: Text('Z', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                                  DataColumn(label: Text('Magnitudo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                                  DataColumn(label: Text('Level MMI', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
-                                ],
-                                rows: accelLog.reversed.map((sample) {
-                                  double mag = (sample['magnitude'] as num).toDouble();
-                                  Color levelColor = _getMmiColor(mag);
+                                 columns: const [
+                                   DataColumn(label: Text('Waktu', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                                   DataColumn(label: Text('Magnitudo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                                   DataColumn(label: Text('Level MMI', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                                 ],
+                                 rows: accelLog.reversed.map((sample) {
+                                   double mag = (sample['magnitude'] as num).toDouble();
+                                   Color levelColor = _getMmiColor(mag);
 
-                                  return DataRow(
-                                    cells: [
-                                      DataCell(Text(sample['time'] ?? '--:--:--', style: const TextStyle(fontSize: 11, color: Colors.grey))),
-                                      DataCell(Text((sample['x'] as num).toStringAsFixed(2), style: const TextStyle(fontSize: 11))),
-                                      DataCell(Text((sample['y'] as num).toStringAsFixed(2), style: const TextStyle(fontSize: 11))),
-                                      DataCell(Text((sample['z'] as num).toStringAsFixed(2), style: const TextStyle(fontSize: 11))),
-                                      DataCell(Text((sample['magnitude'] as num).toStringAsFixed(4), style: const TextStyle(fontSize: 11))),
-                                      DataCell(
-                                        Text(
-                                          sample['mmi_level'] ?? 'I',
-                                          style: TextStyle(
-                                            color: levelColor,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                }).toList(),
+                                   return DataRow(
+                                     cells: [
+                                       DataCell(Text(sample['time'] ?? '--:--:--', style: const TextStyle(fontSize: 11, color: Colors.grey))),
+                                       DataCell(Text((sample['magnitude'] as num).toStringAsFixed(4), style: const TextStyle(fontSize: 11))),
+                                       DataCell(
+                                         Text(
+                                           sample['mmi_level'] ?? 'I',
+                                           style: TextStyle(
+                                             color: levelColor,
+                                             fontWeight: FontWeight.bold,
+                                             fontSize: 11,
+                                           ),
+                                         ),
+                                       ),
+                                     ],
+                                   );
+                                 }).toList(),
                               ),
                             ),
                     ],
