@@ -143,18 +143,10 @@
                         </span>
                     </div>
 
-                    @php
-                        $mag = (float) $currentAccel['magnitude'];
-                        if ($mag < 0.34)      { $mmiLevel = 'I';      $mmiStatus = 'Aman';    $mmiColor = '#22c55e'; }
-                        elseif ($mag < 2.8)   { $mmiLevel = 'II-III'; $mmiStatus = 'Lemah';   $mmiColor = '#86efac'; }
-                        elseif ($mag < 7.8)   { $mmiLevel = 'IV';     $mmiStatus = 'Waspada'; $mmiColor = '#f59e0b'; }
-                        elseif ($mag < 18.4)  { $mmiLevel = 'V';      $mmiStatus = 'Bahaya!'; $mmiColor = '#f97316'; }
-                        else                  { $mmiLevel = 'VI+';    $mmiStatus = 'AWAS!';   $mmiColor = '#ef4444'; }
-                    @endphp
                     <div class="dashboard-info-grid margin-y-1-5">
                         <div class="dashboard-info-card">
-                            <p>Level MMI</p>
-                            <strong id="currentMmi" style="color: {{ $mmiColor }};">{{ $mmiLevel }} ({{ $mmiStatus }})</strong>
+                            <p>NILAI X / Y / Z</p>
+                            <strong id="currentAxes">{{ number_format($currentAccel['x'], 2) }} / {{ number_format($currentAccel['y'], 2) }} / {{ number_format($currentAccel['z'], 2) }}</strong>
                         </div>
                         <div class="dashboard-info-card">
                             <p>Waktu Sensor</p>
@@ -196,6 +188,9 @@
                         <thead>
                             <tr>
                                 <th>Waktu</th>
+                                <th>X</th>
+                                <th>Y</th>
+                                <th>Z</th>
                                 <th>Magnitudo</th>
                                 <th>Level MMI</th>
                                 <th class="text-right">Status</th>
@@ -213,6 +208,9 @@
                                 @endphp
                                 <tr>
                                     <td class="text-muted">{{ $sample['time'] }}</td>
+                                    <td>{{ number_format($sample['x'], 2) }}</td>
+                                    <td>{{ number_format($sample['y'], 2) }}</td>
+                                    <td>{{ number_format($sample['z'], 2) }}</td>
                                     <td>{{ number_format($sample['magnitude'], 4) }}</td>
                                     <td><span style="font-weight: 800; color: {{ $mmiColor }};">{{ $mmiLevel }}</span></td>
                                     <td class="text-right"><span style="font-weight: 700; color: {{ $mmiColor }};">{{ $mmiStatus }}</span></td>
@@ -350,9 +348,6 @@
                     },
                 },
                 series: [
-                    { name: 'X', type: 'line', data: samples.map((s) => s.x) },
-                    { name: 'Y', type: 'line', data: samples.map((s) => s.y) },
-                    { name: 'Z', type: 'line', data: samples.map((s) => s.z) },
                     { name: 'Magnitudo', type: 'area', data: samples.map((s) => s.magnitude) },
                 ],
                 xaxis: {
@@ -373,13 +368,13 @@
                 },
                 stroke: {
                     curve: isMobile ? 'straight' : 'smooth',
-                    width: [2, 2, 2, 3],
+                    width: [3],
                     lineCap: 'round',
                 },
-                colors: ['#b45309', '#f97316', '#fbbf24', '#e63946'],
+                colors: ['#e63946'],
                 fill: {
-                    type: ['solid', 'solid', 'solid', 'solid'],
-                    opacity: [0, 0, 0, 0.15],
+                    type: ['solid'],
+                    opacity: [0.15],
                 },
                 markers: {
                     size: [5],
@@ -432,9 +427,6 @@
                     false, false
                 );
                 accelChart.updateSeries([
-                    { name: 'X', type: 'line', data: samples.map((s) => s.x) },
-                    { name: 'Y', type: 'line', data: samples.map((s) => s.y) },
-                    { name: 'Z', type: 'line', data: samples.map((s) => s.z) },
                     { name: 'Magnitudo', type: 'area', data: samples.map((s) => s.magnitude) },
                 ]);
                 return;
@@ -596,6 +588,9 @@
                 const mmi = getMmiForMagnitude(sample.magnitude);
                 html += `<tr>
                     <td class="text-muted">${sample.time ?? '--'}</td>
+                    <td>${formatNumber(sample.x, 2)}</td>
+                    <td>${formatNumber(sample.y, 2)}</td>
+                    <td>${formatNumber(sample.z, 2)}</td>
                     <td>${formatNumber(sample.magnitude, 4)}</td>
                     <td><span style="font-weight:800;color:${mmi.color};">${mmi.level}</span></td>
                     <td class="text-right"><span style="font-weight:700;color:${mmi.color};">${mmi.status}</span></td>
@@ -642,12 +637,7 @@
             const seismicEvents = data.seismicEvents || [];
 
             setText('currentMagnitude', formatNumber(accel.magnitude));
-            const mmi = getMmiForMagnitude(accel.magnitude);
-            const mmiEl = document.getElementById('currentMmi');
-            if (mmiEl) {
-                mmiEl.textContent = `${mmi.level} (${mmi.status})`;
-                mmiEl.style.color = mmi.color;
-            }
+            setText('currentAxes', `${formatNumber(accel.x)} / ${formatNumber(accel.y)} / ${formatNumber(accel.z)}`);
             setText('currentAccelTime', accel.time ?? '--');
             setText('lastUpdatedAt', data.lastUpdatedAt ?? accel.time ?? '--');
 

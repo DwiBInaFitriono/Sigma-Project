@@ -51,6 +51,9 @@
                     <thead>
                         <tr>
                             <th>Tanggal &amp; Waktu (WIB)</th>
+                            <th>X</th>
+                            <th>Y</th>
+                            <th>Z</th>
                             <th>Magnitudo</th>
                             <th>Level MMI</th>
                             <th class="text-right">Status</th>
@@ -68,6 +71,9 @@
                              @endphp
                             <tr>
                                 <td class="text-muted">{{ \Carbon\Carbon::parse($sample->recorded_at)->timezone('Asia/Jakarta')->format('d M Y H:i:s') }}</td>
+                                <td>{{ number_format($sample->x, 2) }}</td>
+                                <td>{{ number_format($sample->y, 2) }}</td>
+                                <td>{{ number_format($sample->z, 2) }}</td>
                                 <td>{{ number_format($sample->magnitude, 4) }}</td>
                                 <td><span style="font-weight: 800; color: {{ $mmiColor }};">{{ $mmiLevel }}</span></td>
                                 <td class="text-right"><span style="font-weight: 700; color: {{ $mmiColor }};">{{ $mmiStatus }}</span></td>
@@ -335,6 +341,9 @@
                     const mmi = getMmi(d.magnitude);
                     return [
                         d.time,
+                        d.x.toFixed(2),
+                        d.y.toFixed(2),
+                        d.z.toFixed(2),
                         d.magnitude.toFixed(4),
                         mmi.level,
                         mmi.status
@@ -343,7 +352,7 @@
 
                 doc.autoTable({
                     startY: currentY,
-                    head: [['Waktu', 'Magnitudo', 'MMI', 'Status']],
+                    head: [['Waktu', 'X', 'Y', 'Z', 'Magnitudo', 'MMI', 'Status']],
                     body: tableBody,
                     theme: 'striped',
                     headStyles: { fillColor: [194, 116, 62] },

@@ -150,28 +150,29 @@ class _DashboardTabState extends State<DashboardTab> {
     final gpsLog = _dashboardData?.gpsLogSamples ?? [];
 
     double currentMagnitude = (accel?['magnitude'] as num?)?.toDouble() ?? 0.0;
+    double currentX = (accel?['x'] as num?)?.toDouble() ?? 0.0;
+    double currentY = (accel?['y'] as num?)?.toDouble() ?? 0.0;
+    double currentZ = (accel?['z'] as num?)?.toDouble() ?? 0.0;
 
     // Calculate Y-axis range dynamically to avoid overflow and support both m/s2 and Gal data
-    double minYVal = -5.0;
-    double maxYVal = 15.0;
+    double minYVal = -0.5;
+    double maxYVal = 5.0;
     if (samples.isNotEmpty) {
       double minSample = samples.map((s) {
-        double m = s.magnitude > 20.0 ? s.magnitude / 100.0 : s.magnitude;
-        return [s.x, s.y, s.z, m].reduce((a, b) => a < b ? a : b);
+        return s.magnitude > 20.0 ? s.magnitude / 100.0 : s.magnitude;
       }).reduce((a, b) => a < b ? a : b);
       
       double maxSample = samples.map((s) {
-        double m = s.magnitude > 20.0 ? s.magnitude / 100.0 : s.magnitude;
-        return [s.x, s.y, s.z, m].reduce((a, b) => a > b ? a : b);
+        return s.magnitude > 20.0 ? s.magnitude / 100.0 : s.magnitude;
       }).reduce((a, b) => a > b ? a : b);
 
       double range = maxSample - minSample;
-      if (range < 4.0) range = 4.0;
+      if (range < 2.0) range = 2.0;
       minYVal = minSample - (range * 0.1);
       maxYVal = maxSample + (range * 0.1);
       
       // Keep it within a reasonable boundary
-      if (minYVal < -40.0) minYVal = -40.0;
+      if (minYVal < 0.0) minYVal = 0.0;
       if (maxYVal > 50.0) maxYVal = 50.0;
     }
 
@@ -341,7 +342,7 @@ class _DashboardTabState extends State<DashboardTab> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                  Text(
-                                   "Level MMI: ${_getMmiLevel(currentMagnitude)}",
+                                   "Nilai X / Y / Z: ${currentX.toStringAsFixed(2)} / ${currentY.toStringAsFixed(2)} / ${currentZ.toStringAsFixed(2)}",
                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
                                    overflow: TextOverflow.ellipsis,
                                  ),
@@ -406,9 +407,6 @@ class _DashboardTabState extends State<DashboardTab> {
                                   minY: minYVal,
                                   maxY: maxYVal,
                                   lineBarsData: [
-                                    _buildBarData(samples, (s) => s.x, const Color(0xFFB45309), 1.5), // X (brown)
-                                    _buildBarData(samples, (s) => s.y, const Color(0xFFF97316), 1.5), // Y (orange)
-                                    _buildBarData(samples, (s) => s.z, const Color(0xFFFBBF24), 1.5), // Z (yellow)
                                     _buildBarData(samples, (s) => s.magnitude > 20.0 ? s.magnitude / 100.0 : s.magnitude, const Color(0xFFE13B3B), 2.5, isFilled: true), // Magnitude (red)
                                   ],
                                 ),
@@ -420,12 +418,6 @@ class _DashboardTabState extends State<DashboardTab> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          _buildLegendItem("X", const Color(0xFFB45309)),
-                          const SizedBox(width: 12),
-                          _buildLegendItem("Y", const Color(0xFFF97316)),
-                          const SizedBox(width: 12),
-                          _buildLegendItem("Z", const Color(0xFFFBBF24)),
-                          const SizedBox(width: 12),
                           _buildLegendItem("Magnitudo", const Color(0xFFE13B3B)),
                         ],
                       ),
@@ -622,16 +614,25 @@ class _DashboardTabState extends State<DashboardTab> {
                                 columnSpacing: 18,
                                  columns: const [
                                    DataColumn(label: Text('Waktu', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                                   DataColumn(label: Text('X', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                                   DataColumn(label: Text('Y', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                                   DataColumn(label: Text('Z', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
                                    DataColumn(label: Text('Magnitudo', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
                                    DataColumn(label: Text('Level MMI', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
                                  ],
                                  rows: accelLog.reversed.map((sample) {
                                    double mag = (sample['magnitude'] as num).toDouble();
+                                   double xVal = (sample['x'] as num?)?.toDouble() ?? 0.0;
+                                   double yVal = (sample['y'] as num?)?.toDouble() ?? 0.0;
+                                   double zVal = (sample['z'] as num?)?.toDouble() ?? 0.0;
                                    Color levelColor = _getMmiColor(mag);
 
                                    return DataRow(
                                      cells: [
                                        DataCell(Text(sample['time'] ?? '--:--:--', style: const TextStyle(fontSize: 11, color: Colors.grey))),
+                                       DataCell(Text(xVal.toStringAsFixed(2), style: const TextStyle(fontSize: 11))),
+                                       DataCell(Text(yVal.toStringAsFixed(2), style: const TextStyle(fontSize: 11))),
+                                       DataCell(Text(zVal.toStringAsFixed(2), style: const TextStyle(fontSize: 11))),
                                        DataCell(Text((sample['magnitude'] as num).toStringAsFixed(4), style: const TextStyle(fontSize: 11))),
                                        DataCell(
                                          Text(
