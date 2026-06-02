@@ -8,7 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-test('ingesting accelerometer data with magnitude < 0.15 does not create a seismic event', function () {
+test('ingesting accelerometer data with magnitude < 1.5 does not create a seismic event', function () {
     // 1. Send GPS data
     $this->postJson(route('api.sensors.gps.store'), [
         'device_id' => 'device-1',
@@ -23,17 +23,17 @@ test('ingesting accelerometer data with magnitude < 0.15 does not create a seism
     // 2. Send low magnitude accelerometer data
     $this->postJson(route('api.sensors.accelerometer.store'), [
         'device_id' => 'device-1',
-        'x' => 0.05,
-        'y' => 0.05,
-        'z' => 0.05,
-        'magnitude' => 0.1, // < 0.15
+        'x' => 0.5,
+        'y' => 0.5,
+        'z' => 0.5,
+        'magnitude' => 0.866, // < 1.5
         'recorded_at' => now()->toIso8601String(),
     ])->assertStatus(201);
 
     expect(SeismicEvent::count())->toBe(0);
 });
 
-test('ingesting accelerometer data with magnitude >= 0.15 creates a seismic event with latest GPS data', function () {
+test('ingesting accelerometer data with magnitude >= 1.5 creates a seismic event with latest GPS data', function () {
     // 1. Send GPS data
     $this->postJson(route('api.sensors.gps.store'), [
         'device_id' => 'device-1',
@@ -51,7 +51,7 @@ test('ingesting accelerometer data with magnitude >= 0.15 creates a seismic even
         'x' => 1.5,
         'y' => 1.5,
         'z' => 1.5,
-        'magnitude' => 2.598, // >= 0.15
+        'magnitude' => 2.598, // >= 1.5
         'recorded_at' => now()->toIso8601String(),
     ])->assertStatus(201);
 
@@ -62,8 +62,8 @@ test('ingesting accelerometer data with magnitude >= 0.15 creates a seismic even
     expect($event->device_id)->toBe('device-1');
     expect($event->latitude)->toBe(-6.2000000);
     expect($event->longitude)->toBe(106.8166667);
-    expect($event->mmi_level)->toBe('VI+');
-    expect($event->mmi_status)->toBe('AWAS!');
+    expect($event->mmi_level)->toBe('II-III'); // 2.598 is < 2.8, so II-III
+    expect($event->mmi_status)->toBe('Lemah');
 });
 
 test('realtime data payload contains seismicEvents', function () {

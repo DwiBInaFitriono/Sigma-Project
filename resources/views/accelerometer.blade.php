@@ -185,14 +185,14 @@
         }
 
         /**
-         * Determine MMI color from magnitude — mirrors main.ino thresholds.
+         * Determine MMI color from magnitude — mirrors main2.ino thresholds.
          */
         function getMmiForMagnitude(magnitude) {
             const m = Number(magnitude);
-            if (m < 0.15) return { level: 'I', status: 'Aman', color: '#22c55e' };
-            if (m < 0.30) return { level: 'II-III', status: 'Lemah', color: '#86efac' };
-            if (m < 0.60) return { level: 'IV', status: 'Waspada', color: '#f59e0b' };
-            if (m < 1.00) return { level: 'V', status: 'Bahaya!', color: '#f97316' };
+            if (m < 0.34) return { level: 'I', status: 'Aman', color: '#22c55e' };
+            if (m < 2.8) return { level: 'II-III', status: 'Lemah', color: '#86efac' };
+            if (m < 7.8) return { level: 'IV', status: 'Waspada', color: '#f59e0b' };
+            if (m < 18.4) return { level: 'V', status: 'Bahaya!', color: '#f97316' };
             return { level: 'VI+', status: 'AWAS!', color: '#ef4444' };
         }
 

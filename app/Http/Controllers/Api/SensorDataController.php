@@ -102,7 +102,7 @@ class SensorDataController extends Controller
             'recorded_at' => $recordedAt->toIso8601String(),
         ], now()->addMinutes(5));
 
-        $isSeismic = $magnitude >= 0.15;
+        $isSeismic = $magnitude >= 1.5;
         $accelerometerData = null;
 
         if ($isSeismic) {

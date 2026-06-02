@@ -96,15 +96,15 @@ abstract class Controller
             $gps = $this->formatGpsData($latestGps, $gpsConnected);
         }
 
-        // 5. Chart samples: only entries in the database (since database now only stores magnitude >= 0.15)
+        // 5. Chart samples: only entries in the database (since database now only stores magnitude >= 1.5)
         $accelerometerSamples = AccelerometerData::query()
             ->latest('recorded_at')
             ->limit($sampleLimit)
             ->get();
 
-        // Log samples: only entries with detected magnitude (>= 0.15 = MMI Level II-III)
+        // Log samples: only entries with detected magnitude (>= 1.5 = MMI Level II-III or higher)
         $accelerometerLogSamples = AccelerometerData::query()
-            ->where('magnitude', '>=', 0.15)
+            ->where('magnitude', '>=', 1.5)
             ->latest('recorded_at')
             ->limit($sampleLimit)
             ->get();
@@ -324,19 +324,19 @@ abstract class Controller
      */
     protected function getMmiStatus(float $magnitude): array
     {
-        if ($magnitude < 0.15) {
+        if ($magnitude < 0.34) {
             return ['level' => 'I', 'status' => 'Aman', 'color' => '#22c55e'];
         }
 
-        if ($magnitude < 0.30) {
+        if ($magnitude < 2.8) {
             return ['level' => 'II-III', 'status' => 'Lemah', 'color' => '#86efac'];
         }
 
-        if ($magnitude < 0.60) {
+        if ($magnitude < 7.8) {
             return ['level' => 'IV', 'status' => 'Waspada', 'color' => '#f59e0b'];
         }
 
-        if ($magnitude < 1.00) {
+        if ($magnitude < 18.4) {
             return ['level' => 'V', 'status' => 'Bahaya!', 'color' => '#f97316'];
         }
 
@@ -345,14 +345,14 @@ abstract class Controller
 
     /**
      * Collect accelerometer log entries from the last N minutes.
-     * Only includes entries with detected seismic magnitude (>= 0.15).
+     * Only includes entries with detected seismic magnitude (>= 1.5).
      * Each entry includes MMI level and status.
      */
     protected function collectAccelerometerLog(int $minutes = 5): array
     {
         return AccelerometerData::query()
             ->where('recorded_at', '>=', Carbon::now()->subMinutes($minutes))
-            ->where('magnitude', '>=', 0.15)
+            ->where('magnitude', '>=', 1.5)
             ->orderByDesc('recorded_at')
             ->get()
             ->map(function (AccelerometerData $sample): array {

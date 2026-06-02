@@ -117,18 +117,18 @@ class _DashboardTabState extends State<DashboardTab> {
       mag = double.tryParse(val) ?? 0.0;
     }
     
-    if (mag < 0.15) return const Color(0xFF22C55E);
-    if (mag < 0.30) return const Color(0xFF86EFAC);
-    if (mag < 0.60) return const Color(0xFFF59E0B);
-    if (mag < 1.00) return const Color(0xFFF97316);
+    if (mag < 0.34) return const Color(0xFF22C55E);
+    if (mag < 2.8) return const Color(0xFF86EFAC);
+    if (mag < 7.8) return const Color(0xFFF59E0B);
+    if (mag < 18.4) return const Color(0xFFF97316);
     return const Color(0xFFEF4444);
   }
 
   String _getMmiLevel(double mag) {
-    if (mag < 0.15) return 'I (Aman)';
-    if (mag < 0.30) return 'II-III (Lemah)';
-    if (mag < 0.60) return 'IV (Waspada)';
-    if (mag < 1.00) return 'V (Bahaya!)';
+    if (mag < 0.34) return 'I (Aman)';
+    if (mag < 2.8) return 'II-III (Lemah)';
+    if (mag < 7.8) return 'IV (Waspada)';
+    if (mag < 18.4) return 'V (Bahaya!)';
     return 'VI+ (AWAS!)';
   }
 
@@ -590,7 +590,7 @@ class _DashboardTabState extends State<DashboardTab> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const Text(
-                        "Log Getaran Terakhir (PGA >= 0.15)",
+                        "Log Getaran Terakhir (PGA >= 1.5)",
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),

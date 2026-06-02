@@ -29,7 +29,7 @@ class HistoryController extends Controller
         // Fetch paginated accelerometer logs for the selected date (only seismic events)
         $accelerometerLogs = AccelerometerData::query()
             ->whereDate('recorded_at', $queryDate)
-            ->where('magnitude', '>=', 0.15)
+            ->where('magnitude', '>=', 1.5)
             ->orderByDesc('recorded_at')
             ->paginate(50, ['*'], 'accel_page')
             ->withQueryString();
