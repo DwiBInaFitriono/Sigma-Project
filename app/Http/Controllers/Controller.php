@@ -38,24 +38,24 @@ abstract class Controller
         $gpsConnected = false;
         if ($lastSeenGpsStr) {
             $lastSeenGps = Carbon::parse($lastSeenGpsStr);
-            $gpsConnected = $lastSeenGps->diffInSeconds(now()) < 12;
+            $gpsConnected = $lastSeenGps->diffInSeconds(now()) < 60;
         }
 
         // Fallback for GPS connection check if cache is not set yet
         if (! $gpsConnected && $latestGps) {
-            $gpsConnected = $latestGps->recorded_at && $latestGps->recorded_at->diffInSeconds(now()) < 10;
+            $gpsConnected = $latestGps->created_at && $latestGps->created_at->diffInSeconds(now()) < 60;
         }
 
         $lastSeenAccelStr = Cache::get("device_last_seen_accel:{$deviceId}");
         $accelConnected = false;
         if ($lastSeenAccelStr) {
             $lastSeenAccel = Carbon::parse($lastSeenAccelStr);
-            $accelConnected = $lastSeenAccel->diffInSeconds(now()) < 12;
+            $accelConnected = $lastSeenAccel->diffInSeconds(now()) < 60;
         }
 
         // Fallback for Accelerometer connection check if cache is not set yet
         if (! $accelConnected && $latestAccelerometer) {
-            $accelConnected = $latestAccelerometer->recorded_at && $latestAccelerometer->recorded_at->diffInSeconds(now()) < 10;
+            $accelConnected = $latestAccelerometer->created_at && $latestAccelerometer->created_at->diffInSeconds(now()) < 60;
         }
 
         // 3. Fetch latest Accelerometer reading from Cache for real-time display card
@@ -176,7 +176,7 @@ abstract class Controller
             ];
         }
 
-        $gpsDirectlyConnected = $gps->recorded_at && $gps->recorded_at->diffInSeconds(now()) < 10;
+        $gpsDirectlyConnected = $gps->created_at && $gps->created_at->diffInSeconds(now()) < 60;
         $hasFix = (float) $gps->latitude !== 0.0 || (float) $gps->longitude !== 0.0;
 
         return [
@@ -226,7 +226,7 @@ abstract class Controller
             'magnitude' => (float) $accelerometer->magnitude,
             'time' => $this->formatWibTimestamp($accelerometer->recorded_at?->timezone($this->dashboardTimezone()), 'd M Y H:i:s'),
             'sensor_time' => $this->formatWibTimestamp($accelerometer->recorded_at?->timezone($this->dashboardTimezone()), 'd M Y H:i:s'),
-            'is_connected' => $accelerometer->recorded_at && $accelerometer->recorded_at->diffInSeconds(now()) < 10,
+            'is_connected' => $accelerometer->created_at && $accelerometer->created_at->diffInSeconds(now()) < 60,
         ];
     }
 

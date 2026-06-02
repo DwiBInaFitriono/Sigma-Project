@@ -17,7 +17,7 @@
 #define OLED_RESET -1
 
 // [DISESUAIKAN] Buzzer dipindah ke GPIO 32 karena GPIO 35 hanya bisa untuk input (bikin crash)
-#define BUZZER_PIN 32
+#define BUZZER_PIN 32 
 
 // Jalur GPS (RX=18, TX=19)
 #define GPS_RX 19
@@ -29,7 +29,7 @@
 const char *WIFI_SSID = "Infinix HOT 11 Play";
 const char *WIFI_PASSWORD = "anjaynumpangyak";
 const char *DEVICE_ID = "esp32-sigma-01";
-const char *API_BASE_URL = "https://sigma.sfht.space/api";
+const char *API_BASE_URL = "https://sigma-project-one.vercel.app/api";
 
 // ---------------------------------------------------------
 // GLOBAL OBJECTS
@@ -58,10 +58,10 @@ struct SensorState {
 // ---------------------------------------------------------
 // TUNING PARAMETERS
 // ---------------------------------------------------------
-const int VIBRATION_DURATION_REQ = 1200;   // ms 
-const int VIBRATION_RESET_DELAY = 800;     // ms
-const float VIBRATION_START_THRESHOLD = 1.5; // m/s2 (Manual shake threshold)
-const float ALARM_THRESHOLD = 7.8;         // m/s2 (Batas buzzer goyangan)
+const int VIBRATION_DURATION_REQ = 500;   // ms 
+const int VIBRATION_RESET_DELAY = 1000;   // ms
+const float VIBRATION_START_THRESHOLD = 0.20; // m/s2 (Sangat sensitif dinamo)
+const float ALARM_THRESHOLD = 0.60;       // m/s2 (Batas buzzer dinamo)
 const unsigned long UPLOAD_INTERVAL_MS = 2000;
 const unsigned long DISPLAY_UPDATE_INTERVAL_MS = 1000;
 const unsigned long WIFI_RECONNECT_INTERVAL_MS = 10000;
@@ -73,8 +73,6 @@ const int HTTP_TIMEOUT_MS = 3000;
 unsigned long lastUploadMillis = 0;
 unsigned long lastDisplayUpdate = 0;
 unsigned long lastWifiCheck = 0;
-unsigned long lastCommandCheck = 0;
-const unsigned long COMMAND_CHECK_INTERVAL_MS = 5000;
 
 // ---------------------------------------------------------
 // FUNCTION PROTOTYPES
@@ -89,9 +87,6 @@ void uploadData();
 String getStatusMMI(float pga);
 bool buildRecordedAt(char *buffer, size_t bufferSize);
 bool postJson(const char *url, const char *payload);
-void checkCommands();
-void markCommandExecuted(int commandId);
-void performReset();
 
 // ---------------------------------------------------------
 // SETUP
@@ -168,11 +163,6 @@ void loop() {
   if (now - lastUploadMillis >= UPLOAD_INTERVAL_MS) {
     uploadData();
     lastUploadMillis = now;
-  }
-
-  if (now - lastCommandCheck >= COMMAND_CHECK_INTERVAL_MS) {
-    checkCommands();
-    lastCommandCheck = now;
   }
 }
 
@@ -284,12 +274,42 @@ void processGPS() {
 
 void processAccelerometer() {
   sensors_event_t event;
+  static int failCount = 0;
+  
   if (!accel.getEvent(&event)) {
+    failCount++;
+    if (failCount > 15) {
+      Serial.println(F("[WARNING] ADXL345 read fails! Re-initializing I2C & ADXL345..."));
+      Wire.begin();
+      accel.begin();
+      failCount = 0;
+    }
     // Jika kabel goyang/kendur dan gagal baca, paksa nilai ke 0 agar buzzer tidak nyangkut
     state.smoothedPga = 0.0;
     state.isBuzzerActive = false;
     digitalWrite(BUZZER_PIN, LOW);
     return;
+  }
+  failCount = 0;
+
+  // Deteksi jika sensor mengembalikan nilai yang membeku/freeze akibat shock/vibrasi
+  static float lastRawX = 0.0, lastRawY = 0.0, lastRawZ = 0.0;
+  static int frozenCount = 0;
+
+  if (event.acceleration.x == lastRawX && event.acceleration.y == lastRawY && event.acceleration.z == lastRawZ) {
+    frozenCount++;
+  } else {
+    frozenCount = 0;
+    lastRawX = event.acceleration.x;
+    lastRawY = event.acceleration.y;
+    lastRawZ = event.acceleration.z;
+  }
+
+  if (frozenCount > 30) {
+    Serial.println(F("[WARNING] ADXL345 data frozen! Re-initializing I2C & ADXL345..."));
+    Wire.begin();
+    accel.begin();
+    frozenCount = 0;
   }
 
   state.lastX = event.acceleration.x;
@@ -366,13 +386,13 @@ void processAccelerometer() {
 }
 
 String getStatusMMI(float pga) {
-  if (pga < 0.34)
+  if (pga < 0.15)
     return "I (Aman)";
-  else if (pga < 2.8)
+  else if (pga < 0.30)
     return "II-III (Lemah)";
-  else if (pga < 7.8)
+  else if (pga < 0.60)
     return "IV (Waspada)";
-  else if (pga < 18.4)
+  else if (pga < 1.00)
     return "V (Bahaya!)";
   else
     return "VI+ (AWAS!)";
@@ -490,8 +510,7 @@ void uploadData() {
   snprintf(urlAccel, sizeof(urlAccel), "%s/sensors/accelerometer",
            API_BASE_URL);
 
-  // GPS Data Upload
-  // Selalu kirim data GPS agar status koneksi di web terbaca "Online"
+  // GPS Data Upload (Selalu kirim agar status koneksi di web terbaca "Online")
   if (gps.location.isValid()) {
     if (hasTime) {
       snprintf(payload, sizeof(payload),
@@ -512,8 +531,7 @@ void uploadData() {
                gps.satellites.isValid() ? gps.satellites.value() : 0);
     }
   } else {
-    // Jika belum lock satelit (NO FIX), kirim koordinat default agar backend mencatat status online GPS.
-    // Gunakan status "SEARCHING" jika modul aktif mengirim karakter, dan "NO GPS" jika tidak ada data dari modul.
+    // Kirim data default (0.0) agar status GPS di web terdeteksi Online walau sedang mencari satelit
     const char* gpsStatus = (gps.charsProcessed() > 0) ? "SEARCHING" : "NO GPS";
     snprintf(payload, sizeof(payload),
              "{\"device_id\":\"%s\",\"latitude\":0.0,\"longitude\":0.0,"
@@ -538,103 +556,4 @@ void uploadData() {
              state.smoothedPga);
   }
   postJson(urlAccel, payload);
-}
-
-// ---------------------------------------------------------
-// ESP32 COMMAND POLLING & REBOOT
-// ---------------------------------------------------------
-void checkCommands() {
-  if (WiFi.status() != WL_CONNECTED) {
-    return;
-  }
-
-  char url[128];
-  snprintf(url, sizeof(url), "%s/sensor-commands/pending?device_id=%s", API_BASE_URL, DEVICE_ID);
-
-  WiFiClientSecure client;
-  client.setInsecure();
-  client.setTimeout(3);
-
-  HTTPClient http;
-  http.begin(client, url);
-  http.setTimeout(HTTP_TIMEOUT_MS);
-
-  int httpCode = http.GET();
-  if (httpCode == HTTP_CODE_OK) {
-    String response = http.getString();
-    
-    int searchStart = 0;
-    bool foundReset = false;
-    while (true) {
-      int resetIndex = response.indexOf("\"reset_default\"", searchStart);
-      if (resetIndex == -1) {
-        break;
-      }
-      
-      foundReset = true;
-      
-      // Temukan ID perintah untuk menandai eksekusi selesai
-      int idSearchStart = response.lastIndexOf("\"id\":", resetIndex);
-      if (idSearchStart != -1) {
-        int idValStart = idSearchStart + 5;
-        while (idValStart < response.length() && (response[idValStart] == ' ' || response[idValStart] == ':')) {
-          idValStart++;
-        }
-        int idValEnd = idValStart;
-        while (idValEnd < response.length() && isDigit(response[idValEnd])) {
-          idValEnd++;
-        }
-        String idStr = response.substring(idValStart, idValEnd);
-        int commandId = idStr.toInt();
-        
-        markCommandExecuted(commandId);
-      }
-      
-      searchStart = resetIndex + 15;
-    }
-    
-    if (foundReset) {
-      performReset();
-    }
-  }
-
-  http.end();
-}
-
-void markCommandExecuted(int commandId) {
-  if (WiFi.status() != WL_CONNECTED) {
-    return;
-  }
-
-  char url[128];
-  snprintf(url, sizeof(url), "%s/sensor-commands/%d/executed", API_BASE_URL, commandId);
-
-  WiFiClientSecure client;
-  client.setInsecure();
-  client.setTimeout(3);
-
-  HTTPClient http;
-  http.begin(client, url);
-  http.addHeader("Content-Type", "application/json");
-  http.setTimeout(HTTP_TIMEOUT_MS);
-
-  int httpCode = http.sendRequest("PATCH", "{}");
-  Serial.print(F("[HTTP] Mark executed command #"));
-  Serial.print(commandId);
-  Serial.print(F(" code="));
-  Serial.println(httpCode);
-
-  http.end();
-}
-
-void performReset() {
-  Serial.println(F("\n=== PERFORMING RESET / REBOOT ==="));
-  display.clearDisplay();
-  display.setCursor(0, 10);
-  display.println(F("Rebooting ESP32..."));
-  display.println(F("Please wait..."));
-  display.display();
-  delay(1500);
-
-  ESP.restart();
 }
