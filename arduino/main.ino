@@ -73,6 +73,8 @@ const int HTTP_TIMEOUT_MS = 3000;
 unsigned long lastUploadMillis = 0;
 unsigned long lastDisplayUpdate = 0;
 unsigned long lastWifiCheck = 0;
+unsigned long lastCommandCheck = 0;
+const unsigned long COMMAND_CHECK_INTERVAL_MS = 5000;
 
 // ---------------------------------------------------------
 // FUNCTION PROTOTYPES
@@ -87,6 +89,9 @@ void uploadData();
 String getStatusMMI(float pga);
 bool buildRecordedAt(char *buffer, size_t bufferSize);
 bool postJson(const char *url, const char *payload);
+void checkCommands();
+void markCommandExecuted(int commandId);
+void performReset();
 
 // ---------------------------------------------------------
 // SETUP
@@ -163,6 +168,11 @@ void loop() {
   if (now - lastUploadMillis >= UPLOAD_INTERVAL_MS) {
     uploadData();
     lastUploadMillis = now;
+  }
+
+  if (now - lastCommandCheck >= COMMAND_CHECK_INTERVAL_MS) {
+    checkCommands();
+    lastCommandCheck = now;
   }
 }
 
@@ -528,4 +538,103 @@ void uploadData() {
              state.smoothedPga);
   }
   postJson(urlAccel, payload);
+}
+
+// ---------------------------------------------------------
+// ESP32 COMMAND POLLING & REBOOT
+// ---------------------------------------------------------
+void checkCommands() {
+  if (WiFi.status() != WL_CONNECTED) {
+    return;
+  }
+
+  char url[128];
+  snprintf(url, sizeof(url), "%s/sensor-commands/pending?device_id=%s", API_BASE_URL, DEVICE_ID);
+
+  WiFiClientSecure client;
+  client.setInsecure();
+  client.setTimeout(3);
+
+  HTTPClient http;
+  http.begin(client, url);
+  http.setTimeout(HTTP_TIMEOUT_MS);
+
+  int httpCode = http.GET();
+  if (httpCode == HTTP_CODE_OK) {
+    String response = http.getString();
+    
+    int searchStart = 0;
+    bool foundReset = false;
+    while (true) {
+      int resetIndex = response.indexOf("\"reset_default\"", searchStart);
+      if (resetIndex == -1) {
+        break;
+      }
+      
+      foundReset = true;
+      
+      // Temukan ID perintah untuk menandai eksekusi selesai
+      int idSearchStart = response.lastIndexOf("\"id\":", resetIndex);
+      if (idSearchStart != -1) {
+        int idValStart = idSearchStart + 5;
+        while (idValStart < response.length() && (response[idValStart] == ' ' || response[idValStart] == ':')) {
+          idValStart++;
+        }
+        int idValEnd = idValStart;
+        while (idValEnd < response.length() && isDigit(response[idValEnd])) {
+          idValEnd++;
+        }
+        String idStr = response.substring(idValStart, idValEnd);
+        int commandId = idStr.toInt();
+        
+        markCommandExecuted(commandId);
+      }
+      
+      searchStart = resetIndex + 15;
+    }
+    
+    if (foundReset) {
+      performReset();
+    }
+  }
+
+  http.end();
+}
+
+void markCommandExecuted(int commandId) {
+  if (WiFi.status() != WL_CONNECTED) {
+    return;
+  }
+
+  char url[128];
+  snprintf(url, sizeof(url), "%s/sensor-commands/%d/executed", API_BASE_URL, commandId);
+
+  WiFiClientSecure client;
+  client.setInsecure();
+  client.setTimeout(3);
+
+  HTTPClient http;
+  http.begin(client, url);
+  http.addHeader("Content-Type", "application/json");
+  http.setTimeout(HTTP_TIMEOUT_MS);
+
+  int httpCode = http.sendRequest("PATCH", "{}");
+  Serial.print(F("[HTTP] Mark executed command #"));
+  Serial.print(commandId);
+  Serial.print(F(" code="));
+  Serial.println(httpCode);
+
+  http.end();
+}
+
+void performReset() {
+  Serial.println(F("\n=== PERFORMING RESET / REBOOT ==="));
+  display.clearDisplay();
+  display.setCursor(0, 10);
+  display.println(F("Rebooting ESP32..."));
+  display.println(F("Please wait..."));
+  display.display();
+  delay(1500);
+
+  ESP.restart();
 }
