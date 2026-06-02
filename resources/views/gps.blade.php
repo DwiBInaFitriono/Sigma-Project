@@ -486,9 +486,9 @@
 </script>
 <script>
     // ─── GPS Control Panel JS ─────────────────────────────────────────────────
-    const GPS_POWER_URL  = @json(route('sensor-commands.power'));
-    const GPS_RESET_URL  = @json(route('sensor-commands.reset'));
-    const GPS_STATE_URL  = @json(route('sensor-commands.state'));
+    const GPS_POWER_URL  = '/sensor-commands/power';
+    const GPS_RESET_URL  = '/sensor-commands/reset';
+    const GPS_STATE_URL  = '/sensor-commands/state';
     const GPS_CSRF       = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
     // Load initial GPS power state

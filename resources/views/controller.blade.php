@@ -101,7 +101,7 @@
     })();
 
     // ── API Config ─────────────────────────────────────────────────────────────
-    const RESET_ESP_URL = @json(route('sensor-commands.reset-esp32'));
+    const RESET_ESP_URL = '/sensor-commands/reset-esp32';
     const CSRF = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
     // ── Show Feedback ──────────────────────────────────────────────────────────
@@ -143,7 +143,7 @@
     }
 
     // ── Live Connection Status Polling (every 15s) ─────────────────────────────
-    const STATE_URL = @json(route('panel.data.realtime'));
+    const STATE_URL = '/panel/data/realtime';
 
     async function pollConnectionStatus() {
         try {

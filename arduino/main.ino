@@ -17,7 +17,7 @@
 #define OLED_RESET -1
 
 // [DISESUAIKAN] Buzzer dipindah ke GPIO 32 karena GPIO 35 hanya bisa untuk input (bikin crash)
-#define BUZZER_PIN 35
+#define BUZZER_PIN 32
 
 // Jalur GPS (RX=18, TX=19)
 #define GPS_RX 19
@@ -29,7 +29,7 @@
 const char *WIFI_SSID = "Infinix HOT 11 Play";
 const char *WIFI_PASSWORD = "anjaynumpangyak";
 const char *DEVICE_ID = "esp32-sigma-01";
-const char *API_BASE_URL = "https://sigma-project-one.vercel.app/api";
+const char *API_BASE_URL = "https://sigma.sfht.space/api";
 
 // ---------------------------------------------------------
 // GLOBAL OBJECTS

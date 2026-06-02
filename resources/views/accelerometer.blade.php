@@ -513,10 +513,10 @@
 
 <script>
     // ─── Sensor Control Panel JS ───────────────────────────────────────────────
-    const POWER_URL      = @json(route('sensor-commands.power'));
-    const SENS_URL       = @json(route('sensor-commands.sensitivity'));
-    const RESET_URL      = @json(route('sensor-commands.reset'));
-    const STATE_URL      = @json(route('sensor-commands.state'));
+    const POWER_URL      = '/sensor-commands/power';
+    const SENS_URL       = '/sensor-commands/sensitivity';
+    const RESET_URL      = '/sensor-commands/reset';
+    const STATE_URL      = '/sensor-commands/state';
     const CSRF_TOKEN     = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
     // Load initial state from server
