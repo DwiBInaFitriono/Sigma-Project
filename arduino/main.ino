@@ -17,11 +17,11 @@
 #define OLED_RESET -1
 
 // [DISESUAIKAN] Buzzer dipindah ke GPIO 32 karena GPIO 35 hanya bisa untuk input (bikin crash)
-#define BUZZER_PIN 32 
+#define BUZZER_PIN 35
 
 // Jalur GPS (RX=18, TX=19)
-#define GPS_RX 18
-#define GPS_TX 19
+#define GPS_RX 19
+#define GPS_TX 18
 
 // ---------------------------------------------------------
 // NETWORK & API CONFIGURATION
@@ -58,10 +58,10 @@ struct SensorState {
 // ---------------------------------------------------------
 // TUNING PARAMETERS
 // ---------------------------------------------------------
-const int VIBRATION_DURATION_REQ = 500;   // ms 
-const int VIBRATION_RESET_DELAY = 1000;   // ms
-const float VIBRATION_START_THRESHOLD = 0.20; // m/s2 (Sangat sensitif dinamo)
-const float ALARM_THRESHOLD = 0.60;       // m/s2 (Batas buzzer dinamo)
+const int VIBRATION_DURATION_REQ = 1200;   // ms 
+const int VIBRATION_RESET_DELAY = 800;     // ms
+const float VIBRATION_START_THRESHOLD = 1.5; // m/s2 (Manual shake threshold)
+const float ALARM_THRESHOLD = 7.8;         // m/s2 (Batas buzzer goyangan)
 const unsigned long UPLOAD_INTERVAL_MS = 2000;
 const unsigned long DISPLAY_UPDATE_INTERVAL_MS = 1000;
 const unsigned long WIFI_RECONNECT_INTERVAL_MS = 10000;
@@ -319,7 +319,7 @@ void processAccelerometer() {
     }
   }
 
-  // bagian dinamo
+  // 3. Peak Hold (Hanya naik saat dinamo menyala)
   if (rawPga > state.smoothedPga) {
     state.smoothedPga = rawPga;
   }
@@ -356,13 +356,13 @@ void processAccelerometer() {
 }
 
 String getStatusMMI(float pga) {
-  if (pga < 0.15)
+  if (pga < 0.34)
     return "I (Aman)";
-  else if (pga < 0.30)
+  else if (pga < 2.8)
     return "II-III (Lemah)";
-  else if (pga < 0.60)
+  else if (pga < 7.8)
     return "IV (Waspada)";
-  else if (pga < 1.00)
+  else if (pga < 18.4)
     return "V (Bahaya!)";
   else
     return "VI+ (AWAS!)";
@@ -481,24 +481,34 @@ void uploadData() {
            API_BASE_URL);
 
   // GPS Data Upload
-  if (gps.location.isValid()) {
-    if (hasTime) {
-      snprintf(payload, sizeof(payload),
-               "{\"device_id\":\"%s\",\"latitude\":%.7f,\"longitude\":%.7f,"
-               "\"altitude\":%.2f,\"satellites\":%d,\"status\":\"3D "
-               "FIX\",\"recorded_at\":\"%s\"}",
-               DEVICE_ID, gps.location.lat(), gps.location.lng(),
-               gps.altitude.isValid() ? gps.altitude.meters() : 0.0,
-               gps.satellites.isValid() ? gps.satellites.value() : 0,
-               recordedAt);
+  // Tetap kirim data GPS jika modul aktif (charsProcessed > 0) agar dashboard menampilkan status "Online"
+  if (gps.charsProcessed() > 0) {
+    if (gps.location.isValid()) {
+      if (hasTime) {
+        snprintf(payload, sizeof(payload),
+                 "{\"device_id\":\"%s\",\"latitude\":%.7f,\"longitude\":%.7f,"
+                 "\"altitude\":%.2f,\"satellites\":%d,\"status\":\"3D "
+                 "FIX\",\"recorded_at\":\"%s\"}",
+                 DEVICE_ID, gps.location.lat(), gps.location.lng(),
+                 gps.altitude.isValid() ? gps.altitude.meters() : 0.0,
+                 gps.satellites.isValid() ? gps.satellites.value() : 0,
+                 recordedAt);
+      } else {
+        snprintf(payload, sizeof(payload),
+                 "{\"device_id\":\"%s\",\"latitude\":%.7f,\"longitude\":%.7f,"
+                 "\"altitude\":%.2f,\"satellites\":%d,\"status\":\"3D "
+                 "FIX\",\"recorded_at\":null}",
+                 DEVICE_ID, gps.location.lat(), gps.location.lng(),
+                 gps.altitude.isValid() ? gps.altitude.meters() : 0.0,
+                 gps.satellites.isValid() ? gps.satellites.value() : 0);
+      }
     } else {
+      // Jika belum lock satelit (NO FIX), kirim koordinat default agar backend mencatat status online GPS
       snprintf(payload, sizeof(payload),
-               "{\"device_id\":\"%s\",\"latitude\":%.7f,\"longitude\":%.7f,"
-               "\"altitude\":%.2f,\"satellites\":%d,\"status\":\"3D "
+               "{\"device_id\":\"%s\",\"latitude\":0.0,\"longitude\":0.0,"
+               "\"altitude\":0.0,\"satellites\":%d,\"status\":\"NO "
                "FIX\",\"recorded_at\":null}",
-               DEVICE_ID, gps.location.lat(), gps.location.lng(),
-               gps.altitude.isValid() ? gps.altitude.meters() : 0.0,
-               gps.satellites.isValid() ? gps.satellites.value() : 0);
+               DEVICE_ID, gps.satellites.isValid() ? gps.satellites.value() : 0);
     }
     postJson(urlGps, payload);
   }
