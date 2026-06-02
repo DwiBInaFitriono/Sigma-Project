@@ -90,8 +90,8 @@ class _DashboardTabState extends State<DashboardTab> {
         // Trigger alarm if there is a new seismic event
         if (data.seismicEvents.isNotEmpty) {
           final latestEvent = data.seismicEvents.last;
-          final eventTime = latestEvent['time'] as String;
-          if (_lastAlarmTime != eventTime) {
+          final eventTime = (latestEvent['time'] ?? latestEvent['recorded_at'] ?? '').toString();
+          if (eventTime.isNotEmpty && _lastAlarmTime != eventTime) {
             _lastAlarmTime = eventTime;
             // Play alarm sound
             _audioPlayer.play(AssetSource('sounds/alarm.wav'));
@@ -331,19 +331,24 @@ class _DashboardTabState extends State<DashboardTab> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "Sensor ADXL345 (Akselerometer)",
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                              Text(
-                                "Nilai X / Y / Z: ${(accel?['x'] as num?)?.toStringAsFixed(2) ?? '0.00'} / ${(accel?['y'] as num?)?.toStringAsFixed(2) ?? '0.00'} / ${(accel?['z'] as num?)?.toStringAsFixed(2) ?? '0.00'}",
-                                style: const TextStyle(fontSize: 12, color: Colors.grey),
-                              ),
-                            ],
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "Sensor ADXL345 (Akselerometer)",
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  "Nilai X / Y / Z: ${(accel?['x'] as num?)?.toStringAsFixed(2) ?? '0.00'} / ${(accel?['y'] as num?)?.toStringAsFixed(2) ?? '0.00'} / ${(accel?['z'] as num?)?.toStringAsFixed(2) ?? '0.00'}",
+                                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
                           ),
+                          const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
@@ -458,19 +463,24 @@ class _DashboardTabState extends State<DashboardTab> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "GPS NEO-6M (Lokasi Perangkat)",
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                              Text(
-                                "Status: ${gps?.status ?? 'NO FIX'}",
-                                style: const TextStyle(fontSize: 12, color: Colors.grey),
-                              ),
-                            ],
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "GPS NEO-6M (Lokasi Perangkat)",
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Text(
+                                  "Status: ${gps?.status ?? 'NO FIX'}",
+                                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
                           ),
+                          const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
@@ -687,7 +697,7 @@ class _DashboardTabState extends State<DashboardTab> {
                                   DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
                                 ],
                                 rows: gpsLog.reversed.map((sample) {
-                                  bool isFix = (sample['status'] as String).contains('FIX');
+                                  bool isFix = (sample['status']?.toString() ?? '').contains('FIX');
 
                                   return DataRow(
                                     cells: [

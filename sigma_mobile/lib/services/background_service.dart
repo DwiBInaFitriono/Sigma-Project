@@ -54,7 +54,7 @@ void onStart(ServiceInstance service) async {
         
         if (data.seismicEvents.isNotEmpty) {
           final latestEvent = data.seismicEvents.last;
-          final eventTime = latestEvent['time'] as String?;
+          final eventTime = (latestEvent['time'] ?? latestEvent['recorded_at'])?.toString();
           final mmiLevel = latestEvent['mmi_level'] as String? ?? 'I';
           final mmiStatus = latestEvent['mmi_status'] as String? ?? 'Aman';
           final magnitude = (latestEvent['magnitude'] as num?)?.toStringAsFixed(2) ?? '0.0';
