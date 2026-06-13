@@ -33,30 +33,18 @@ abstract class Controller
         $latestGps = GPSData::query()->latest('recorded_at')->first();
         $latestAccelerometer = AccelerometerData::query()->latest('recorded_at')->first();
 
-        // 2. Check online status via Cache first (heartbeat)
-        $lastSeenGpsStr = Cache::get("device_last_seen_gps:{$deviceId}");
-        $gpsConnected = false;
-        if ($lastSeenGpsStr) {
-            $lastSeenGps = Carbon::parse($lastSeenGpsStr);
-            $gpsConnected = $lastSeenGps->diffInSeconds(now()) < 60;
-        }
+        // 2. Check online status — ESP32 selalu kirim GPS setiap 2 detik,
+        // jadi GPS created_at adalah heartbeat terbaik untuk seluruh device.
+        // Cache mungkin tidak berfungsi di server production (prefix berbeda),
+        // jadi kita utamakan pengecekan langsung dari database.
+        $latestGpsForStatus = GPSData::query()->latest('created_at')->first();
+        $deviceOnline = $latestGpsForStatus
+            && $latestGpsForStatus->created_at
+            && $latestGpsForStatus->created_at->diffInSeconds(now()) < 60;
 
-        // Fallback for GPS connection check if cache is not set yet
-        if (! $gpsConnected && $latestGps) {
-            $gpsConnected = $latestGps->created_at && $latestGps->created_at->diffInSeconds(now()) < 60;
-        }
-
-        $lastSeenAccelStr = Cache::get("device_last_seen_accel:{$deviceId}");
-        $accelConnected = false;
-        if ($lastSeenAccelStr) {
-            $lastSeenAccel = Carbon::parse($lastSeenAccelStr);
-            $accelConnected = $lastSeenAccel->diffInSeconds(now()) < 60;
-        }
-
-        // Fallback for Accelerometer connection check if cache is not set yet
-        if (! $accelConnected && $latestAccelerometer) {
-            $accelConnected = $latestAccelerometer->created_at && $latestAccelerometer->created_at->diffInSeconds(now()) < 60;
-        }
+        // GPS dan Accel satu device (ESP32), jadi kalau GPS masuk = device hidup = accel juga online
+        $gpsConnected = $deviceOnline;
+        $accelConnected = $deviceOnline;
 
         // 3. Fetch latest Accelerometer reading from Cache for real-time display card
         $latestAccelCache = Cache::get("device_latest_accel:{$deviceId}");

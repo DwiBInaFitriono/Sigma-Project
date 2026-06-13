@@ -7,7 +7,6 @@
 /* Card */
 .esp-card {
     background: var(--sigma-surface);
-    backdrop-filter: var(--sigma-blur);
     border: 1px solid var(--sigma-border);
     border-radius: var(--sigma-radius-card);
     box-shadow: var(--sigma-glow);

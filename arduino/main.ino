@@ -29,7 +29,7 @@
 const char *WIFI_SSID = "Infinix HOT 11 Play";
 const char *WIFI_PASSWORD = "anjaynumpangyak";
 const char *DEVICE_ID = "esp32-sigma-01";
-const char *API_BASE_URL = "https://sigma-project-one.vercel.app/api";
+const char *API_BASE_URL = "https://sigma.sfht.space/api";
 
 // ---------------------------------------------------------
 // GLOBAL OBJECTS
@@ -65,7 +65,7 @@ const float ALARM_THRESHOLD = 0.60;       // m/s2 (Batas buzzer dinamo)
 const unsigned long UPLOAD_INTERVAL_MS = 2000;
 const unsigned long DISPLAY_UPDATE_INTERVAL_MS = 1000;
 const unsigned long WIFI_RECONNECT_INTERVAL_MS = 10000;
-const int HTTP_TIMEOUT_MS = 3000;
+const int HTTP_TIMEOUT_MS = 8000; // 8 detik (cukup untuk TLS handshake hotspot)
 
 // ---------------------------------------------------------
 // TIMING STATE
@@ -321,7 +321,6 @@ void processAccelerometer() {
            pow(event.acceleration.z, 2));
 
   // 1. Auto-kalibrasi PINTAR (Hanya saat sedang diam / getaran kecil)
-  // Ini mencegah baseline rusak/bergeser ke atas saat dinamo menyala kencang!
   if (abs(totalG - state.baselineG) < 1.0) {
       state.baselineG = (0.90 * state.baselineG) + (0.10 * totalG);
   }
@@ -340,8 +339,7 @@ void processAccelerometer() {
   state.lastProcessTime = now;
 
   if (dt > 0 && dt < 5000) {
-    // Sapu bersih! Anjlok 15.0 m/s2 setiap detiknya.
-    // Misal angka nyangkut di 4.5, ia akan jatuh ke 0.0 mutlak dalam waktu 0.3 detik!
+    // Anjlok 15.0 m/s2 setiap detiknya
     float dropAmount = (dt / 1000.0) * 15.0;
     state.smoothedPga -= dropAmount;
     if (state.smoothedPga < 0) {
@@ -478,7 +476,7 @@ bool postJson(const char *url, const char *payload) {
 
   WiFiClientSecure client;
   client.setInsecure();
-  client.setTimeout(3); // Mencegah freeze saat HTTPS Handshake (koneksi wifi lambat)
+  client.setTimeout(10); // 10 detik untuk TLS handshake (hotspot HP butuh waktu lebih lama)
   
   HTTPClient http;
   http.begin(client, url);
@@ -490,6 +488,11 @@ bool postJson(const char *url, const char *payload) {
 
   if (!success) {
     Serial.print(F("[HTTP] POST failed -> "));
+    Serial.print(url);
+    Serial.print(F(" code="));
+    Serial.println(httpCode);
+  } else {
+    Serial.print(F("[HTTP] POST OK -> "));
     Serial.print(url);
     Serial.print(F(" code="));
     Serial.println(httpCode);

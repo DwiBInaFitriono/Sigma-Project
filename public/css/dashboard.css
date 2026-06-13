@@ -14,7 +14,7 @@
     --sigma-accent: #C2743E;
     --sigma-accent-2: #8B5026;
     --sigma-warm: #6B3C1B;
-    --sigma-blur: blur(24px) saturate(180%);
+    --sigma-blur: none;
     --sigma-glow: 0 8px 32px rgba(139, 80, 38, 0.05);
 }
 
@@ -37,15 +37,25 @@ html.dark-mode {
     box-sizing: border-box;
 }
 
-a, button, input, select, textarea, .glow-card, .panel-card, .dashboard-chart-card, 
-.sidebar-link, .topbar-icon-btn, .sidebar-dropdown-toggle, .bottom-nav-link, 
+a, button, input, select, textarea {
+    transition: background-color 0.15s ease,
+                border-color 0.15s ease,
+                color 0.15s ease,
+                transform 0.15s ease;
+}
+
+.sidebar-link, .topbar-icon-btn, .sidebar-dropdown-toggle, .bottom-nav-link,
 .btn-logout-sidebar, .btn-toggle-sidebar, .btn-mobile-logout, .sidebar-close-toggle,
-.power-btn, .ctrl-apply-btn, .ctrl-reset-btn, .btn-submit, .btn-role, .btn-delete, .dashboard-info-card {
-    transition: background-color 0.4s cubic-bezier(0.16, 1, 0.3, 1), 
-                border-color 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-                box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-                color 0.2s ease,
-                transform 0.2s ease;
+.power-btn, .ctrl-apply-btn, .ctrl-reset-btn, .btn-submit, .btn-role, .btn-delete {
+    transition: background-color 0.15s ease,
+                border-color 0.15s ease,
+                color 0.15s ease,
+                transform 0.15s ease;
+}
+
+/* Cards: NO transition on scroll-visible elements (perf) */
+.glow-card, .panel-card, .dashboard-chart-card, .dashboard-info-card {
+    contain: layout style;
 }
 
 html {
@@ -141,10 +151,9 @@ body.sigma-app::before {
     opacity: 0;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.5);
     z-index: 1090;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
 .sidebar-overlay.is-visible {
@@ -348,6 +357,10 @@ body.sigma-app::before {
     min-width: 0;
     padding: 0 4rem 3rem 4rem;
     overflow-y: auto;
+    /* Smooth GPU-accelerated scroll */
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: auto; /* native scroll, no JS jank */
+    will-change: scroll-position;
 }
 
 .panel-content::-webkit-scrollbar {
@@ -367,12 +380,12 @@ body.sigma-app::before {
     padding: 0 4rem;
     height: 107px;
     box-sizing: border-box;
-    background: var(--sigma-surface);
-    backdrop-filter: var(--sigma-blur);
+    background: var(--sigma-surface-2); /* solid enough, no blur needed */
     border-bottom: 1px solid var(--sigma-border);
     position: sticky;
     top: 0;
     z-index: 50;
+    will-change: transform; /* GPU layer untuk sticky */
 }
 
 .topbar-right {
@@ -464,13 +477,12 @@ body.sigma-app::before {
     border: 1px solid var(--sigma-border);
     border-radius: var(--sigma-radius-card);
     box-shadow: var(--sigma-glow);
-    backdrop-filter: var(--sigma-blur);
     padding: 0.5rem 0;
     z-index: 1050;
     visibility: hidden;
     opacity: 0;
-    transform: translateY(-10px);
-    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
+    transform: translateY(-8px);
+    transition: opacity 0.15s ease, visibility 0.15s ease, transform 0.15s ease;
 }
 
 .profile-dropdown-container.is-open .profile-dropdown-menu {
@@ -584,7 +596,7 @@ body.sigma-app::before {
 .panel-card,
 .dashboard-chart-card {
     background: var(--sigma-surface);
-    backdrop-filter: var(--sigma-blur);
+    /* backdrop-filter disabled for scroll performance */
     border: 1px solid var(--sigma-border);
     border-radius: var(--sigma-radius-card);
     box-shadow: var(--sigma-glow);
@@ -593,7 +605,7 @@ body.sigma-app::before {
 
 .glow-card:hover {
     border-color: var(--sigma-accent);
-    transform: translateY(-2px);
+    /* removed transform on hover - reduces repaint during scroll */
 }
 
 .stat-card {
@@ -855,11 +867,11 @@ body.sigma-app::before {
     position: fixed;
     inset: auto 0 0 0;
     z-index: 1150;
-    background: var(--sigma-surface);
-    backdrop-filter: var(--sigma-blur);
+    background: var(--sigma-surface-2);
     border-top: 1px solid var(--sigma-border);
     padding: 0.75rem;
     gap: 0.5rem;
+    will-change: transform;
 }
 
 .bottom-nav-link {
@@ -1008,23 +1020,13 @@ h1, h2, h3, h4, h5, h6,
 
 /* Mobile & Low-End Device Performance Adjustments */
 @media (max-width: 768px) {
-    :root {
-        --sigma-blur: none !important;
-    }
-    
     .glow-card, 
     .panel-card, 
     .dashboard-chart-card,
     .sidebar,
     .mobile-top-nav,
     .content-topbar {
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
         box-shadow: none !important;
-    }
-    
-    .glow-card:hover {
-        transform: none !important;
     }
 }
 

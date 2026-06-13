@@ -30,7 +30,7 @@
                 <div class="section-header">
                     <div>
                         <h2 class="section-title">Sensor ADXL345 Realtime</h2>
-                        <p class="section-subtitle">Grafik realtime + ringkasan nilai sensor ADXL345.</p>
+                        <p class="section-subtitle">Grafik realtime sumbu X / Y / Z dari sensor ADXL345.</p>
                     </div>
                     <div class="live-badge">REALTIME</div>
                 </div>
@@ -41,13 +41,26 @@
                         <strong id="currentAxes">{{ number_format($currentAccel['x'], 2) }} / {{ number_format($currentAccel['y'], 2) }} / {{ number_format($currentAccel['z'], 2) }}</strong>
                     </div>
                     <div class="dashboard-info-card">
+                        <p>PGA (Peak Ground Acc.)</p>
+                        <strong id="currentMagnitudeCard">{{ number_format($currentAccel['magnitude'], 4) }} m/s²</strong>
+                    </div>
+                    <div class="dashboard-info-card">
                         <p>Waktu Sensor</p>
                         <strong id="currentAccelTime">{{ $currentAccel['time'] ?? now()->timezone('Asia/Jakarta')->format('d M Y H:i:s') . ' WIB' }}</strong>
                     </div>
                 </div>
 
-                <div class="chart-wrapper">
-                    <div id="chart"></div>
+                <!-- XYZ Chart Tabs -->
+                <div class="accel-chart-tabs" style="display:flex;gap:.5rem;margin-bottom:1rem;">
+                    <button id="tab-xyz" class="accel-tab-btn accel-tab-active" onclick="switchTab('xyz')">X / Y / Z</button>
+                    <button id="tab-pga" class="accel-tab-btn" onclick="switchTab('pga')">PGA</button>
+                </div>
+
+                <div class="chart-wrapper" id="chart-xyz-wrapper">
+                    <div id="chart-xyz"></div>
+                </div>
+                <div class="chart-wrapper" id="chart-pga-wrapper" style="display:none;">
+                    <div id="chart-pga"></div>
                 </div>
             </section>
 
@@ -64,16 +77,16 @@
                         <p id="connectionStatus" class="dashboard-score-card-value {{ $currentAccel['is_connected'] ? 'status-connected' : 'status-disconnected' }}">{{ $currentAccel['is_connected'] ? 'Terhubung' : 'Terputus' }}</p>
                     </div>
                     <div class="dashboard-score-card">
-                        <p class="dashboard-score-card-title">Magnitudo Terkini</p>
-                        <p id="currentMagnitude" class="dashboard-score-card-value">{{ number_format($currentAccel['magnitude'], 2) }}</p>
+                        <p class="dashboard-score-card-title">PGA Terkini</p>
+                        <p id="currentMagnitude" class="dashboard-score-card-value">{{ number_format($currentAccel['magnitude'], 4) }}</p>
                     </div>
                     <div class="dashboard-score-card">
-                        <p class="dashboard-score-card-title">Magnitudo Maksimum</p>
-                        <p id="magnitudeMaximum" class="dashboard-score-card-value">{{ number_format($summary['maximum'], 2) }}</p>
+                        <p class="dashboard-score-card-title">PGA Maksimum</p>
+                        <p id="magnitudeMaximum" class="dashboard-score-card-value">{{ number_format($summary['maximum'], 4) }}</p>
                     </div>
                     <div class="dashboard-score-card">
-                        <p class="dashboard-score-card-title">Rata-rata Getaran</p>
-                        <p id="magnitudeAverage" class="dashboard-score-card-value">{{ number_format($summary['average'], 2) }}</p>
+                        <p class="dashboard-score-card-title">Rata-rata PGA</p>
+                        <p id="magnitudeAverage" class="dashboard-score-card-value">{{ number_format($summary['average'], 4) }}</p>
                     </div>
                     <div class="dashboard-score-card">
                         <p class="dashboard-score-card-title">Jumlah Sampel</p>
@@ -89,7 +102,7 @@
         <div class="section-header">
             <div>
                 <h2 class="section-title">Log Sensor — 5 Menit Terakhir</h2>
-                <p class="section-subtitle">Riwayat data accelerometer dari 5 menit terakhir beserta status MMI.</p>
+                <p class="section-subtitle">Riwayat data accelerometer dari 5 menit terakhir beserta status MMI berdasarkan PGA.</p>
             </div>
             <span id="log-refresh-badge" class="status-pill-badge">LOG</span>
         </div>
@@ -99,10 +112,10 @@
                 <thead>
                     <tr>
                         <th>Waktu</th>
-                        <th>X</th>
-                        <th>Y</th>
-                        <th>Z</th>
-                        <th>Magnitudo</th>
+                        <th>X (m/s²)</th>
+                        <th>Y (m/s²)</th>
+                        <th>Z (m/s²)</th>
+                        <th>PGA</th>
                         <th>Level MMI</th>
                         <th class="text-right">Status</th>
                     </tr>
@@ -150,85 +163,77 @@
         const dashboardDataUrl = '/panel/data/realtime';
         const logDataUrl = '/panel/data/log';
 
-        // Realtime chart: every 1 second (optimized)
         const CHART_REFRESH_MS = 1000;
-        // Log table: every 2 seconds
         const LOG_REFRESH_MS = 2000;
 
-        let accelChart = null;
+        let chartXyz = null;
+        let chartPga = null;
+        let activeTab = 'xyz';
         let cachedLogDataJson = null;
+
+        // ── Tab switcher ──────────────────────────────────────────────────────
+        window.switchTab = function (tab) {
+            activeTab = tab;
+            document.getElementById('chart-xyz-wrapper').style.display = tab === 'xyz' ? '' : 'none';
+            document.getElementById('chart-pga-wrapper').style.display = tab === 'pga' ? '' : 'none';
+            document.getElementById('tab-xyz').classList.toggle('accel-tab-active', tab === 'xyz');
+            document.getElementById('tab-pga').classList.toggle('accel-tab-active', tab === 'pga');
+        };
 
         function updateClock() {
             const now = new Date();
             const hh = String(now.getHours()).padStart(2, '0');
             const mm = String(now.getMinutes()).padStart(2, '0');
             const ss = String(now.getSeconds()).padStart(2, '0');
-            const timeStr = `${hh}:${mm}:${ss}`;
-
             const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-            const dateStr = `${days[now.getDay()]}, ${String(now.getDate()).padStart(2, '0')} ${months[now.getMonth()]} ${now.getFullYear()}`;
-
-            setText('realtime-clock', timeStr);
-            setText('realtime-date', dateStr);
+            setText('realtime-clock', `${hh}:${mm}:${ss}`);
+            setText('realtime-date', `${days[now.getDay()]}, ${String(now.getDate()).padStart(2, '0')} ${months[now.getMonth()]} ${now.getFullYear()}`);
         }
 
         function formatNumber(value, digits = 2) {
-            const numericValue = Number(value);
-            if (!Number.isFinite(numericValue)) return (0).toFixed(digits);
-            return numericValue.toFixed(digits);
+            const n = Number(value);
+            return Number.isFinite(n) ? n.toFixed(digits) : (0).toFixed(digits);
         }
 
         function setText(id, value) {
-            const element = document.getElementById(id);
-            if (element) { element.textContent = value; }
+            const el = document.getElementById(id);
+            if (el) el.textContent = value;
         }
 
         /**
-         * Determine MMI color from magnitude — mirrors main2.ino thresholds.
+         * Determine MMI level from PGA value — mirrors main.ino thresholds.
          */
-        function getMmiForMagnitude(magnitude) {
-            const m = Number(magnitude);
-            if (m < 0.34) return { level: 'I', status: 'Aman', color: '#22c55e' };
-            if (m < 2.8) return { level: 'II-III', status: 'Lemah', color: '#86efac' };
-            if (m < 7.8) return { level: 'IV', status: 'Waspada', color: '#f59e0b' };
-            if (m < 18.4) return { level: 'V', status: 'Bahaya!', color: '#f97316' };
-            return { level: 'VI+', status: 'AWAS!', color: '#ef4444' };
+        function getMmiForPga(pga) {
+            const p = Number(pga);
+            if (p < 0.34)  return { level: 'I',    status: 'Aman',    color: '#22c55e' };
+            if (p < 2.8)   return { level: 'II-III', status: 'Lemah',  color: '#86efac' };
+            if (p < 7.8)   return { level: 'IV',   status: 'Waspada', color: '#f59e0b' };
+            if (p < 18.4)  return { level: 'V',    status: 'Bahaya!', color: '#f97316' };
+            return           { level: 'VI+',  status: 'AWAS!',   color: '#ef4444' };
         }
 
-        function buildChartOptions(samples) {
+        // ── Chart helpers ─────────────────────────────────────────────────────
+        function chartBase(samples, height) {
             const isMobile = window.innerWidth <= 768;
-            const isDark = document.documentElement.classList.contains('dark-mode');
+            const isDark   = document.documentElement.classList.contains('dark-mode');
             const labelColor = isDark ? '#c4a98a' : '#6b5545';
-            const gridColor  = isDark ? 'rgba(194, 116, 62, 0.15)' : 'rgba(107, 85, 69, 0.12)';
-
+            const gridColor  = isDark ? 'rgba(194,116,62,.15)' : 'rgba(107,85,69,.12)';
             return {
                 chart: {
-                    type: 'area',
-                    height: isMobile ? 320 : 520,
+                    height: isMobile ? 280 : height,
                     fontFamily: 'Plus Jakarta Sans, system-ui, sans-serif',
                     toolbar: { show: false },
                     animations: {
                         enabled: !isMobile,
                         easing: 'easeinout',
-                        speed: 500,
-                        dynamicAnimation: { enabled: !isMobile, speed: 350 },
+                        speed: 400,
+                        dynamicAnimation: { enabled: !isMobile, speed: 300 },
                     },
                     background: 'transparent',
-                    dropShadow: {
-                        enabled: !isMobile,
-                        top: 2,
-                        left: 0,
-                        blur: 4,
-                        color: '#e63946',
-                        opacity: 0.18,
-                    },
                 },
-                series: [
-                    { name: 'Magnitudo', data: samples.map((s) => s.magnitude) },
-                ],
                 xaxis: {
-                    categories: samples.map((s) => s.time || '--'),
+                    categories: samples.map(s => s.time || '--'),
                     labels: {
                         style: { colors: labelColor, fontWeight: 600, fontSize: '11px' },
                         hideOverlappingLabels: true,
@@ -240,36 +245,19 @@
                 yaxis: {
                     labels: {
                         style: { colors: labelColor, fontWeight: 600, fontSize: '11px' },
-                        formatter: (val) => val != null ? val.toFixed(1) : '0',
+                        formatter: v => v != null ? v.toFixed(2) : '0',
                     },
                 },
                 stroke: {
                     curve: isMobile ? 'straight' : 'smooth',
-                    width: [3.5],
+                    width: [2.5, 2.5, 2.5],
                     lineCap: 'round',
                 },
-                colors: ['#e63946'],
-                fill: {
-                    type: ['gradient'],
-                    opacity: [1],
-                    gradient: {
-                        shade: isDark ? 'dark' : 'light',
-                        type: 'vertical',
-                        opacityFrom: 0.35,
-                        opacityTo: 0.02,
-                        stops: [0, 95, 100],
-                        colorStops: [
-                            { offset: 0, color: '#e63946', opacity: 0.35 },
-                            { offset: 60, color: '#e63946', opacity: 0.10 },
-                            { offset: 100, color: '#e63946', opacity: 0.01 },
-                        ],
-                    },
-                },
                 markers: {
-                    size: [5],
-                    strokeWidth: [2],
-                    strokeColors: ['#fff'],
-                    hover: { size: 8, sizeOffset: 3 },
+                    size: [4, 4, 4],
+                    strokeWidth: [2, 2, 2],
+                    strokeColors: ['#fff', '#fff', '#fff'],
+                    hover: { size: 7 },
                 },
                 grid: {
                     borderColor: gridColor,
@@ -282,9 +270,7 @@
                     shared: true,
                     intersect: false,
                     theme: isDark ? 'dark' : 'light',
-                    y: {
-                        formatter: (val) => val != null ? val.toFixed(4) : '0',
-                    },
+                    y: { formatter: v => v != null ? v.toFixed(4) : '0' },
                     style: { fontSize: '12px' },
                 },
                 legend: {
@@ -294,39 +280,95 @@
                     labels: { colors: labelColor },
                     fontWeight: 700,
                     fontSize: '13px',
-                    markers: {
-                        size: 6,
-                        shape: 'circle',
-                        strokeWidth: 0,
-                    },
+                    markers: { size: 6, shape: 'circle', strokeWidth: 0 },
                     itemMargin: { horizontal: 12, vertical: 4 },
                 },
                 dataLabels: { enabled: false },
             };
         }
 
-        function renderChart(samples) {
-            const validSamples = samples.length > 0 ? samples : [{ x: 0, y: 0, z: 0, magnitude: 0, time: '--' }];
+        function buildXyzOptions(samples) {
+            const base = chartBase(samples, 440);
+            return Object.assign(base, {
+                chart: Object.assign(base.chart, { type: 'line' }),
+                series: [
+                    { name: 'X', data: samples.map(s => s.x) },
+                    { name: 'Y', data: samples.map(s => s.y) },
+                    { name: 'Z', data: samples.map(s => s.z) },
+                ],
+                colors: ['#3b82f6', '#22c55e', '#f59e0b'],
+                fill: {
+                    type: ['solid', 'solid', 'solid'],
+                    opacity: [1, 1, 1],
+                },
+                stroke: Object.assign(base.stroke, { width: [2.5, 2.5, 2.5] }),
+            });
+        }
 
-            if (!accelChart) {
-                const options = buildChartOptions(validSamples);
-                accelChart = new ApexCharts(document.querySelector('#chart'), options);
-                accelChart.render();
+        function buildPgaOptions(samples) {
+            const isDark = document.documentElement.classList.contains('dark-mode');
+            const base = chartBase(samples, 340);
+            return Object.assign(base, {
+                chart: Object.assign(base.chart, { type: 'area' }),
+                series: [
+                    { name: 'PGA', data: samples.map(s => s.magnitude) },
+                ],
+                colors: ['#e63946'],
+                fill: {
+                    type: ['gradient'],
+                    gradient: {
+                        shade: isDark ? 'dark' : 'light',
+                        type: 'vertical',
+                        opacityFrom: 0.35,
+                        opacityTo: 0.02,
+                        stops: [0, 95, 100],
+                        colorStops: [
+                            { offset: 0,   color: '#e63946', opacity: 0.35 },
+                            { offset: 60,  color: '#e63946', opacity: 0.10 },
+                            { offset: 100, color: '#e63946', opacity: 0.01 },
+                        ],
+                    },
+                },
+                stroke: Object.assign(base.stroke, { width: [3] }),
+                yaxis: Object.assign(base.yaxis, {
+                    title: {
+                        text: 'PGA (m/s²)',
+                        style: { fontWeight: 700, fontSize: '11px' },
+                    },
+                }),
+            });
+        }
+
+        function renderCharts(samples) {
+            const valid = samples.length > 0
+                ? samples
+                : [{ x: 0, y: 0, z: 0, magnitude: 0, time: '--' }];
+
+            // XYZ chart
+            if (!chartXyz) {
+                chartXyz = new ApexCharts(document.querySelector('#chart-xyz'), buildXyzOptions(valid));
+                chartXyz.render();
             } else {
-                accelChart.updateOptions(
-                    { xaxis: { categories: validSamples.map((s) => s.time || '--') } },
-                    false,
-                    false
-                );
-                accelChart.updateSeries([
-                    { name: 'Magnitudo', data: validSamples.map((s) => s.magnitude) },
+                chartXyz.updateOptions({ xaxis: { categories: valid.map(s => s.time || '--') } }, false, false);
+                chartXyz.updateSeries([
+                    { name: 'X', data: valid.map(s => s.x) },
+                    { name: 'Y', data: valid.map(s => s.y) },
+                    { name: 'Z', data: valid.map(s => s.z) },
                 ]);
+            }
+
+            // PGA chart
+            if (!chartPga) {
+                chartPga = new ApexCharts(document.querySelector('#chart-pga'), buildPgaOptions(valid));
+                chartPga.render();
+            } else {
+                chartPga.updateOptions({ xaxis: { categories: valid.map(s => s.time || '--') } }, false, false);
+                chartPga.updateSeries([{ name: 'PGA', data: valid.map(s => s.magnitude) }]);
             }
         }
 
         /**
-         * Render the log table from the 5-minute log array.
-         * Each row includes real server timestamp, X/Y/Z, magnitude, MMI level, and status.
+         * Render the log table — status dihitung dari PGA, bukan magnitude langsung.
          */
         function renderLogTable(logEntries) {
             const tbody = document.getElementById('sample-log-body');
@@ -338,18 +380,19 @@
             }
 
             let html = '';
-            logEntries.forEach((sample) => {
-                // Use server-provided mmi_* if available (initial SSR), else compute client-side
+            logEntries.forEach(sample => {
+                // Gunakan PGA (magnitude) untuk cek MMI
+                const pga = Number(sample.magnitude);
                 const mmi = (sample.mmi_level && sample.mmi_status && sample.mmi_color)
                     ? { level: sample.mmi_level, status: sample.mmi_status, color: sample.mmi_color }
-                    : getMmiForMagnitude(sample.magnitude);
+                    : getMmiForPga(pga);
 
                 html += `<tr>
                     <td class="text-muted">${sample.time ?? '--'}</td>
                     <td>${formatNumber(sample.x, 2)}</td>
                     <td>${formatNumber(sample.y, 2)}</td>
                     <td>${formatNumber(sample.z, 2)}</td>
-                    <td>${formatNumber(sample.magnitude, 4)}</td>
+                    <td>${formatNumber(pga, 4)}</td>
                     <td><span style="font-weight:800;color:${mmi.color};">${mmi.level}</span></td>
                     <td class="text-right"><span style="font-weight:700;color:${mmi.color};">${mmi.status}</span></td>
                 </tr>`;
@@ -360,19 +403,21 @@
         function applyDashboardData(data) {
             if (!data) return;
 
-            const accel = data.currentAccel || {};
+            const accel   = data.currentAccel || {};
             const summary = data.summary || {};
             const samples = data.accelSamples || [];
 
-            setText('currentMagnitude', formatNumber(accel.magnitude));
+            const pga = Number(accel.magnitude);
+            setText('currentMagnitude', formatNumber(pga, 4));
+            setText('currentMagnitudeCard', `${formatNumber(pga, 4)} m/s²`);
             setText('currentAxes', `${formatNumber(accel.x)} / ${formatNumber(accel.y)} / ${formatNumber(accel.z)}`);
             setText('currentAccelTime', accel.time ?? '--');
-            setText('magnitudeMaximum', formatNumber(summary.maximum));
-            setText('magnitudeAverage', formatNumber(summary.average));
+            setText('magnitudeMaximum', formatNumber(summary.maximum, 4));
+            setText('magnitudeAverage', formatNumber(summary.average, 4));
             setText('sampleCount', String(summary.count ?? 0));
 
             const connectionEl = document.getElementById('connectionStatus');
-            const liveBadgeEl = document.querySelector('.live-badge');
+            const liveBadgeEl  = document.querySelector('.live-badge');
             if (connectionEl) {
                 if (accel.is_connected) {
                     connectionEl.textContent = 'Terhubung';
@@ -385,7 +430,7 @@
                 }
             }
 
-            try { renderChart(samples); } catch (e) { console.warn('[SIGMA] Chart error:', e); }
+            try { renderCharts(samples); } catch (e) { console.warn('[SIGMA] Chart error:', e); }
         }
 
         // ── Realtime chart refresh (1 second) ─────────────────────────────────
@@ -393,14 +438,11 @@
 
         async function refreshChartData() {
             if (isChartRefreshing) return;
-            if (document.hidden) {
-                setTimeout(refreshChartData, CHART_REFRESH_MS);
-                return;
-            }
+            if (document.hidden) { setTimeout(refreshChartData, CHART_REFRESH_MS); return; }
             isChartRefreshing = true;
 
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            const timeoutId  = setTimeout(() => controller.abort(), 8000);
 
             try {
                 const response = await fetch(`${dashboardDataUrl}?t=${Date.now()}`, {
@@ -410,34 +452,27 @@
                     signal: controller.signal,
                 });
                 clearTimeout(timeoutId);
-                if (!response.ok) {
-                    console.error('[SIGMA] Chart refresh failed with status:', response.status);
-                    return;
-                }
+                if (!response.ok) return;
                 const data = await response.json();
                 applyDashboardData(data);
-            } catch (error) {
+            } catch (e) {
                 clearTimeout(timeoutId);
-                console.error('[SIGMA] Chart refresh exception:', error);
             } finally {
                 isChartRefreshing = false;
                 setTimeout(refreshChartData, CHART_REFRESH_MS);
             }
         }
 
-        // ── Log table refresh (10 seconds) ────────────────────────────────────
+        // ── Log table refresh (2 seconds) ─────────────────────────────────────
         let isLogRefreshing = false;
 
         async function refreshLogData() {
             if (isLogRefreshing) return;
-            if (document.hidden) {
-                setTimeout(refreshLogData, LOG_REFRESH_MS);
-                return;
-            }
+            if (document.hidden) { setTimeout(refreshLogData, LOG_REFRESH_MS); return; }
             isLogRefreshing = true;
 
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
+            const timeoutId  = setTimeout(() => controller.abort(), 8000);
 
             try {
                 const response = await fetch(`${logDataUrl}?t=${Date.now()}`, {
@@ -447,20 +482,16 @@
                     signal: controller.signal,
                 });
                 clearTimeout(timeoutId);
-                if (!response.ok) {
-                    console.error('[SIGMA] Log refresh failed with status:', response.status);
-                    return;
-                }
+                if (!response.ok) return;
                 const data = await response.json();
                 if (data.accelLog) {
-                    const dataStr = JSON.stringify(data.accelLog);
-                    if (dataStr === cachedLogDataJson) return;
-                    cachedLogDataJson = dataStr;
+                    const str = JSON.stringify(data.accelLog);
+                    if (str === cachedLogDataJson) return;
+                    cachedLogDataJson = str;
                     renderLogTable(data.accelLog);
                 }
-            } catch (error) {
+            } catch (e) {
                 clearTimeout(timeoutId);
-                console.error('[SIGMA] Log refresh exception:', error);
             } finally {
                 isLogRefreshing = false;
                 setTimeout(refreshLogData, LOG_REFRESH_MS);
@@ -470,32 +501,29 @@
         // ── Boot ──────────────────────────────────────────────────────────────
         (function startClock() {
             try { updateClock(); } catch (e) {}
-            setInterval(function () { try { updateClock(); } catch (e) {} }, 1000);
+            setInterval(() => { try { updateClock(); } catch (e) {} }, 1000);
         })();
 
         try { applyDashboardData(initialDashboardData); } catch (e) {}
         try { renderLogTable(initialAccelLog); } catch (e) {}
 
-        // Kick off polling
         refreshChartData();
         refreshLogData();
 
-        // Dark mode observer — rebuild chart colors on theme toggle
+        // Dark mode observer
         const observer = new MutationObserver(() => {
-            if (accelChart) {
-                try {
-                    const isDark = document.documentElement.classList.contains('dark-mode');
-                    const labelColor = isDark ? '#c4a98a' : '#6b5545';
-                    const gridColor  = isDark ? 'rgba(194, 116, 62, 0.15)' : 'rgba(107, 85, 69, 0.12)';
-                    accelChart.updateOptions({
-                        tooltip: { theme: isDark ? 'dark' : 'light' },
-                        xaxis: { labels: { style: { colors: labelColor } } },
-                        yaxis: { labels: { style: { colors: labelColor } } },
-                        grid: { borderColor: gridColor },
-                        legend: { labels: { colors: labelColor } },
-                    }, false, false);
-                } catch (e) {}
-            }
+            const isDark = document.documentElement.classList.contains('dark-mode');
+            const labelColor = isDark ? '#c4a98a' : '#6b5545';
+            const gridColor  = isDark ? 'rgba(194,116,62,.15)' : 'rgba(107,85,69,.12)';
+            const opts = {
+                tooltip: { theme: isDark ? 'dark' : 'light' },
+                xaxis:   { labels: { style: { colors: labelColor } } },
+                yaxis:   { labels: { style: { colors: labelColor } } },
+                grid:    { borderColor: gridColor },
+                legend:  { labels: { colors: labelColor } },
+            };
+            if (chartXyz) try { chartXyz.updateOptions(opts, false, false); } catch (e) {}
+            if (chartPga) try { chartPga.updateOptions(opts, false, false); } catch (e) {}
         });
         observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     });
