@@ -70,9 +70,9 @@
                     <div class="card-desc">Polling otomatis setiap 5 detik</div>
                 </div>
                 <div class="glow-card stat-card meter-card meter-card-magnitude">
-                    <div class="card-title">Magnitudo Getaran</div>
-                    <div id="currentMagnitude" class="card-value">{{ number_format($currentAccel['magnitude'], 2) }}</div>
-                    <div class="card-desc">Nilai PGA terkini — realtime</div>
+                    <div class="card-title">PGA Getaran</div>
+                    <div id="currentMagnitude" class="card-value">{{ number_format($currentAccel['magnitude'], 4) }}</div>
+                    <div class="card-desc">Peak Ground Acceleration — realtime</div>
                 </div>
 
                 <div class="glow-card stat-card">
@@ -160,15 +160,15 @@
 
                     <div class="dashboard-score-grid">
                         <div class="dashboard-score-card">
-                            <p class="dashboard-score-card-title">Magnitudo Maksimum</p>
-                            <p id="magnitudeMaximum" class="dashboard-score-card-value">{{ number_format($summary['maximum'], 2) }}</p>
+                            <p class="dashboard-score-card-title">PGA Maksimum</p>
+                            <p id="magnitudeMaximum" class="dashboard-score-card-value">{{ number_format($summary['maximum'], 4) }}</p>
                         </div>
                         <div class="dashboard-score-card">
-                            <p class="dashboard-score-card-title">Rata-rata getaran</p>
-                            <p id="magnitudeAverage" class="dashboard-score-card-value">{{ number_format($summary['average'], 2) }}</p>
+                            <p class="dashboard-score-card-title">Rata-rata PGA</p>
+                            <p id="magnitudeAverage" class="dashboard-score-card-value">{{ number_format($summary['average'], 4) }}</p>
                         </div>
                         <div class="dashboard-score-card">
-                            <p class="dashboard-score-card-title">Jumlah sampel</p>
+                            <p class="dashboard-score-card-title">Jumlah Sampel</p>
                             <p id="sampleCount" class="dashboard-score-card-value">{{ $summary['count'] }}</p>
                         </div>
                     </div>
@@ -188,10 +188,10 @@
                         <thead>
                             <tr>
                                 <th>Waktu</th>
-                                <th>X</th>
-                                <th>Y</th>
-                                <th>Z</th>
-                                <th>Magnitudo</th>
+                                <th>X (m/s²)</th>
+                                <th>Y (m/s²)</th>
+                                <th>Z (m/s²)</th>
+                                <th>PGA</th>
                                 <th>Level MMI</th>
                                 <th class="text-right">Status</th>
                             </tr>
@@ -348,7 +348,7 @@
                     },
                 },
                 series: [
-                    { name: 'Magnitudo', type: 'area', data: samples.map((s) => s.magnitude) },
+                    { name: 'PGA', type: 'area', data: samples.map((s) => s.magnitude) },
                 ],
                 xaxis: {
                     categories: samples.map((s) => s.time || '--'),
@@ -427,7 +427,7 @@
                     false, false
                 );
                 accelChart.updateSeries([
-                    { name: 'Magnitudo', type: 'area', data: samples.map((s) => s.magnitude) },
+                    { name: 'PGA', type: 'area', data: samples.map((s) => s.magnitude) },
                 ]);
                 return;
             }
@@ -527,7 +527,7 @@
                             <div style="font-weight:800;font-size:14px;margin-bottom:6px;color:${event.mmi_color || '#ef4444'};">🚨 Deteksi Getaran</div>
                             <div style="font-size:12px;">
                                 <b>Waktu:</b> ${event.recorded_at}<br>
-                                <b>Magnitudo:</b> ${formatNumber(event.magnitude, 4)}<br>
+                                <b>PGA:</b> ${formatNumber(event.magnitude, 4)}<br>
                                 <b>Level MMI:</b> <span style="font-weight:800;color:${event.mmi_color};">${event.mmi_level}</span><br>
                                 <b>Status:</b> <span style="font-weight:700;color:${event.mmi_color};">${event.mmi_status}</span><br>
                                 <b>Device:</b> ${event.device_id || 'Unknown'}<br>
@@ -563,14 +563,14 @@
         });
         mapThemeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
-        // ─── MMI Helper (mirrors main2.ino thresholds) ─────────────────────────
-        function getMmiForMagnitude(magnitude) {
-            const m = Number(magnitude);
-            if (m < 0.34) return { level: 'I',      status: 'Aman',    color: '#22c55e' };
-            if (m < 2.8)  return { level: 'II-III',  status: 'Lemah',   color: '#86efac' };
-            if (m < 7.8)  return { level: 'IV',      status: 'Waspada', color: '#f59e0b' };
-            if (m < 18.4) return { level: 'V',       status: 'Bahaya!', color: '#f97316' };
-            return               { level: 'VI+',      status: 'AWAS!',   color: '#ef4444' };
+        // ─── MMI Helper berdasarkan PGA (mirrors main.ino thresholds) ───────────
+        function getMmiForPga(pga) {
+            const p = Number(pga);
+            if (p < 0.34)  return { level: 'I',      status: 'Aman',    color: '#22c55e' };
+            if (p < 2.8)   return { level: 'II-III', status: 'Lemah',   color: '#86efac' };
+            if (p < 7.8)   return { level: 'IV',     status: 'Waspada', color: '#f59e0b' };
+            if (p < 18.4)  return { level: 'V',      status: 'Bahaya!', color: '#f97316' };
+            return                { level: 'VI+',     status: 'AWAS!',   color: '#ef4444' };
         }
 
         function renderSampleTable(samples) {
@@ -585,13 +585,14 @@
             let html = '';
             // Newest first, use real server timestamp
             [...samples].reverse().forEach((sample) => {
-                const mmi = getMmiForMagnitude(sample.magnitude);
+                const pga = Number(sample.magnitude);
+                const mmi = getMmiForPga(pga);
                 html += `<tr>
                     <td class="text-muted">${sample.time ?? '--'}</td>
                     <td>${formatNumber(sample.x, 2)}</td>
                     <td>${formatNumber(sample.y, 2)}</td>
                     <td>${formatNumber(sample.z, 2)}</td>
-                    <td>${formatNumber(sample.magnitude, 4)}</td>
+                    <td>${formatNumber(pga, 4)}</td>
                     <td><span style="font-weight:800;color:${mmi.color};">${mmi.level}</span></td>
                     <td class="text-right"><span style="font-weight:700;color:${mmi.color};">${mmi.status}</span></td>
                 </tr>`;
@@ -636,7 +637,7 @@
             const gpsLogSamples = data.gpsLogSamples || [];
             const seismicEvents = data.seismicEvents || [];
 
-            setText('currentMagnitude', formatNumber(accel.magnitude));
+            setText('currentMagnitude', formatNumber(accel.magnitude, 4));
             setText('currentAxes', `${formatNumber(accel.x)} / ${formatNumber(accel.y)} / ${formatNumber(accel.z)}`);
             setText('currentAccelTime', accel.time ?? '--');
             setText('lastUpdatedAt', data.lastUpdatedAt ?? accel.time ?? '--');
@@ -671,8 +672,8 @@
 
             setText('gpsRecordedAt', gps.recorded_at ?? '--');
 
-            setText('magnitudeMaximum', formatNumber(summary.maximum));
-            setText('magnitudeAverage', formatNumber(summary.average));
+            setText('magnitudeMaximum', formatNumber(summary.maximum, 4));
+            setText('magnitudeAverage', formatNumber(summary.average, 4));
             setText('sampleCount',      String(summary.count ?? 0));
 
             // Always update accelerometer chart and table with latest data
