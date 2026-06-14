@@ -16,20 +16,23 @@
 #define SCREEN_HEIGHT 64
 #define OLED_RESET -1
 
-// [DISESUAIKAN] Buzzer dipindah ke GPIO 32 karena GPIO 35 hanya bisa untuk input (bikin crash)
-#define BUZZER_PIN 32 
+// Buzzer di GPIO 32 (Aman untuk Output)
+#define BUZZER_PIN 32
 
-// Jalur GPS (RX=18, TX=19)
-#define GPS_RX 19
-#define GPS_TX 18
+// [DISESUAIKAN] Jalur GPS ke Hardware Serial 2 ESP32 standar
+#define GPS_RX 16 // Hubungkan ke TX modul GPS
+#define GPS_TX 17 // Hubungkan ke RX modul GPS
+
+// (Catatan: Pin I2C untuk OLED dan ADXL345 secara otomatis
+// menggunakan pin default ESP32 yaitu SDA = 21, SCL = 22)
 
 // ---------------------------------------------------------
 // NETWORK & API CONFIGURATION
 // ---------------------------------------------------------
-const char *WIFI_SSID = "Infinix HOT 11 Play";
-const char *WIFI_PASSWORD = "anjaynumpangyak";
+const char *WIFI_SSID = "RIO";
+const char *WIFI_PASSWORD = "riomia454706";
 const char *DEVICE_ID = "esp32-sigma-01";
-const char *API_BASE_URL = "https://sigma.sfht.space/api";
+const char *API_BASE_URL = "https://sigma-project-one.vercel.app/api";
 
 // ---------------------------------------------------------
 // GLOBAL OBJECTS
@@ -58,14 +61,26 @@ struct SensorState {
 // ---------------------------------------------------------
 // TUNING PARAMETERS
 // ---------------------------------------------------------
-const int VIBRATION_DURATION_REQ = 500;   // ms 
-const int VIBRATION_RESET_DELAY = 1000;   // ms
-const float VIBRATION_START_THRESHOLD = 0.20; // m/s2 (Sangat sensitif dinamo)
-const float ALARM_THRESHOLD = 0.60;       // m/s2 (Batas buzzer dinamo)
+const int VIBRATION_DURATION_REQ = 1200;     // ms
+const int VIBRATION_RESET_DELAY = 800;       // ms
+const float VIBRATION_START_THRESHOLD = 1.5; // m/s2 (Manual shake threshold)
+const float ALARM_THRESHOLD = 7.8;           // m/s2 (Batas buzzer goyangan)
 const unsigned long UPLOAD_INTERVAL_MS = 2000;
 const unsigned long DISPLAY_UPDATE_INTERVAL_MS = 1000;
 const unsigned long WIFI_RECONNECT_INTERVAL_MS = 10000;
-const int HTTP_TIMEOUT_MS = 8000; // 8 detik (cukup untuk TLS handshake hotspot)
+
+/**
+ * Timeout HTTPS per-request dalam milidetik.
+ * Nilai 5000ms memberi ruang cukup untuk SSL handshake di jaringan lambat
+ * tanpa memblok loop terlalu lama.
+ */
+const int HTTP_TIMEOUT_MS = 5000;
+
+/**
+ * Timeout soket WiFiClientSecure dalam detik.
+ * Harus > 0 dan <= HTTP_TIMEOUT_MS / 1000 agar tidak bertentangan.
+ */
+const int WIFI_CLIENT_TIMEOUT_S = 5;
 
 // ---------------------------------------------------------
 // TIMING STATE
@@ -73,6 +88,8 @@ const int HTTP_TIMEOUT_MS = 8000; // 8 detik (cukup untuk TLS handshake hotspot)
 unsigned long lastUploadMillis = 0;
 unsigned long lastDisplayUpdate = 0;
 unsigned long lastWifiCheck = 0;
+unsigned long lastCommandCheck = 0;
+const unsigned long COMMAND_CHECK_INTERVAL_MS = 5000;
 
 // ---------------------------------------------------------
 // FUNCTION PROTOTYPES
@@ -87,6 +104,9 @@ void uploadData();
 String getStatusMMI(float pga);
 bool buildRecordedAt(char *buffer, size_t bufferSize);
 bool postJson(const char *url, const char *payload);
+void checkCommands();
+void markCommandExecuted(int commandId);
+void performReset();
 
 // ---------------------------------------------------------
 // SETUP
@@ -98,6 +118,7 @@ void setup() {
   pinMode(BUZZER_PIN, OUTPUT);
   digitalWrite(BUZZER_PIN, LOW);
 
+  // Inisialisasi Serial GPS dengan pin yang sudah disesuaikan
   gpsSerial.begin(9600, SERIAL_8N1, GPS_RX, GPS_TX);
 
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
@@ -125,10 +146,10 @@ void setup() {
       delay(1000);
     }
   }
-  
+
   // Anti-Hang (Mencegah sistem freeze jika kabel sensor goyang saat dinamo nyala)
   Wire.setTimeOut(150);
-  
+
   accel.setRange(ADXL345_RANGE_2_G);
 
   calibrateSensor();
@@ -163,6 +184,11 @@ void loop() {
   if (now - lastUploadMillis >= UPLOAD_INTERVAL_MS) {
     uploadData();
     lastUploadMillis = now;
+  }
+
+  if (now - lastCommandCheck >= COMMAND_CHECK_INTERVAL_MS) {
+    checkCommands();
+    lastCommandCheck = now;
   }
 }
 
@@ -274,42 +300,12 @@ void processGPS() {
 
 void processAccelerometer() {
   sensors_event_t event;
-  static int failCount = 0;
-  
   if (!accel.getEvent(&event)) {
-    failCount++;
-    if (failCount > 15) {
-      Serial.println(F("[WARNING] ADXL345 read fails! Re-initializing I2C & ADXL345..."));
-      Wire.begin();
-      accel.begin();
-      failCount = 0;
-    }
     // Jika kabel goyang/kendur dan gagal baca, paksa nilai ke 0 agar buzzer tidak nyangkut
     state.smoothedPga = 0.0;
     state.isBuzzerActive = false;
     digitalWrite(BUZZER_PIN, LOW);
     return;
-  }
-  failCount = 0;
-
-  // Deteksi jika sensor mengembalikan nilai yang membeku/freeze akibat shock/vibrasi
-  static float lastRawX = 0.0, lastRawY = 0.0, lastRawZ = 0.0;
-  static int frozenCount = 0;
-
-  if (event.acceleration.x == lastRawX && event.acceleration.y == lastRawY && event.acceleration.z == lastRawZ) {
-    frozenCount++;
-  } else {
-    frozenCount = 0;
-    lastRawX = event.acceleration.x;
-    lastRawY = event.acceleration.y;
-    lastRawZ = event.acceleration.z;
-  }
-
-  if (frozenCount > 30) {
-    Serial.println(F("[WARNING] ADXL345 data frozen! Re-initializing I2C & ADXL345..."));
-    Wire.begin();
-    accel.begin();
-    frozenCount = 0;
   }
 
   state.lastX = event.acceleration.x;
@@ -321,25 +317,29 @@ void processAccelerometer() {
            pow(event.acceleration.z, 2));
 
   // 1. Auto-kalibrasi PINTAR (Hanya saat sedang diam / getaran kecil)
+  // Ini mencegah baseline rusak/bergeser ke atas saat dinamo menyala kencang!
   if (abs(totalG - state.baselineG) < 1.0) {
-      state.baselineG = (0.90 * state.baselineG) + (0.10 * totalG);
+    state.baselineG = (0.90 * state.baselineG) + (0.10 * totalG);
   }
 
   float rawPga = abs(totalG - state.baselineG);
 
   // Abaikan noise sangat kecil agar tidak merusak perhitungan
   if (rawPga < 0.15) {
-      rawPga = 0.0;
+    rawPga = 0.0;
   }
 
   // 2. Linear Time-Based Decay (Turun instan)
   unsigned long now = millis();
   unsigned long dt = now - state.lastProcessTime;
-  if (state.lastProcessTime == 0) dt = 0; 
+  if (state.lastProcessTime == 0) {
+    dt = 0;
+  }
   state.lastProcessTime = now;
 
   if (dt > 0 && dt < 5000) {
-    // Anjlok 15.0 m/s2 setiap detiknya
+    // Sapu bersih! Anjlok 15.0 m/s2 setiap detiknya.
+    // Misal angka nyangkut di 4.5, ia akan jatuh ke 0.0 mutlak dalam waktu 0.3 detik!
     float dropAmount = (dt / 1000.0) * 15.0;
     state.smoothedPga -= dropAmount;
     if (state.smoothedPga < 0) {
@@ -384,16 +384,17 @@ void processAccelerometer() {
 }
 
 String getStatusMMI(float pga) {
-  if (pga < 0.15)
+  if (pga < 0.34) {
     return "I (Aman)";
-  else if (pga < 0.30)
+  } else if (pga < 2.8) {
     return "II-III (Lemah)";
-  else if (pga < 0.60)
+  } else if (pga < 7.8) {
     return "IV (Waspada)";
-  else if (pga < 1.00)
+  } else if (pga < 18.4) {
     return "V (Bahaya!)";
-  else
+  } else {
     return "VI+ (AWAS!)";
+  }
 }
 
 // ---------------------------------------------------------
@@ -469,6 +470,16 @@ bool buildRecordedAt(char *buffer, size_t bufferSize) {
   return false;
 }
 
+/**
+ * Kirim JSON payload via HTTPS POST.
+ *
+ * Perbaikan dari versi sebelumnya:
+ * - WiFiClientSecure dibuat lokal di dalam fungsi agar tidak ada state SSL
+ *   yang tersisa antar-panggilan (mencegah code=-1 akibat koneksi lama).
+ * - setTimeout pada klien diset ke WIFI_CLIENT_TIMEOUT_S yang konsisten
+ *   dengan HTTP_TIMEOUT_MS.
+ * - http.end() dipanggil sebelum destruktor klien agar FIN dikirim lebih dulu.
+ */
 bool postJson(const char *url, const char *payload) {
   if (WiFi.status() != WL_CONNECTED) {
     return false;
@@ -476,10 +487,15 @@ bool postJson(const char *url, const char *payload) {
 
   WiFiClientSecure client;
   client.setInsecure();
-  client.setTimeout(10); // 10 detik untuk TLS handshake (hotspot HP butuh waktu lebih lama)
-  
+  client.setTimeout(WIFI_CLIENT_TIMEOUT_S);
+
   HTTPClient http;
-  http.begin(client, url);
+  if (!http.begin(client, url)) {
+    Serial.print(F("[HTTP] begin() failed: "));
+    Serial.println(url);
+    return false;
+  }
+
   http.addHeader("Content-Type", "application/json");
   http.setTimeout(HTTP_TIMEOUT_MS);
 
@@ -491,14 +507,14 @@ bool postJson(const char *url, const char *payload) {
     Serial.print(url);
     Serial.print(F(" code="));
     Serial.println(httpCode);
-  } else {
-    Serial.print(F("[HTTP] POST OK -> "));
-    Serial.print(url);
-    Serial.print(F(" code="));
-    Serial.println(httpCode);
   }
 
   http.end();
+
+  // Beri jeda singkat agar stack TCP/SSL bersih sebelum koneksi berikutnya.
+  // Ini mencegah heap exhaustion pada back-to-back HTTPS call di ESP32.
+  delay(100);
+
   return success;
 }
 
@@ -510,10 +526,10 @@ void uploadData() {
   char urlGps[128];
   char urlAccel[128];
   snprintf(urlGps, sizeof(urlGps), "%s/sensors/gps", API_BASE_URL);
-  snprintf(urlAccel, sizeof(urlAccel), "%s/sensors/accelerometer",
-           API_BASE_URL);
+  snprintf(urlAccel, sizeof(urlAccel), "%s/sensors/accelerometer", API_BASE_URL);
 
-  // GPS Data Upload (Selalu kirim agar status koneksi di web terbaca "Online")
+  // GPS Data Upload
+  // Selalu kirim data GPS agar status koneksi di web terbaca "Online"
   if (gps.location.isValid()) {
     if (hasTime) {
       snprintf(payload, sizeof(payload),
@@ -534,8 +550,9 @@ void uploadData() {
                gps.satellites.isValid() ? gps.satellites.value() : 0);
     }
   } else {
-    // Kirim data default (0.0) agar status GPS di web terdeteksi Online walau sedang mencari satelit
-    const char* gpsStatus = (gps.charsProcessed() > 0) ? "SEARCHING" : "NO GPS";
+    // Jika belum lock satelit (NO FIX), kirim koordinat default agar backend mencatat status online GPS.
+    // Gunakan status "SEARCHING" jika modul aktif mengirim karakter, dan "NO GPS" jika tidak ada data dari modul.
+    const char *gpsStatus = (gps.charsProcessed() > 0) ? "SEARCHING" : "NO GPS";
     snprintf(payload, sizeof(payload),
              "{\"device_id\":\"%s\",\"latitude\":0.0,\"longitude\":0.0,"
              "\"altitude\":0.0,\"satellites\":%d,\"status\":\"%s\","
@@ -559,4 +576,115 @@ void uploadData() {
              state.smoothedPga);
   }
   postJson(urlAccel, payload);
+}
+
+// ---------------------------------------------------------
+// ESP32 COMMAND POLLING & REBOOT
+// ---------------------------------------------------------
+void checkCommands() {
+  if (WiFi.status() != WL_CONNECTED) {
+    return;
+  }
+
+  char url[128];
+  snprintf(url, sizeof(url), "%s/sensor-commands/pending?device_id=%s", API_BASE_URL, DEVICE_ID);
+
+  WiFiClientSecure client;
+  client.setInsecure();
+  client.setTimeout(WIFI_CLIENT_TIMEOUT_S);
+
+  HTTPClient http;
+  if (!http.begin(client, url)) {
+    return;
+  }
+  http.setTimeout(HTTP_TIMEOUT_MS);
+
+  int httpCode = http.GET();
+  if (httpCode == HTTP_CODE_OK) {
+    String response = http.getString();
+    http.end();
+
+    int searchStart = 0;
+    bool foundReset = false;
+    while (true) {
+      int resetIndex = response.indexOf("\"reset_default\"", searchStart);
+      if (resetIndex == -1) {
+        break;
+      }
+
+      foundReset = true;
+
+      // Temukan ID perintah untuk menandai eksekusi selesai
+      int idSearchStart = response.lastIndexOf("\"id\":", resetIndex);
+      if (idSearchStart != -1) {
+        int idValStart = idSearchStart + 5;
+        while (idValStart < (int)response.length() &&
+               (response[idValStart] == ' ' || response[idValStart] == ':')) {
+          idValStart++;
+        }
+        int idValEnd = idValStart;
+        while (idValEnd < (int)response.length() && isDigit(response[idValEnd])) {
+          idValEnd++;
+        }
+        String idStr = response.substring(idValStart, idValEnd);
+        int commandId = idStr.toInt();
+
+        if (commandId > 0) {
+          // Jeda singkat sebelum mark-executed agar koneksi GPS sebelumnya bersih
+          delay(200);
+          markCommandExecuted(commandId);
+        }
+      }
+
+      searchStart = resetIndex + 15;
+    }
+
+    if (foundReset) {
+      performReset();
+    }
+  } else {
+    http.end();
+    Serial.print(F("[HTTP] checkCommands failed code="));
+    Serial.println(httpCode);
+  }
+}
+
+void markCommandExecuted(int commandId) {
+  if (WiFi.status() != WL_CONNECTED) {
+    return;
+  }
+
+  char url[128];
+  snprintf(url, sizeof(url), "%s/sensor-commands/%d/executed", API_BASE_URL, commandId);
+
+  WiFiClientSecure client;
+  client.setInsecure();
+  client.setTimeout(WIFI_CLIENT_TIMEOUT_S);
+
+  HTTPClient http;
+  if (!http.begin(client, url)) {
+    return;
+  }
+  http.addHeader("Content-Type", "application/json");
+  http.setTimeout(HTTP_TIMEOUT_MS);
+
+  int httpCode = http.sendRequest("PATCH", "{}");
+  Serial.print(F("[HTTP] Mark executed command #"));
+  Serial.print(commandId);
+  Serial.print(F(" code="));
+  Serial.println(httpCode);
+
+  http.end();
+}
+
+void performReset() {
+  Serial.println(F("\n=== PERFORMING RESET / REBOOT ==="));
+  display.clearDisplay();
+  display.setCursor(0, 10);
+  display.println(F("Rebooting ESP32..."));
+  display.println(F("Please wait..."));
+  display.display();
+  delay(1500);
+
+  ESP.restart();
 }

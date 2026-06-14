@@ -154,7 +154,16 @@
                         </div>
                     </div>
 
-                    <div class="dashboard-chart-card">
+                    <!-- Chart Tab Switcher -->
+                    <div class="accel-chart-tabs" style="display:flex;gap:.5rem;margin-bottom:1rem;">
+                        <button id="dash-tab-xyz" class="accel-tab-btn accel-tab-active" onclick="dashSwitchTab('xyz')">X / Y / Z</button>
+                        <button id="dash-tab-pga" class="accel-tab-btn" onclick="dashSwitchTab('pga')">PGA</button>
+                    </div>
+
+                    <div class="dashboard-chart-card" id="dash-chart-xyz-wrapper">
+                        <div id="accelChartXyz" class="sensor-chart"></div>
+                    </div>
+                    <div class="dashboard-chart-card" id="dash-chart-pga-wrapper" style="display:none;">
                         <div id="accelChart" class="sensor-chart"></div>
                     </div>
 
@@ -290,6 +299,8 @@
         const REFRESH_MS = 1000;
 
         let accelChart = null;
+        let accelChartXyz = null;
+        let dashActiveTab = 'xyz';
         const mapState = { map: null, marker: null, seismicLayers: [] };
         let cachedAccelTime = null;
         let cachedGpsTime = null;
@@ -322,36 +333,34 @@
             if (element) { element.textContent = value; }
         }
 
-        function buildChartOptions(samples) {
-            const isMobile = window.innerWidth <= 768;
-            const isDark = document.documentElement.classList.contains('dark-mode');
-            const labelColor = isDark ? '#c4a98a' : '#6b5545';
-            const gridColor  = isDark ? 'rgba(194, 116, 62, 0.15)' : 'rgba(107, 85, 69, 0.12)';
+        // ── Tab switcher untuk dashboard accel chart ───────────────────────
+        window.dashSwitchTab = function (tab) {
+            dashActiveTab = tab;
+            document.getElementById('dash-chart-xyz-wrapper').style.display = tab === 'xyz' ? '' : 'none';
+            document.getElementById('dash-chart-pga-wrapper').style.display = tab === 'pga' ? '' : 'none';
+            document.getElementById('dash-tab-xyz').classList.toggle('accel-tab-active', tab === 'xyz');
+            document.getElementById('dash-tab-pga').classList.toggle('accel-tab-active', tab === 'pga');
+        };
 
+        function chartBase(samples, height) {
+            const isMobile = window.innerWidth <= 768;
+            const isDark   = document.documentElement.classList.contains('dark-mode');
+            const labelColor = isDark ? '#c4a98a' : '#6b5545';
+            const gridColor  = isDark ? 'rgba(194,116,62,.15)' : 'rgba(107,85,69,.12)';
             return {
                 chart: {
-                    type: 'line',
-                    height: 340,
+                    height: isMobile ? 240 : height,
                     fontFamily: 'Plus Jakarta Sans, system-ui, sans-serif',
                     toolbar: { show: false },
                     animations: {
-                        enabled: true,
+                        enabled: !isMobile,
                         easing: 'linear',
-                        dynamicAnimation: {
-                            enabled: true,
-                            speed: 350
-                        }
+                        dynamicAnimation: { enabled: !isMobile, speed: 350 },
                     },
                     background: 'transparent',
-                    dropShadow: {
-                        enabled: false,
-                    },
                 },
-                series: [
-                    { name: 'PGA', type: 'area', data: samples.map((s) => s.magnitude) },
-                ],
                 xaxis: {
-                    categories: samples.map((s) => s.time || '--'),
+                    categories: samples.map(s => s.time || '--'),
                     labels: {
                         style: { colors: labelColor, fontWeight: 600, fontSize: '11px' },
                         hideOverlappingLabels: true,
@@ -363,24 +372,18 @@
                 yaxis: {
                     labels: {
                         style: { colors: labelColor, fontWeight: 600, fontSize: '11px' },
-                        formatter: (val) => val != null ? val.toFixed(1) : '0',
+                        formatter: v => v != null ? v.toFixed(2) : '0',
                     },
                 },
                 stroke: {
                     curve: isMobile ? 'straight' : 'smooth',
-                    width: [3],
                     lineCap: 'round',
                 },
-                colors: ['#e63946'],
-                fill: {
-                    type: ['solid'],
-                    opacity: [0.15],
-                },
                 markers: {
-                    size: [5],
-                    strokeWidth: [2],
-                    strokeColors: ['#fff'],
-                    hover: { size: 8, sizeOffset: 3 },
+                    size: [4, 4, 4],
+                    strokeWidth: [2, 2, 2],
+                    strokeColors: ['#fff', '#fff', '#fff'],
+                    hover: { size: 7 },
                 },
                 grid: {
                     borderColor: gridColor,
@@ -393,9 +396,7 @@
                     shared: true,
                     intersect: false,
                     theme: isDark ? 'dark' : 'light',
-                    y: {
-                        formatter: (val) => val != null ? val.toFixed(4) : '0',
-                    },
+                    y: { formatter: v => v != null ? v.toFixed(4) : '0' },
                     style: { fontSize: '12px' },
                 },
                 legend: {
@@ -405,35 +406,91 @@
                     labels: { colors: labelColor },
                     fontWeight: 700,
                     fontSize: '13px',
-                    markers: {
-                        size: 6,
-                        shape: 'circle',
-                        strokeWidth: 0,
-                    },
+                    markers: { size: 6, shape: 'circle', strokeWidth: 0 },
                     itemMargin: { horizontal: 12, vertical: 4 },
                 },
                 dataLabels: { enabled: false },
             };
         }
 
+        function buildXyzOptions(samples) {
+            const base = chartBase(samples, 340);
+            return Object.assign(base, {
+                chart: Object.assign(base.chart, { type: 'line' }),
+                series: [
+                    { name: 'X', data: samples.map(s => s.x) },
+                    { name: 'Y', data: samples.map(s => s.y) },
+                    { name: 'Z', data: samples.map(s => s.z) },
+                ],
+                colors: ['#3b82f6', '#22c55e', '#f59e0b'],
+                fill: { type: ['solid', 'solid', 'solid'], opacity: [1, 1, 1] },
+                stroke: Object.assign(base.stroke, { width: [2.5, 2.5, 2.5] }),
+            });
+        }
+
+        function buildPgaOptions(samples) {
+            const isDark = document.documentElement.classList.contains('dark-mode');
+            const base = chartBase(samples, 340);
+            return Object.assign(base, {
+                chart: Object.assign(base.chart, { type: 'area' }),
+                series: [{ name: 'PGA', data: samples.map(s => s.magnitude) }],
+                colors: ['#e63946'],
+                fill: {
+                    type: ['gradient'],
+                    gradient: {
+                        shade: isDark ? 'dark' : 'light',
+                        type: 'vertical',
+                        opacityFrom: 0.35,
+                        opacityTo: 0.02,
+                        stops: [0, 95, 100],
+                        colorStops: [
+                            { offset: 0,   color: '#e63946', opacity: 0.35 },
+                            { offset: 60,  color: '#e63946', opacity: 0.10 },
+                            { offset: 100, color: '#e63946', opacity: 0.01 },
+                        ],
+                    },
+                },
+                stroke: Object.assign(base.stroke, { width: [3] }),
+                yaxis: Object.assign(base.yaxis, {
+                    title: { text: 'PGA (m/s²)', style: { fontWeight: 700, fontSize: '11px' } },
+                }),
+            });
+        }
+
         function renderChart(samples) {
             if (typeof ApexCharts === 'undefined') return;
-            const chartElement = document.getElementById('accelChart');
-            if (!chartElement) return;
 
-            if (accelChart) {
-                accelChart.updateOptions(
-                    { xaxis: { categories: samples.map((s) => s.time || '--') } },
-                    false, false
-                );
-                accelChart.updateSeries([
-                    { name: 'PGA', type: 'area', data: samples.map((s) => s.magnitude) },
-                ]);
-                return;
+            const valid = samples.length > 0
+                ? samples
+                : [{ x: 0, y: 0, z: 0, magnitude: 0, time: '--' }];
+
+            // XYZ chart
+            const xyzEl = document.getElementById('accelChartXyz');
+            if (xyzEl) {
+                if (!accelChartXyz) {
+                    accelChartXyz = new ApexCharts(xyzEl, buildXyzOptions(valid));
+                    accelChartXyz.render();
+                } else {
+                    accelChartXyz.updateOptions({ xaxis: { categories: valid.map(s => s.time || '--') } }, false, false);
+                    accelChartXyz.updateSeries([
+                        { name: 'X', data: valid.map(s => s.x) },
+                        { name: 'Y', data: valid.map(s => s.y) },
+                        { name: 'Z', data: valid.map(s => s.z) },
+                    ]);
+                }
             }
 
-            accelChart = new ApexCharts(chartElement, buildChartOptions(samples));
-            accelChart.render();
+            // PGA chart
+            const pgaEl = document.getElementById('accelChart');
+            if (pgaEl) {
+                if (!accelChart) {
+                    accelChart = new ApexCharts(pgaEl, buildPgaOptions(valid));
+                    accelChart.render();
+                } else {
+                    accelChart.updateOptions({ xaxis: { categories: valid.map(s => s.time || '--') } }, false, false);
+                    accelChart.updateSeries([{ name: 'PGA', data: valid.map(s => s.magnitude) }]);
+                }
+            }
         }
 
         // ─── Leaflet Map ──────────────────────────────────────────────────────
@@ -739,22 +796,19 @@
         refreshDashboardData();
 
         // Dark mode observer — rebuild chart colors on theme toggle
-        let lastChartSamples = initialDashboardData.accelSamples || [];
         const observer = new MutationObserver(() => {
-            if (accelChart) {
-                try {
-                    const isDark = document.documentElement.classList.contains('dark-mode');
-                    const labelColor = isDark ? '#c4a98a' : '#6b5545';
-                    const gridColor  = isDark ? 'rgba(194, 116, 62, 0.15)' : 'rgba(107, 85, 69, 0.12)';
-                    accelChart.updateOptions({
-                        tooltip: { theme: isDark ? 'dark' : 'light' },
-                        xaxis: { labels: { style: { colors: labelColor } } },
-                        yaxis: { labels: { style: { colors: labelColor } } },
-                        grid: { borderColor: gridColor },
-                        legend: { labels: { colors: labelColor } },
-                    }, false, false);
-                } catch (e) {}
-            }
+            const isDark = document.documentElement.classList.contains('dark-mode');
+            const labelColor = isDark ? '#c4a98a' : '#6b5545';
+            const gridColor  = isDark ? 'rgba(194, 116, 62, 0.15)' : 'rgba(107, 85, 69, 0.12)';
+            const opts = {
+                tooltip: { theme: isDark ? 'dark' : 'light' },
+                xaxis: { labels: { style: { colors: labelColor } } },
+                yaxis: { labels: { style: { colors: labelColor } } },
+                grid: { borderColor: gridColor },
+                legend: { labels: { colors: labelColor } },
+            };
+            if (accelChart)    try { accelChart.updateOptions(opts, false, false); }    catch (e) {}
+            if (accelChartXyz) try { accelChartXyz.updateOptions(opts, false, false); } catch (e) {}
         });
         observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     });
