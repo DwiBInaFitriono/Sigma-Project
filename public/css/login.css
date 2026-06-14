@@ -170,7 +170,6 @@ html.dark-mode .theme-toggle-btn:hover {
     color: #9d8b7e;
 }
 
-/* Override browser autofill grey background */
 .auth-input:-webkit-autofill,
 .auth-input:-webkit-autofill:hover,
 .auth-input:-webkit-autofill:focus {
@@ -309,7 +308,6 @@ html.dark-mode .theme-toggle-btn:hover {
     padding-top: 1.5rem;
 }
 
-/* ── Mobile: compact card ── */
 @media (max-width: 480px) {
     .auth-page {
         padding: 1rem 1rem 2rem;
@@ -358,7 +356,6 @@ html.dark-mode .theme-toggle-btn:hover {
     }
 }
 
-/* ── Dark Mode ── */
 html.dark-mode .auth-page {
     background: #1A110C;
 }
@@ -438,4 +435,3 @@ html.dark-mode .theme-toggle-btn:hover {
 .auth-title {
     font-family: 'Outfit', system-ui, sans-serif !important;
 }
-

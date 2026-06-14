@@ -8,19 +8,19 @@ $now = Carbon::now();
 
 for ($i = 20; $i >= 0; $i--) {
     $time = (clone $now)->subSeconds($i * 5);
-    
+
     $isQuake = $i >= 2 && $i <= 8;
-    
+
     if ($isQuake) {
         $x = rand(-800, 800) / 100;
         $y = rand(-800, 800) / 100;
         $z = rand(500, 1500) / 100;
-        $magnitude = rand(400, 1500) / 100; // Between 4.0 and 15.0
+        $magnitude = rand(400, 1500) / 100;
     } else {
         $x = rand(-20, 20) / 100;
         $y = rand(-20, 20) / 100;
         $z = rand(900, 1050) / 100;
-        $magnitude = rand(0, 30) / 100; // Below 0.34
+        $magnitude = rand(0, 30) / 100;
     }
 
     AccelerometerData::create([

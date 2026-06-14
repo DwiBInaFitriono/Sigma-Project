@@ -56,8 +56,7 @@
         const themeToggleBtn = document.getElementById('theme-toggle');
         const themeToggleDesktop = document.getElementById('theme-toggle-desktop');
         const htmlElement = document.documentElement;
-        
-        // Initial check
+
         if (localStorage.getItem('theme') === 'dark') {
             htmlElement.classList.add('dark-mode');
         }
@@ -78,7 +77,6 @@
             themeToggleDesktop.addEventListener('click', toggleTheme);
         }
 
-        // Close profile dropdowns when clicking outside
         window.addEventListener('click', function(e) {
             if (!e.target.closest('.profile-dropdown-container')) {
                 document.querySelectorAll('.profile-dropdown-container').forEach(container => {

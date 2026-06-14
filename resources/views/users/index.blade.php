@@ -32,7 +32,6 @@
     @endif
 
     <div class="users-grid">
-        <!-- Form Tambah User -->
         <section class="glow-card panel-card log-card">
             <div class="section-header">
                 <div>
@@ -81,7 +80,6 @@
             </form>
         </section>
 
-        <!-- Daftar User -->
         <section class="glow-card panel-card log-card">
             <div class="section-header">
                 <div>
