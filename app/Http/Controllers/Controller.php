@@ -84,13 +84,15 @@ abstract class Controller
             $gps = $this->formatGpsData($latestGps, $gpsConnected);
         }
 
-        // 5. Chart samples: only entries in the database (since database now only stores magnitude >= 1.5)
+        // 5. Chart samples: semua pembacaan 5 menit terakhir (tanpa filter magnitude)
+        //    agar grafik berjalan kontinu — naik saat getaran, turun saat tenang.
         $accelerometerSamples = AccelerometerData::query()
+            ->where('recorded_at', '>=', Carbon::now()->subMinutes(5))
             ->latest('recorded_at')
             ->limit($sampleLimit)
             ->get();
 
-        // Log samples: only entries with detected magnitude (>= 1.5 = MMI Level II-III or higher)
+        // Log samples: hanya entri dengan getaran terdeteksi (magnitude >= 1.5 = MMI II-III ke atas)
         $accelerometerLogSamples = AccelerometerData::query()
             ->where('magnitude', '>=', 1.5)
             ->latest('recorded_at')

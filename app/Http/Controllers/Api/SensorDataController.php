@@ -102,19 +102,20 @@ class SensorDataController extends Controller
             'recorded_at' => $recordedAt->toIso8601String(),
         ], now()->addMinutes(5));
 
+        // Selalu simpan semua pembacaan ke database agar grafik berjalan kontinu.
+        // Seismic event (& trigger alarm) hanya dibuat jika magnitude >= 1.5.
+        $accelerometerData = AccelerometerData::create([
+            'device_id' => $deviceId,
+            'x' => (float) $validated['x'],
+            'y' => (float) $validated['y'],
+            'z' => (float) $validated['z'],
+            'magnitude' => $magnitude,
+            'recorded_at' => $recordedAt,
+        ]);
+
         $isSeismic = $magnitude >= 1.5;
-        $accelerometerData = null;
 
         if ($isSeismic) {
-            $accelerometerData = AccelerometerData::create([
-                'device_id' => $deviceId,
-                'x' => (float) $validated['x'],
-                'y' => (float) $validated['y'],
-                'z' => (float) $validated['z'],
-                'magnitude' => $magnitude,
-                'recorded_at' => $recordedAt,
-            ]);
-
             $gpsData = GPSData::query()
                 ->where('device_id', $deviceId)
                 ->latest('recorded_at')
@@ -138,21 +139,10 @@ class SensorDataController extends Controller
             }
         }
 
-        $responseData = $accelerometerData
-            ? $this->formatAccelerometerData($accelerometerData)
-            : [
-                'device_id' => $deviceId,
-                'x' => (float) $validated['x'],
-                'y' => (float) $validated['y'],
-                'z' => (float) $validated['z'],
-                'magnitude' => $magnitude,
-                'recorded_at' => $this->toJakartaTimeLabel($recordedAt, 'd M Y H:i:s'),
-            ];
-
         return response()->json([
             'success' => true,
-            'message' => $isSeismic ? 'Accelerometer data saved (seismic event).' : 'Heartbeat received.',
-            'data' => $responseData,
+            'message' => $isSeismic ? 'Accelerometer data saved (seismic event).' : 'Accelerometer data saved.',
+            'data' => $this->formatAccelerometerData($accelerometerData),
         ], 201);
     }
 

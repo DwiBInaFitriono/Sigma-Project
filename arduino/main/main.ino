@@ -29,8 +29,8 @@
 // ---------------------------------------------------------
 // NETWORK & API CONFIGURATION
 // ---------------------------------------------------------
-const char *WIFI_SSID = "RIO";
-const char *WIFI_PASSWORD = "riomia454706";
+const char *WIFI_SSID = "Infinix SMART 20";
+const char *WIFI_PASSWORD = "e99wnby4s2yg4y8";
 const char *DEVICE_ID = "esp32-sigma-01";
 const char *API_BASE_URL = "https://sigma-project-one.vercel.app/api";
 
@@ -329,21 +329,23 @@ void processAccelerometer() {
     rawPga = 0.0;
   }
 
-  // 2. Linear Time-Based Decay (Turun instan)
+  // 2. Linear Time-Based Decay
   unsigned long now = millis();
-  unsigned long dt = now - state.lastProcessTime;
-  if (state.lastProcessTime == 0) {
-    dt = 0;
-  }
+  unsigned long dt  = (state.lastProcessTime == 0) ? 0 : (now - state.lastProcessTime);
   state.lastProcessTime = now;
 
-  if (dt > 0 && dt < 5000) {
-    // Sapu bersih! Anjlok 15.0 m/s2 setiap detiknya.
-    // Misal angka nyangkut di 4.5, ia akan jatuh ke 0.0 mutlak dalam waktu 0.3 detik!
-    float dropAmount = (dt / 1000.0) * 15.0;
-    state.smoothedPga -= dropAmount;
-    if (state.smoothedPga < 0) {
+  if (dt > 0) {
+    if (dt >= 5000) {
+      // Sistem diblok lama (HTTPS upload, dsb.) — getaran pasti sudah berhenti.
+      // Reset paksa ke 0 agar nilai tidak nyangkut setelah unggah data selesai.
       state.smoothedPga = 0.0;
+    } else {
+      // Decay normal: turun 15.0 m/s² setiap detiknya.
+      float dropAmount = (dt / 1000.0f) * 15.0f;
+      state.smoothedPga -= dropAmount;
+      if (state.smoothedPga < 0.0f) {
+        state.smoothedPga = 0.0f;
+      }
     }
   }
 
@@ -374,7 +376,8 @@ void processAccelerometer() {
   }
 
   if (state.isBuzzerActive) {
-    if (millis() - state.buzzerActivationTime >= 1000) {
+    // Watchdog buzzer: paksa mati setelah 3 detik agar tidak nyangkut selamanya.
+    if (millis() - state.buzzerActivationTime >= 3000) {
       state.isBuzzerActive = false;
       digitalWrite(BUZZER_PIN, LOW);
     }
