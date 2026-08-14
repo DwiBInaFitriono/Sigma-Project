@@ -62,15 +62,13 @@ class ApiService {
     await prefs.setBool(keyMockMode, value);
     if (value) {
       // If switching to mock mode, auto-create a mock user if none exists
-      if (_currentUser == null) {
-        _currentUser = User(
+      _currentUser ??= User(
           id: 1,
           name: "Operator Demo",
           email: "operator@sigma.com",
           role: "admin",
           token: "mock-token-123456",
         );
-      }
     }
   }
 

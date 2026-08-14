@@ -205,7 +205,7 @@ class _ProfileTabState extends State<ProfileTab> {
                       title: const Text("Mode Demo (Offline Mock)"),
                       subtitle: const Text("Gunakan simulasi data lokal tanpa memerlukan server aktif"),
                       value: _isMock,
-                      activeColor: const Color(0xFFC2743E),
+                      activeThumbColor: const Color(0xFFC2743E),
                       contentPadding: EdgeInsets.zero,
                       onChanged: (val) {
                         setState(() {

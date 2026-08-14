@@ -105,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 title: const Text("Mode Demo (Offline Mock)"),
                 subtitle: const Text("Simulasi telemetry gempa & GPS tanpa koneksi server"),
                 value: isMock,
-                activeColor: const Color(0xFFC2743E),
+                activeThumbColor: const Color(0xFFC2743E),
                 onChanged: (val) {
                   setModalState(() {
                     isMock = val;

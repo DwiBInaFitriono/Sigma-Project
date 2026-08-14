@@ -16,4 +16,28 @@ export default defineConfig({
             ignored: ['**/storage/framework/views/**'],
         },
     },
+    build: {
+        target: 'esnext',
+        minify: 'terser',
+        terserOptions: {
+            compress: {
+                drop_console: true,
+                drop_debugger: true,
+            },
+        },
+        reportCompressedSize: false,
+        chunkSizeWarningLimit: 1000,
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    vendor: ['sidebar.js'],
+                },
+            },
+        },
+    },
+    optimization: {
+        splitChunks: {
+            chunks: 'all',
+        },
+    },
 });

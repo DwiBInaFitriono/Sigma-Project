@@ -30,17 +30,21 @@ abstract class Controller
         $deviceId = 'esp32-sigma-01'; // Default device ID from main.ino
 
         // 1. Fetch latest GPS and Accelerometer data from DB for fallback/historical logs
-        $latestGps = GPSData::query()->latest('recorded_at')->first();
-        $latestAccelerometer = AccelerometerData::query()->latest('recorded_at')->first();
+        // Combine queries to reduce database hits
+        $latestGps = GPSData::query()
+            ->select('id', 'latitude', 'longitude', 'altitude', 'satellites', 'status', 'recorded_at', 'created_at')
+            ->latest('recorded_at')
+            ->first();
+        $latestAccelerometer = AccelerometerData::query()
+            ->select('id', 'x', 'y', 'z', 'magnitude', 'recorded_at', 'created_at')
+            ->latest('recorded_at')
+            ->first();
 
-        // 2. Check online status — ESP32 selalu kirim GPS setiap 2 detik,
-        // jadi GPS created_at adalah heartbeat terbaik untuk seluruh device.
-        // Cache mungkin tidak berfungsi di server production (prefix berbeda),
-        // jadi kita utamakan pengecekan langsung dari database.
-        $latestGpsForStatus = GPSData::query()->latest('created_at')->first();
-        $deviceOnline = $latestGpsForStatus
-            && $latestGpsForStatus->created_at
-            && $latestGpsForStatus->created_at->diffInSeconds(now()) < 60;
+        // 2. Check online status — ESP32 selalu kirim GPS setiap 2 detik
+        // Use the already fetched latestGps instead of querying again
+        $deviceOnline = $latestGps
+            && $latestGps->created_at
+            && $latestGps->created_at->diffInSeconds(now()) < 60;
 
         // GPS dan Accel satu device (ESP32), jadi kalau GPS masuk = device hidup = accel juga online
         $gpsConnected = $deviceOnline;
@@ -87,6 +91,7 @@ abstract class Controller
         // 5. Chart samples: semua pembacaan 5 menit terakhir (tanpa filter magnitude)
         //    agar grafik berjalan kontinu — naik saat getaran, turun saat tenang.
         $accelerometerSamples = AccelerometerData::query()
+            ->select('id', 'x', 'y', 'z', 'magnitude', 'recorded_at')
             ->where('recorded_at', '>=', Carbon::now()->subMinutes(5))
             ->latest('recorded_at')
             ->limit($sampleLimit)
@@ -94,6 +99,7 @@ abstract class Controller
 
         // Log samples: hanya entri dengan getaran terdeteksi (magnitude >= 1.5 = MMI II-III ke atas)
         $accelerometerLogSamples = AccelerometerData::query()
+            ->select('id', 'x', 'y', 'z', 'magnitude', 'recorded_at')
             ->where('magnitude', '>=', 1.5)
             ->latest('recorded_at')
             ->limit($sampleLimit)
@@ -103,6 +109,7 @@ abstract class Controller
         $accelerometerLogSamples = $accelerometerLogSamples->sortBy('recorded_at')->values();
 
         $gpsLogSamples = GPSData::query()
+            ->select('id', 'latitude', 'longitude', 'altitude', 'satellites', 'status', 'recorded_at')
             ->latest('recorded_at')
             ->limit($sampleLimit)
             ->get()
@@ -123,27 +130,31 @@ abstract class Controller
 
     protected function collectSeismicEvents(): array
     {
-        return SeismicEvent::query()
-            ->where('recorded_at', '>=', Carbon::today())
-            ->latest('recorded_at')
-            ->get()
-            ->map(function (SeismicEvent $event): array {
-                $mmiColor = $this->getMmiStatus((float) $event->magnitude)['color'];
+        // Cache seismic events untuk 30 detik untuk mengurangi database hits
+        return Cache::remember('dashboard_seismic_events', 30, function () {
+            return SeismicEvent::query()
+                ->select('id', 'device_id', 'latitude', 'longitude', 'altitude', 'magnitude', 'mmi_level', 'mmi_status', 'recorded_at')
+                ->where('recorded_at', '>=', Carbon::today())
+                ->latest('recorded_at')
+                ->get()
+                ->map(function (SeismicEvent $event): array {
+                    $mmiColor = $this->getMmiStatus((float) $event->magnitude)['color'];
 
-                return [
-                    'id' => $event->id,
-                    'device_id' => $event->device_id,
-                    'latitude' => (float) $event->latitude,
-                    'longitude' => (float) $event->longitude,
-                    'altitude' => $event->altitude === null ? null : (float) $event->altitude,
-                    'magnitude' => (float) $event->magnitude,
-                    'mmi_level' => $event->mmi_level,
-                    'mmi_status' => $event->mmi_status,
-                    'mmi_color' => $mmiColor,
-                    'recorded_at' => $this->formatWibTimestamp($event->recorded_at?->timezone($this->dashboardTimezone()), 'd M Y H:i:s'),
-                ];
-            })
-            ->all();
+                    return [
+                        'id' => $event->id,
+                        'device_id' => $event->device_id,
+                        'latitude' => (float) $event->latitude,
+                        'longitude' => (float) $event->longitude,
+                        'altitude' => $event->altitude === null ? null : (float) $event->altitude,
+                        'magnitude' => (float) $event->magnitude,
+                        'mmi_level' => $event->mmi_level,
+                        'mmi_status' => $event->mmi_status,
+                        'mmi_color' => $mmiColor,
+                        'recorded_at' => $this->formatWibTimestamp($event->recorded_at?->timezone($this->dashboardTimezone()), 'd M Y H:i:s'),
+                    ];
+                })
+                ->all();
+        });
     }
 
     /**
@@ -340,26 +351,33 @@ abstract class Controller
      */
     protected function collectAccelerometerLog(int $minutes = 5): array
     {
-        return AccelerometerData::query()
-            ->where('recorded_at', '>=', Carbon::now()->subMinutes($minutes))
-            ->where('magnitude', '>=', 1.5)
-            ->orderByDesc('recorded_at')
-            ->get()
-            ->map(function (AccelerometerData $sample): array {
-                $mmi = $this->getMmiStatus((float) $sample->magnitude);
+        // Cache accelerometer logs untuk 5 detik untuk real-time feel dengan reduced database hits
+        $cacheKey = "accel_log_{$minutes}";
 
-                return [
-                    'time' => $this->formatWibTimestamp($sample->recorded_at?->timezone($this->dashboardTimezone()), 'H:i:s'),
-                    'x' => (float) $sample->x,
-                    'y' => (float) $sample->y,
-                    'z' => (float) $sample->z,
-                    'magnitude' => (float) $sample->magnitude,
-                    'mmi_level' => $mmi['level'],
-                    'mmi_status' => $mmi['status'],
-                    'mmi_color' => $mmi['color'],
-                ];
-            })
-            ->all();
+        return Cache::remember($cacheKey, 5, function () use ($minutes) {
+            return AccelerometerData::query()
+                ->select('id', 'x', 'y', 'z', 'magnitude', 'recorded_at')
+                ->where('recorded_at', '>=', Carbon::now()->subMinutes($minutes))
+                ->where('magnitude', '>=', 1.5)
+                ->orderByDesc('recorded_at')
+                ->limit(50) // Limit to prevent huge payloads
+                ->get()
+                ->map(function (AccelerometerData $sample): array {
+                    $mmi = $this->getMmiStatus((float) $sample->magnitude);
+
+                    return [
+                        'time' => $this->formatWibTimestamp($sample->recorded_at?->timezone($this->dashboardTimezone()), 'H:i:s'),
+                        'x' => (float) $sample->x,
+                        'y' => (float) $sample->y,
+                        'z' => (float) $sample->z,
+                        'magnitude' => (float) $sample->magnitude,
+                        'mmi_level' => $mmi['level'],
+                        'mmi_status' => $mmi['status'],
+                        'mmi_color' => $mmi['color'],
+                    ];
+                })
+                ->all();
+        });
     }
 
     /**
@@ -367,20 +385,27 @@ abstract class Controller
      */
     protected function collectGpsLog(int $minutes = 5): array
     {
-        return GPSData::query()
-            ->where('recorded_at', '>=', Carbon::now()->subMinutes($minutes))
-            ->orderByDesc('recorded_at')
-            ->get()
-            ->map(function (GPSData $gps): array {
-                return [
-                    'time' => $this->formatWibTimestamp($gps->recorded_at?->timezone($this->dashboardTimezone()), 'H:i:s'),
-                    'latitude' => (float) $gps->latitude,
-                    'longitude' => (float) $gps->longitude,
-                    'altitude' => $gps->altitude === null ? 0.0 : (float) $gps->altitude,
-                    'satellites' => (int) $gps->satellites,
-                    'status' => $gps->status ?? 'NO FIX',
-                ];
-            })
-            ->all();
+        // Cache GPS logs untuk 5 detik untuk reduced database hits
+        $cacheKey = "gps_log_{$minutes}";
+
+        return Cache::remember($cacheKey, 5, function () use ($minutes) {
+            return GPSData::query()
+                ->select('id', 'latitude', 'longitude', 'altitude', 'satellites', 'status', 'recorded_at')
+                ->where('recorded_at', '>=', Carbon::now()->subMinutes($minutes))
+                ->orderByDesc('recorded_at')
+                ->limit(50) // Limit to prevent huge payloads
+                ->get()
+                ->map(function (GPSData $gps): array {
+                    return [
+                        'time' => $this->formatWibTimestamp($gps->recorded_at?->timezone($this->dashboardTimezone()), 'H:i:s'),
+                        'latitude' => (float) $gps->latitude,
+                        'longitude' => (float) $gps->longitude,
+                        'altitude' => $gps->altitude === null ? 0.0 : (float) $gps->altitude,
+                        'satellites' => (int) $gps->satellites,
+                        'status' => $gps->status ?? 'NO FIX',
+                    ];
+                })
+                ->all();
+        });
     }
 }
