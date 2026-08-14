@@ -29,8 +29,10 @@ export default defineConfig({
         chunkSizeWarningLimit: 1000,
         rollupOptions: {
             output: {
-                manualChunks: {
-                    vendor: ['sidebar.js'],
+                manualChunks(id) {
+                    if (id.includes('sidebar.js')) {
+                        return 'vendor';
+                    }
                 },
             },
         },
