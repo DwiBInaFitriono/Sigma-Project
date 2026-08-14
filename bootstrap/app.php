@@ -20,5 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Illuminate\Database\QueryException $e, \Illuminate\Http\Request $request) {
+            abort(404, 'Not Found');
+        });
+        $exceptions->render(function (\PDOException $e, \Illuminate\Http\Request $request) {
+            abort(404, 'Not Found');
+        });
     })->create();
