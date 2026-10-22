@@ -53,6 +53,16 @@ In order to ensure that the Laravel community is welcoming to all, please review
 
 If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
+## PHP Runtime Security Update (2026-10-21)
+
+For CVE-2026-109618 and CVE-2026-109619, run this project on patched PHP runtime lines only:
+
+- PHP 8.3.36+
+- PHP 8.4.27+
+- PHP 8.5.12+
+
+After updating your hosting/runtime version, restart PHP workers (PHP-FPM/Apache/LiteSpeed/FrankenPHP/Vercel deployment) so the patched runtime is actually active.
+
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
